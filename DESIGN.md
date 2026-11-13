@@ -1,148 +1,168 @@
 ---
 version: alpha
-name: Notion-design-analysis
-description: Notion presents itself as the all-in-one workspace through a confident, illustration-rich brand voice — anchored by a deep navy hero band ({colors.brand-navy}) decorated with brand-colored sticky-note dots and mesh wire illustrations, a signature purple pill primary CTA ({colors.primary}), and a rich palette of pastel-tinted feature cards that echo the colorful database properties of the live product. The system uses a Notion-Sans (Inter-based) typeface across every UI surface, anchors a 4-tier pricing comparison (Free / Plus / Business / Enterprise), and presents the live workspace UI mockup directly inside the hero band. Coverage spans homepage, Enterprise, Product AI, Product Agents, Startups, and Pricing surfaces.
+name: Space-Apps-26-mission-control
+description: An original, space-themed "mission control" design system for a NASA Space Apps Challenge 2026 data website. Dark-only. Deep-space surfaces ({colors.void}, {colors.canvas}), an orbit-blue primary action ({colors.primary}), and a single launch-orange accent ({colors.accent}) used sparingly for the one thing that matters on screen. Headlines are set in Space Grotesk, body in Inter, and telemetry (coordinates, timestamps, dataset IDs) in JetBrains Mono. The hero is an orbital band that leads with a live data visual, and the system ships first-class chart and map components with a validated, colourblind-safe data palette. It is NASA-inspired, not NASA-branded: no NASA insignia, logotype or seal is used anywhere.
 
 colors:
-  primary: "#5645d4"
-  primary-pressed: "#4534b3"
-  primary-deep: "#3a2a99"
+  # Surfaces (darkest to lightest)
+  void: "#04060c"
+  canvas: "#0a0e1a"
+  surface: "#111727"
+  surface-raised: "#182036"
+  hairline: "#232c45"
+  hairline-strong: "#3a4666"
+  border-control: "#6a7592"
+  # Text
+  ink: "#f2f5fa"
+  text-secondary: "#b6bfd2"
+  text-muted: "#8b96ad"
+  text-disabled: "#5d6782"
+  # Action and brand
+  primary: "#2f6fed"
+  primary-pressed: "#2459c7"
   on-primary: "#ffffff"
-  brand-navy: "#0a1530"
-  brand-navy-deep: "#070f24"
-  brand-navy-mid: "#1a2a52"
-  link-blue: "#0075de"
-  link-blue-pressed: "#005bab"
-  brand-orange: "#dd5b00"
-  brand-orange-deep: "#793400"
-  brand-pink: "#ff64c8"
-  brand-pink-deep: "#a02e6d"
-  brand-purple: "#7b3ff2"
-  brand-purple-300: "#d6b6f6"
-  brand-purple-800: "#391c57"
-  brand-teal: "#2a9d99"
-  brand-green: "#1aae39"
-  brand-yellow: "#f5d75e"
-  brand-brown: "#523410"
-  card-tint-peach: "#ffe8d4"
-  card-tint-rose: "#fde0ec"
-  card-tint-mint: "#d9f3e1"
-  card-tint-lavender: "#e6e0f5"
-  card-tint-sky: "#dcecfa"
-  card-tint-yellow: "#fef7d6"
-  card-tint-yellow-bold: "#f9e79f"
-  card-tint-cream: "#f8f5e8"
-  card-tint-gray: "#f0eeec"
-  canvas: "#ffffff"
-  surface: "#f6f5f4"
-  surface-soft: "#fafaf9"
-  hairline: "#e5e3df"
-  hairline-soft: "#ede9e4"
-  hairline-strong: "#c8c4be"
-  ink-deep: "#000000"
-  ink: "#1a1a1a"
-  charcoal: "#37352f"
-  slate: "#5d5b54"
-  steel: "#787671"
-  stone: "#a4a097"
-  muted: "#bbb8b1"
-  on-dark: "#ffffff"
-  on-dark-muted: "#a4a097"
-  semantic-success: "#1aae39"
-  semantic-warning: "#dd5b00"
-  semantic-error: "#e03131"
+  link: "#7db2ff"
+  accent: "#ff6a3d"
+  accent-pressed: "#e5532a"
+  on-accent: "#04060c"
+  # Tag tints (dark fills with light text)
+  tint-blue: "#14264a"
+  tint-orange: "#3a1a10"
+  tint-green: "#0f2e1f"
+  tint-amber: "#33270a"
+  tint-red: "#3a1414"
+  on-tint-orange: "#ffb199"
+  on-tint-green: "#6fdc9c"
+  # Semantic (UI state; always paired with an icon and a label)
+  semantic-success: "#2fbf71"
+  semantic-warning: "#fab219"
+  semantic-error: "#d03b3b"
+  semantic-error-text: "#ff8a8a"
+  # Charts: categorical series, fixed order, never cycled
+  chart-1: "#3987e5"
+  chart-2: "#d95926"
+  chart-3: "#199e70"
+  chart-4: "#c98500"
+  chart-5: "#d55181"
+  chart-6: "#008300"
+  chart-7: "#9085e9"
+  chart-8: "#e66767"
+  # Charts and maps: sequential ramp, low (recedes into surface) to high
+  seq-1: "#0d366b"
+  seq-2: "#184f95"
+  seq-3: "#256abf"
+  seq-4: "#3987e5"
+  seq-5: "#6da7ec"
+  seq-6: "#9ec5f4"
+  seq-7: "#cde2fb"
+  # Charts and maps: diverging ramp, cool pole to neutral to warm pole
+  div-cool-2: "#6da7ec"
+  div-cool-1: "#256abf"
+  div-neutral: "#2c3347"
+  div-warm-1: "#b84040"
+  div-warm-2: "#ee8a8a"
+  # Chart chrome
+  chart-grid: "#1c2438"
+  chart-axis: "#3a4666"
+  no-data: "#1c2438"
 
 typography:
   hero-display:
-    fontFamily: Notion Sans
-    fontSize: 80px
-    fontWeight: 600
+    fontFamily: Space Grotesk
+    fontSize: 72px
+    fontWeight: 700
     lineHeight: 1.05
-    letterSpacing: -2px
+    letterSpacing: -1.5px
   display-lg:
-    fontFamily: Notion Sans
+    fontFamily: Space Grotesk
     fontSize: 56px
-    fontWeight: 600
+    fontWeight: 700
     lineHeight: 1.10
     letterSpacing: -1px
   heading-1:
-    fontFamily: Notion Sans
-    fontSize: 48px
-    fontWeight: 600
+    fontFamily: Space Grotesk
+    fontSize: 44px
+    fontWeight: 700
     lineHeight: 1.15
     letterSpacing: -0.5px
   heading-2:
-    fontFamily: Notion Sans
-    fontSize: 36px
-    fontWeight: 600
+    fontFamily: Space Grotesk
+    fontSize: 34px
+    fontWeight: 700
     lineHeight: 1.20
     letterSpacing: -0.5px
   heading-3:
-    fontFamily: Notion Sans
-    fontSize: 28px
-    fontWeight: 600
+    fontFamily: Space Grotesk
+    fontSize: 26px
+    fontWeight: 500
     lineHeight: 1.25
   heading-4:
-    fontFamily: Notion Sans
-    fontSize: 22px
-    fontWeight: 600
+    fontFamily: Space Grotesk
+    fontSize: 20px
+    fontWeight: 500
     lineHeight: 1.30
-  heading-5:
-    fontFamily: Notion Sans
-    fontSize: 18px
-    fontWeight: 600
-    lineHeight: 1.40
+  stat-value:
+    fontFamily: Space Grotesk
+    fontSize: 40px
+    fontWeight: 700
+    lineHeight: 1.10
+    letterSpacing: -0.5px
   subtitle:
-    fontFamily: Notion Sans
+    fontFamily: Inter
     fontSize: 18px
     fontWeight: 400
     lineHeight: 1.50
   body-md:
-    fontFamily: Notion Sans
+    fontFamily: Inter
     fontSize: 16px
     fontWeight: 400
     lineHeight: 1.55
   body-md-medium:
-    fontFamily: Notion Sans
+    fontFamily: Inter
     fontSize: 16px
     fontWeight: 500
     lineHeight: 1.55
   body-sm:
-    fontFamily: Notion Sans
+    fontFamily: Inter
     fontSize: 14px
     fontWeight: 400
     lineHeight: 1.50
   body-sm-medium:
-    fontFamily: Notion Sans
+    fontFamily: Inter
     fontSize: 14px
     fontWeight: 500
     lineHeight: 1.50
   caption:
-    fontFamily: Notion Sans
+    fontFamily: Inter
     fontSize: 13px
     fontWeight: 400
     lineHeight: 1.40
   caption-bold:
-    fontFamily: Notion Sans
+    fontFamily: Inter
     fontSize: 13px
     fontWeight: 600
     lineHeight: 1.40
-  micro:
-    fontFamily: Notion Sans
+  chart-label:
+    fontFamily: Inter
+    fontSize: 12px
+    fontWeight: 400
+    lineHeight: 1.30
+  button-md:
+    fontFamily: Inter
+    fontSize: 14px
+    fontWeight: 600
+    lineHeight: 1.30
+  telemetry:
+    fontFamily: JetBrains Mono
+    fontSize: 13px
+    fontWeight: 400
+    lineHeight: 1.40
+  eyebrow:
+    fontFamily: JetBrains Mono
     fontSize: 12px
     fontWeight: 500
     lineHeight: 1.40
-  micro-uppercase:
-    fontFamily: Notion Sans
-    fontSize: 11px
-    fontWeight: 600
-    lineHeight: 1.40
-    letterSpacing: 1px
-  button-md:
-    fontFamily: Notion Sans
-    fontSize: 14px
-    fontWeight: 500
-    lineHeight: 1.30
+    letterSpacing: 1.5px
 
 rounded:
   xs: 4px
@@ -150,8 +170,6 @@ rounded:
   md: 8px
   lg: 12px
   xl: 16px
-  xxl: 20px
-  xxxl: 24px
   full: 9999px
 
 spacing:
@@ -169,653 +187,736 @@ spacing:
   hero: 120px
 
 components:
+  # Buttons
   button-primary:
     backgroundColor: "{colors.primary}"
     textColor: "{colors.on-primary}"
     typography: "{typography.button-md}"
     rounded: "{rounded.md}"
-    padding: "10px 18px"
+    padding: "12px 20px"
   button-primary-pressed:
     backgroundColor: "{colors.primary-pressed}"
     textColor: "{colors.on-primary}"
   button-primary-disabled:
-    backgroundColor: "{colors.hairline}"
-    textColor: "{colors.muted}"
-  button-dark:
-    backgroundColor: "{colors.ink-deep}"
-    textColor: "{colors.on-dark}"
+    backgroundColor: "{colors.surface-raised}"
+    textColor: "{colors.text-disabled}"
+  button-accent:
+    backgroundColor: "{colors.accent}"
+    textColor: "{colors.on-accent}"
     typography: "{typography.button-md}"
     rounded: "{rounded.md}"
-    padding: "10px 18px"
+    padding: "12px 20px"
+  button-accent-pressed:
+    backgroundColor: "{colors.accent-pressed}"
+    textColor: "{colors.on-accent}"
   button-secondary:
     backgroundColor: "transparent"
     textColor: "{colors.ink}"
     typography: "{typography.button-md}"
     rounded: "{rounded.md}"
-    padding: "10px 18px"
-    border: "1px solid {colors.hairline-strong}"
-  button-on-dark:
-    backgroundColor: "{colors.on-dark}"
-    textColor: "{colors.ink}"
-    typography: "{typography.button-md}"
-    rounded: "{rounded.md}"
-    padding: "10px 18px"
-  button-secondary-on-dark:
-    backgroundColor: "transparent"
-    textColor: "{colors.on-dark}"
-    typography: "{typography.button-md}"
-    rounded: "{rounded.md}"
-    padding: "10px 18px"
-    border: "1px solid {colors.on-dark-muted}"
+    padding: "12px 20px"
+    border: "1px solid {colors.border-control}"
   button-ghost:
     backgroundColor: "transparent"
-    textColor: "{colors.ink}"
+    textColor: "{colors.text-secondary}"
     typography: "{typography.button-md}"
     rounded: "{rounded.sm}"
     padding: "8px 12px"
   button-link:
     backgroundColor: "transparent"
-    textColor: "{colors.link-blue}"
+    textColor: "{colors.link}"
     typography: "{typography.body-sm-medium}"
     padding: "0"
+  # Cards
   card-base:
-    backgroundColor: "{colors.canvas}"
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
     rounded: "{rounded.lg}"
     padding: "{spacing.xl}"
     border: "1px solid {colors.hairline}"
   card-feature:
-    backgroundColor: "{colors.canvas}"
-    rounded: "{rounded.lg}"
-    padding: "{spacing.xxl}"
-    border: "1px solid {colors.hairline}"
-  card-feature-yellow-bold:
-    backgroundColor: "{colors.card-tint-yellow-bold}"
-    textColor: "{colors.charcoal}"
-    rounded: "{rounded.lg}"
-    padding: "{spacing.xxl}"
-  card-feature-peach:
-    backgroundColor: "{colors.card-tint-peach}"
-    textColor: "{colors.charcoal}"
-    rounded: "{rounded.lg}"
-    padding: "{spacing.xxl}"
-  card-feature-rose:
-    backgroundColor: "{colors.card-tint-rose}"
-    textColor: "{colors.charcoal}"
-    rounded: "{rounded.lg}"
-    padding: "{spacing.xxl}"
-  card-feature-mint:
-    backgroundColor: "{colors.card-tint-mint}"
-    textColor: "{colors.charcoal}"
-    rounded: "{rounded.lg}"
-    padding: "{spacing.xxl}"
-  card-feature-sky:
-    backgroundColor: "{colors.card-tint-sky}"
-    textColor: "{colors.charcoal}"
-    rounded: "{rounded.lg}"
-    padding: "{spacing.xxl}"
-  card-feature-lavender:
-    backgroundColor: "{colors.card-tint-lavender}"
-    textColor: "{colors.charcoal}"
-    rounded: "{rounded.lg}"
-    padding: "{spacing.xxl}"
-  card-feature-yellow:
-    backgroundColor: "{colors.card-tint-yellow}"
-    textColor: "{colors.charcoal}"
-    rounded: "{rounded.lg}"
-    padding: "{spacing.xxl}"
-  card-feature-cream:
-    backgroundColor: "{colors.card-tint-cream}"
-    textColor: "{colors.charcoal}"
-    rounded: "{rounded.lg}"
-    padding: "{spacing.xxl}"
-  card-agent-tile:
-    backgroundColor: "{colors.canvas}"
-    rounded: "{rounded.lg}"
-    padding: "{spacing.xl}"
-    border: "1px solid {colors.hairline}"
-  card-template:
-    backgroundColor: "{colors.canvas}"
-    rounded: "{rounded.lg}"
-    padding: "{spacing.lg}"
-    border: "1px solid {colors.hairline}"
-  card-startup-perk:
-    backgroundColor: "{colors.canvas}"
-    rounded: "{rounded.lg}"
-    padding: "{spacing.xl}"
-    border: "1px solid {colors.hairline}"
-  pricing-card:
-    backgroundColor: "{colors.canvas}"
-    rounded: "{rounded.lg}"
-    padding: "{spacing.xxl}"
-    border: "1px solid {colors.hairline}"
-  pricing-card-featured:
     backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
     rounded: "{rounded.lg}"
     padding: "{spacing.xxl}"
-    border: "2px solid {colors.primary}"
+    border: "1px solid {colors.hairline}"
+  card-raised:
+    backgroundColor: "{colors.surface-raised}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.lg}"
+    padding: "{spacing.xl}"
+    border: "1px solid {colors.hairline-strong}"
+  cta-banner:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.xl}"
+    padding: "{spacing.section}"
+    border: "1px solid {colors.hairline}"
+  # Inputs
   text-input:
     backgroundColor: "{colors.canvas}"
     textColor: "{colors.ink}"
     typography: "{typography.body-md}"
     rounded: "{rounded.md}"
     padding: "{spacing.sm} {spacing.md}"
-    border: "1px solid {colors.hairline-strong}"
+    border: "1px solid {colors.border-control}"
     height: 44px
   text-input-focused:
     backgroundColor: "{colors.canvas}"
     textColor: "{colors.ink}"
-    border: "2px solid {colors.primary}"
-  search-pill:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.steel}"
+    border: "2px solid {colors.link}"
+  text-input-error:
+    backgroundColor: "{colors.canvas}"
+    textColor: "{colors.ink}"
+    border: "2px solid {colors.semantic-error-text}"
+  select-input:
+    backgroundColor: "{colors.canvas}"
+    textColor: "{colors.ink}"
     typography: "{typography.body-md}"
     rounded: "{rounded.md}"
     padding: "{spacing.sm} {spacing.md}"
+    border: "1px solid {colors.border-control}"
     height: 44px
-    border: "1px solid {colors.hairline}"
+  # Tabs
   pill-tab:
     backgroundColor: "transparent"
-    textColor: "{colors.steel}"
+    textColor: "{colors.text-secondary}"
     typography: "{typography.body-sm-medium}"
     rounded: "{rounded.full}"
     padding: "{spacing.xs} {spacing.md}"
-    border: "1px solid {colors.hairline}"
+    border: "1px solid {colors.hairline-strong}"
   pill-tab-active:
-    backgroundColor: "{colors.ink-deep}"
-    textColor: "{colors.on-dark}"
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.void}"
     rounded: "{rounded.full}"
-    border: "1px solid {colors.ink-deep}"
+    border: "1px solid {colors.ink}"
   segmented-tab:
     backgroundColor: "transparent"
-    textColor: "{colors.steel}"
+    textColor: "{colors.text-muted}"
     typography: "{typography.body-sm-medium}"
     padding: "{spacing.sm} {spacing.md}"
-    border: "0 0 2px transparent solid"
   segmented-tab-active:
     backgroundColor: "transparent"
     textColor: "{colors.ink}"
     typography: "{typography.body-sm-medium}"
-    border: "0 0 2px {colors.ink} solid"
-  badge-purple:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.on-primary}"
+    border: "0 0 2px {colors.accent} solid"
+  # Badges
+  badge-blue:
+    backgroundColor: "{colors.tint-blue}"
+    textColor: "{colors.link}"
     typography: "{typography.caption-bold}"
-    rounded: "{rounded.full}"
-    padding: "4px 10px"
-  badge-pink:
-    backgroundColor: "{colors.brand-pink}"
-    textColor: "{colors.on-primary}"
-    typography: "{typography.caption-bold}"
-    rounded: "{rounded.full}"
-    padding: "4px 10px"
+    rounded: "{rounded.sm}"
+    padding: "2px 8px"
   badge-orange:
-    backgroundColor: "{colors.brand-orange}"
-    textColor: "{colors.on-primary}"
+    backgroundColor: "{colors.tint-orange}"
+    textColor: "{colors.on-tint-orange}"
     typography: "{typography.caption-bold}"
+    rounded: "{rounded.sm}"
+    padding: "2px 8px"
+  badge-success:
+    backgroundColor: "{colors.tint-green}"
+    textColor: "{colors.on-tint-green}"
+    typography: "{typography.caption-bold}"
+    rounded: "{rounded.sm}"
+    padding: "2px 8px"
+  badge-warning:
+    backgroundColor: "{colors.tint-amber}"
+    textColor: "{colors.semantic-warning}"
+    typography: "{typography.caption-bold}"
+    rounded: "{rounded.sm}"
+    padding: "2px 8px"
+  badge-error:
+    backgroundColor: "{colors.tint-red}"
+    textColor: "{colors.semantic-error-text}"
+    typography: "{typography.caption-bold}"
+    rounded: "{rounded.sm}"
+    padding: "2px 8px"
+  badge-live:
+    backgroundColor: "{colors.tint-orange}"
+    textColor: "{colors.on-tint-orange}"
+    typography: "{typography.eyebrow}"
     rounded: "{rounded.full}"
     padding: "4px 10px"
-  badge-tag-purple:
-    backgroundColor: "{colors.card-tint-lavender}"
-    textColor: "{colors.brand-purple-800}"
-    typography: "{typography.caption-bold}"
-    rounded: "{rounded.sm}"
-    padding: "2px 8px"
-  badge-tag-orange:
-    backgroundColor: "{colors.card-tint-peach}"
-    textColor: "{colors.brand-orange-deep}"
-    typography: "{typography.caption-bold}"
-    rounded: "{rounded.sm}"
-    padding: "2px 8px"
-  badge-tag-green:
-    backgroundColor: "{colors.card-tint-mint}"
-    textColor: "{colors.brand-green}"
-    typography: "{typography.caption-bold}"
-    rounded: "{rounded.sm}"
-    padding: "2px 8px"
-  badge-popular:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.on-primary}"
-    typography: "{typography.caption-bold}"
-    rounded: "{rounded.full}"
-    padding: "4px 10px"
-  promo-banner:
+  # Hero
+  hero-orbit:
+    backgroundColor: "{colors.void}"
+    textColor: "{colors.ink}"
+    rounded: "0"
+    padding: "{spacing.hero} {spacing.xxl}"
+  hero-eyebrow:
+    backgroundColor: "transparent"
+    textColor: "{colors.accent}"
+    typography: "{typography.eyebrow}"
+  hero-data-card:
+    backgroundColor: "{colors.surface}"
+    rounded: "{rounded.xl}"
+    padding: "0"
+    border: "1px solid {colors.hairline-strong}"
+    shadow: "rgba(47, 111, 237, 0.18) 0px 0px 80px 0px"
+  telemetry-strip:
+    backgroundColor: "transparent"
+    textColor: "{colors.text-secondary}"
+    typography: "{typography.telemetry}"
+    padding: "{spacing.md} 0"
+    border: "1px 0 0 {colors.hairline} solid"
+  # Data display
+  stat-tile:
     backgroundColor: "{colors.surface}"
     textColor: "{colors.ink}"
-    typography: "{typography.body-sm-medium}"
+    typography: "{typography.stat-value}"
+    rounded: "{rounded.lg}"
+    padding: "{spacing.xl}"
+    border: "1px solid {colors.hairline}"
+  data-table:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
+    typography: "{typography.body-sm}"
+    rounded: "{rounded.md}"
+    border: "1px solid {colors.hairline}"
+  data-table-header:
+    backgroundColor: "{colors.surface-raised}"
+    textColor: "{colors.text-secondary}"
+    typography: "{typography.caption-bold}"
     padding: "{spacing.sm} {spacing.md}"
-  hero-band-dark:
-    backgroundColor: "{colors.brand-navy}"
-    textColor: "{colors.on-dark}"
-    rounded: "0"
-    padding: "{spacing.hero}"
-  workspace-mockup-card:
-    backgroundColor: "{colors.canvas}"
+  data-table-row:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
+    padding: "{spacing.sm} {spacing.md}"
+    border: "0 0 1px {colors.hairline} solid"
+  data-source-caption:
+    backgroundColor: "transparent"
+    textColor: "{colors.text-muted}"
+    typography: "{typography.caption}"
+    padding: "{spacing.xs} 0 0"
+  # Charts
+  chart-card:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.lg}"
+    padding: "{spacing.xl}"
+    border: "1px solid {colors.hairline}"
+  chart-title:
+    backgroundColor: "transparent"
+    textColor: "{colors.ink}"
+    typography: "{typography.heading-4}"
+  chart-subtitle:
+    backgroundColor: "transparent"
+    textColor: "{colors.text-secondary}"
+    typography: "{typography.body-sm}"
+  chart-axis-label:
+    backgroundColor: "transparent"
+    textColor: "{colors.text-muted}"
+    typography: "{typography.chart-label}"
+  chart-legend-item:
+    backgroundColor: "transparent"
+    textColor: "{colors.text-secondary}"
+    typography: "{typography.chart-label}"
+    padding: "0 {spacing.sm} 0 0"
+  chart-tooltip:
+    backgroundColor: "{colors.surface-raised}"
+    textColor: "{colors.ink}"
+    typography: "{typography.body-sm}"
+    rounded: "{rounded.md}"
+    padding: "{spacing.xs} {spacing.sm}"
+    border: "1px solid {colors.hairline-strong}"
+    shadow: "rgba(0, 0, 0, 0.5) 0px 8px 24px -4px"
+  chart-state:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.text-secondary}"
+    typography: "{typography.body-sm}"
+    rounded: "{rounded.lg}"
+    padding: "{spacing.xxl}"
+  # Maps
+  map-container:
+    backgroundColor: "{colors.void}"
     rounded: "{rounded.lg}"
     padding: "0"
     border: "1px solid {colors.hairline}"
-    shadow: "rgba(15, 15, 15, 0.2) 0px 24px 48px -8px"
-  cta-banner-light:
-    backgroundColor: "{colors.surface}"
+  map-control:
+    backgroundColor: "{colors.surface-raised}"
     textColor: "{colors.ink}"
-    rounded: "{rounded.lg}"
-    padding: "{spacing.section}"
-  comparison-table:
-    backgroundColor: "{colors.canvas}"
+    rounded: "{rounded.md}"
+    border: "1px solid {colors.hairline-strong}"
+    size: 44px
+  map-legend:
+    backgroundColor: "{colors.surface-raised}"
+    textColor: "{colors.text-secondary}"
+    typography: "{typography.chart-label}"
+    rounded: "{rounded.md}"
+    padding: "{spacing.sm}"
+    border: "1px solid {colors.hairline-strong}"
+  map-layer-panel:
+    backgroundColor: "{colors.surface-raised}"
     textColor: "{colors.ink}"
     typography: "{typography.body-sm}"
     rounded: "{rounded.md}"
-    border: "1px solid {colors.hairline}"
-  comparison-row:
-    backgroundColor: "{colors.canvas}"
+    padding: "{spacing.sm}"
+    border: "1px solid {colors.hairline-strong}"
+  map-popup:
+    backgroundColor: "{colors.surface-raised}"
     textColor: "{colors.ink}"
-    padding: "{spacing.md} {spacing.lg}"
-    border: "0 0 1px {colors.hairline-soft} solid"
-  testimonial-card:
-    backgroundColor: "{colors.canvas}"
-    rounded: "{rounded.lg}"
-    padding: "{spacing.xxl}"
-    border: "1px solid {colors.hairline}"
-  logo-wall-item:
-    backgroundColor: "transparent"
-    textColor: "{colors.steel}"
-    typography: "{typography.body-md-medium}"
-    padding: "{spacing.lg}"
-  faq-accordion-item:
-    backgroundColor: "{colors.canvas}"
+    typography: "{typography.body-sm}"
     rounded: "{rounded.md}"
-    padding: "{spacing.xl}"
-    border: "0 0 1px {colors.hairline} solid"
-  stat-row:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.lg}"
-    padding: "{spacing.section-sm}"
-  footer-region:
+    padding: "{spacing.sm} {spacing.md}"
+    border: "1px solid {colors.hairline-strong}"
+    shadow: "rgba(0, 0, 0, 0.5) 0px 8px 24px -4px"
+  map-marker:
+    backgroundColor: "{colors.accent}"
+    rounded: "{rounded.full}"
+    size: 12px
+    border: "2px solid {colors.void}"
+  map-timeline:
+    backgroundColor: "{colors.surface-raised}"
+    textColor: "{colors.text-secondary}"
+    typography: "{typography.telemetry}"
+    rounded: "{rounded.md}"
+    padding: "{spacing.sm} {spacing.md}"
+    border: "1px solid {colors.hairline-strong}"
+  map-attribution:
+    backgroundColor: "{colors.void}"
+    textColor: "{colors.text-muted}"
+    typography: "{typography.chart-label}"
+    padding: "2px 6px"
+  # Page chrome
+  top-nav:
     backgroundColor: "{colors.canvas}"
-    textColor: "{colors.charcoal}"
+    textColor: "{colors.text-secondary}"
+    typography: "{typography.body-sm-medium}"
+    height: 64px
+    border: "0 0 1px {colors.hairline} solid"
+  faq-accordion-item:
+    backgroundColor: "transparent"
+    textColor: "{colors.ink}"
+    padding: "{spacing.xl} 0"
+    border: "0 0 1px {colors.hairline} solid"
+  footer-region:
+    backgroundColor: "{colors.void}"
+    textColor: "{colors.text-secondary}"
     typography: "{typography.body-sm}"
     padding: "{spacing.section} {spacing.xxl}"
-    border: "1px solid {colors.hairline}"
+    border: "1px 0 0 {colors.hairline} solid"
   footer-link:
     backgroundColor: "transparent"
-    textColor: "{colors.steel}"
+    textColor: "{colors.text-muted}"
     typography: "{typography.body-sm}"
     padding: "{spacing.xxs} 0"
 ---
 
 ## Overview
 
-Notion presents itself as the all-in-one workspace through a confident, illustration-rich brand voice. The homepage opens with **"Meet the night shift."** rendered centered over a deep navy hero band ({colors.brand-navy}), decorated with brand-colored sticky-note dots and mesh wire illustrations scattered around the headline. The signature **purple pill primary CTA** ({colors.primary}) "Get Notion free" sits at the visual center, paired with an outlined "Request a demo" secondary. Below the buttons, a real Notion workspace UI mockup card (the "Ramp HQ" kanban board) breaks out of the hero band with a deep diffuse drop shadow.
+This is a **mission control** identity: the calm, dark, instrument-panel look of an operations room, built to make data the brightest thing on screen. It is our own identity, inspired by spaceflight, and it does not copy any company's brand.
 
-Below the hero, the page cycles through a distinctive sequence of feature sections: a dense sticky-note "Keep work moving 24/7" panel with red/blue/green/purple/teal status icons; a **bold yellow** ({colors.card-tint-yellow-bold}) "Ask your on-demand assistants" banner card flanked by orange/rose/mint pastel feature tiles showing assistant UI mockups; and a "Bring all your work together" 3-column grid with brand-colored mockups (sky-blue tutorial card, light Notion calendar, brown/rust testimonial slate). The pricing page renders 4 tiers (Free / Plus / Business / Enterprise) horizontally with one tier featured (purple-bordered) and a dense feature comparison table running below.
+The site is **dark-only**. Surfaces step up from `{colors.void}` (the hero and footer) through `{colors.canvas}` (the page) to `{colors.surface}` and `{colors.surface-raised}` (cards and floating panels). Depth comes from those steps and from hairline borders, not from drop shadows.
 
-The system uses a Notion-Sans typeface (Inter-based) across every UI surface — humanist-geometric character that pairs naturally with the colorful illustrations. Buttons are `{rounded.md}` (8px) rectangles, NOT pills — distinguishing Notion's sober rectangular geometry from competitors that use pills universally. Cards use `{rounded.lg}` (12px) consistently.
+Two colours carry meaning in the chrome. **Orbit blue** (`{colors.primary}`) is the action colour: the main button on any screen. **Launch orange** (`{colors.accent}`) is the signal colour: one eyebrow label, one active tab underline, one map marker, one "live" badge. If orange appears more than a couple of times in a viewport, it has stopped being a signal.
 
-**Key Characteristics:**
-- Deep navy hero band ({colors.brand-navy}) with scattered sticky-note dots + mesh wire decorative illustrations
-- **Signature purple pill** ({colors.primary}) primary CTA — Notion's recognizable "Get Notion free" button color
-- Real Notion workspace UI mockup card embedded in the hero with deep drop shadow
-- Bold yellow feature banner ({colors.card-tint-yellow-bold}) for high-emphasis content sections
-- Pastel feature card palette (peach, rose, mint, lavender, sky, yellow) echoing the live product database properties
-- Notion-Sans (Inter-based) across every UI surface
-- 8px-rounded buttons (NOT pills), 12px-rounded cards — sober editorial geometry
-- 4-tier pricing comparison with dense feature table
-- Centered hero layout (different from the left-aligned norm of most B2B SaaS)
+**Key characteristics:**
+- Dark-only, deep-space surfaces with hairline borders
+- Orbit-blue primary action, launch-orange signal accent used sparingly
+- Space Grotesk headlines, Inter body, JetBrains Mono for telemetry
+- A hero that leads with a real data visual, not an illustration
+- First-class chart and map components with a validated, colourblind-safe data palette
+- Every chart, map and figure carries a visible data source caption
+- 8px buttons, 12px cards, pills reserved for tabs and the live badge
+
+### Brand rules (read before using any NASA material)
+
+- **Do not use the NASA insignia ("meatball"), the NASA logotype ("worm"), the NASA seal, or the Space Apps logo as part of our own identity.** Their use is restricted, and using them implies an endorsement we do not have. If the Space Apps organisers supply an official participant badge, use it exactly as supplied and only where their guidelines allow.
+- NASA imagery and data are generally free to use, but check the usage note on each source page and **credit the source** every time (see `data-source-caption`).
+- Do not ship another organisation's proprietary fonts, logos or illustrations. All three typefaces here are open-licensed (SIL Open Font License).
+- Our own wordmark is set in Space Grotesk 700. Keep it plain text until the team designs a mark.
 
 ## Colors
 
-> Source pages: notion.com/ (homepage), /enterprise, /product/ai, /product/agents, /startups, /pricing. Token coverage was identical across all six pages.
-
-### Brand & Primary
-- **Notion Purple** ({colors.primary}): Signature primary CTA color — the unmistakable "Get Notion free" pill button. Reserved for the dominant CTA only.
-- **Purple Pressed** ({colors.primary-pressed}): Pressed-state variant
-- **Purple Deep** ({colors.primary-deep}): Deeper variant for emphasis
-- **Brand Navy** ({colors.brand-navy}): Hero band background — deep navy
-- **Brand Navy Deep** ({colors.brand-navy-deep}): Deeper navy for promo banner
-- **Brand Navy Mid** ({colors.brand-navy-mid}): Mid-spectrum navy
-- **Link Blue** ({colors.link-blue}): Inline text link blue (NOT primary CTA)
-- **Link Blue Pressed** ({colors.link-blue-pressed}): Pressed-state link blue
-
-### Brand Color Spectrum (echoes live product database properties)
-- **Brand Pink** ({colors.brand-pink}): Pink accent
-- **Brand Pink Deep** ({colors.brand-pink-deep}): Deeper pink
-- **Brand Orange** ({colors.brand-orange}): Orange accent
-- **Brand Orange Deep** ({colors.brand-orange-deep}): Deeper orange-rust
-- **Brand Purple** ({colors.brand-purple}): Purple accent variant
-- **Brand Purple 300** ({colors.brand-purple-300}): Light purple
-- **Brand Purple 800** ({colors.brand-purple-800}): Deep purple for tag text
-- **Brand Teal** ({colors.brand-teal}): Teal accent
-- **Brand Green** ({colors.brand-green}): Bright green
-- **Brand Yellow** ({colors.brand-yellow}): Soft yellow
-- **Brand Brown** ({colors.brand-brown}): Brand brown for "earthy" tints
-
-### Card Tints (Pastel Feature Card Backgrounds)
-- **Tint Peach** ({colors.card-tint-peach}): Pale peach
-- **Tint Rose** ({colors.card-tint-rose}): Pale rose-pink
-- **Tint Mint** ({colors.card-tint-mint}): Pale mint-green
-- **Tint Lavender** ({colors.card-tint-lavender}): Pale lavender
-- **Tint Sky** ({colors.card-tint-sky}): Pale sky-blue
-- **Tint Yellow** ({colors.card-tint-yellow}): Pale yellow
-- **Tint Yellow Bold** ({colors.card-tint-yellow-bold}): Bold yellow for high-emphasis feature banners ("Ask your on-demand assistants")
-- **Tint Cream** ({colors.card-tint-cream}): Cream tint
-- **Tint Gray** ({colors.card-tint-gray}): Neutral surface
-
-### Surface
-- **Canvas White** ({colors.canvas}): Page background and primary card surface
-- **Surface** ({colors.surface}): Subtle section backgrounds, search-pill rest, featured pricing tier
-- **Surface Soft** ({colors.surface-soft}): Quieter section divisions
-- **Hairline** ({colors.hairline}): 1px borders and primary dividers
-- **Hairline Soft** ({colors.hairline-soft}): Quieter dividers
-- **Hairline Strong** ({colors.hairline-strong}): Stronger 1px border for inputs
+### Surfaces
+- **Void** (`{colors.void}`): hero band, footer, map background. The darkest plane.
+- **Canvas** (`{colors.canvas}`): page background.
+- **Surface** (`{colors.surface}`): cards, chart cards, tables.
+- **Surface Raised** (`{colors.surface-raised}`): anything that floats above a card: tooltips, popups, map controls, table headers.
+- **Hairline** (`{colors.hairline}`): default 1px card borders and dividers. Decorative only.
+- **Hairline Strong** (`{colors.hairline-strong}`): borders on raised panels.
+- **Border Control** (`{colors.border-control}`): borders of inputs and outlined buttons. This is the only border token that meets the 3:1 contrast needed for interactive boundaries; never use a hairline for a control edge.
 
 ### Text
-- **Ink Deep** ({colors.ink-deep}): Pure black for emphasis
-- **Ink** ({colors.ink}): Primary headlines and body text
-- **Charcoal** ({colors.charcoal}): Body emphasis (Notion's signature warm-charcoal)
-- **Slate** ({colors.slate}): Secondary text
-- **Steel** ({colors.steel}): Tertiary, footer links
-- **Stone** ({colors.stone}): Muted labels
-- **Muted** ({colors.muted}): Disabled, placeholders
-- **On Dark** ({colors.on-dark}): White text on dark surfaces
-- **On Dark Muted** ({colors.on-dark-muted}): Reduced-opacity white
+- **Ink** (`{colors.ink}`): headlines and primary body text.
+- **Text Secondary** (`{colors.text-secondary}`): supporting copy, legends, nav links.
+- **Text Muted** (`{colors.text-muted}`): axis labels, captions, footer links. The dimmest colour allowed for readable text.
+- **Text Disabled** (`{colors.text-disabled}`): disabled labels and placeholders only. Never for content a user must read.
+
+### Action and signal
+- **Orbit Blue** (`{colors.primary}`): primary button background, with `{colors.on-primary}` text. Not for text on dark surfaces.
+- **Orbit Blue Pressed** (`{colors.primary-pressed}`): pressed state.
+- **Link** (`{colors.link}`): inline links and focus rings. This is the blue to use for text.
+- **Launch Orange** (`{colors.accent}`): the signal accent. Text on it is `{colors.on-accent}` (dark), never white.
+- **Launch Orange Pressed** (`{colors.accent-pressed}`): pressed state.
 
 ### Semantic
-- **Success** ({colors.semantic-success}): Confirmation green
-- **Warning** ({colors.semantic-warning}): Mid-priority alerts (orange)
-- **Error** ({colors.semantic-error}): Validation errors (red)
+- **Success** (`{colors.semantic-success}`), **Warning** (`{colors.semantic-warning}`), **Error** (`{colors.semantic-error}` for fills and icons, `{colors.semantic-error-text}` for text).
+- A status colour always ships with an icon and a label. Colour is never the only signal.
+
+### Data palette
+Defined under **Charts** below. The `chart-*`, `seq-*` and `div-*` tokens are for data marks only. They are never used for buttons, text or decoration, and chrome colours are never used as series colours.
+
+### Checked contrast (WCAG ratio)
+
+| Pair | On canvas | On surface | On surface-raised |
+|---|---|---|---|
+| `ink` | 17.6 | 16.4 | 14.8 |
+| `text-secondary` | 10.4 | 9.7 | 8.8 |
+| `text-muted` | 6.5 | 6.0 | 5.4 |
+| `link` | 8.9 | 8.2 | 7.5 |
+| `accent` | 6.8 | 6.3 | 5.7 |
+| `semantic-error-text` | 8.5 | 7.9 | 7.1 |
+
+`on-primary` on `primary` is 4.55. `on-accent` on `accent` is 7.1. All badge pairs are above 6.8. `text-disabled` (about 3.2) and `semantic-error` (about 3.7) are below the 4.5 needed for body text, which is why they are restricted above.
 
 ## Typography
 
-### Font Family
-**Notion Sans** (primary): Notion's custom Inter-based variable typeface. Fallbacks: Inter, -apple-system, system-ui, 'Segoe UI', Helvetica, sans-serif. Humanist-geometric character used across every UI surface.
+### Font families
+- **Space Grotesk** (display): headlines, stat values, the wordmark. Weights 500 and 700. Fallbacks: `"Space Grotesk", "Inter", system-ui, sans-serif`.
+- **Inter** (body and UI): all running text, buttons, labels, chart text. Weights 400, 500, 600. Fallbacks: `"Inter", system-ui, -apple-system, "Segoe UI", sans-serif`.
+- **JetBrains Mono** (telemetry): coordinates, timestamps, dataset IDs, units readouts, eyebrow labels. Weights 400 and 500. Fallbacks: `"JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace`.
+
+All three are open-licensed and available from Google Fonts. Load only the weights listed, with `font-display: swap`.
 
 ### Hierarchy
 
-| Token | Size | Weight | Line Height | Letter Spacing | Use |
-|---|---|---|---|---|---|
-| `{typography.hero-display}` | 80px | 600 | 1.05 | -2px | Hero ("Meet the night shift") |
-| `{typography.display-lg}` | 56px | 600 | 1.10 | -1px | Section openers |
-| `{typography.heading-1}` | 48px | 600 | 1.15 | -0.5px | Page-level headlines ("Try for free") |
-| `{typography.heading-2}` | 36px | 600 | 1.20 | -0.5px | Subsection headlines ("Keep work moving 24/7") |
-| `{typography.heading-3}` | 28px | 600 | 1.25 | 0 | Card titles |
-| `{typography.heading-4}` | 22px | 600 | 1.30 | 0 | Feature tile titles |
-| `{typography.heading-5}` | 18px | 600 | 1.40 | 0 | FAQ questions |
-| `{typography.subtitle}` | 18px | 400 | 1.50 | 0 | Hero subtitle |
-| `{typography.body-md}` | 16px | 400 | 1.55 | 0 | Primary body text |
-| `{typography.body-md-medium}` | 16px | 500 | 1.55 | 0 | Body emphasis |
-| `{typography.body-sm}` | 14px | 400 | 1.50 | 0 | Secondary body |
-| `{typography.body-sm-medium}` | 14px | 500 | 1.50 | 0 | Active sidebar, button labels |
-| `{typography.caption-bold}` | 13px | 600 | 1.40 | 0 | Badge labels |
-| `{typography.button-md}` | 14px | 500 | 1.30 | 0 | Button labels |
+| Token | Font | Size | Weight | Line height | Tracking | Use |
+|---|---|---|---|---|---|---|
+| `{typography.hero-display}` | Space Grotesk | 72px | 700 | 1.05 | -1.5px | Hero headline |
+| `{typography.display-lg}` | Space Grotesk | 56px | 700 | 1.10 | -1px | Section openers |
+| `{typography.heading-1}` | Space Grotesk | 44px | 700 | 1.15 | -0.5px | Page headlines |
+| `{typography.heading-2}` | Space Grotesk | 34px | 700 | 1.20 | -0.5px | Section headlines |
+| `{typography.heading-3}` | Space Grotesk | 26px | 500 | 1.25 | 0 | Card titles |
+| `{typography.heading-4}` | Space Grotesk | 20px | 500 | 1.30 | 0 | Chart titles, tile titles |
+| `{typography.stat-value}` | Space Grotesk | 40px | 700 | 1.10 | -0.5px | Stat tile numbers |
+| `{typography.subtitle}` | Inter | 18px | 400 | 1.50 | 0 | Hero subtitle |
+| `{typography.body-md}` | Inter | 16px | 400 | 1.55 | 0 | Body text (default) |
+| `{typography.body-md-medium}` | Inter | 16px | 500 | 1.55 | 0 | Body emphasis |
+| `{typography.body-sm}` | Inter | 14px | 400 | 1.50 | 0 | Secondary body, tables, tooltips |
+| `{typography.body-sm-medium}` | Inter | 14px | 500 | 1.50 | 0 | Nav links, tabs |
+| `{typography.caption}` | Inter | 13px | 400 | 1.40 | 0 | Captions, data source lines |
+| `{typography.caption-bold}` | Inter | 13px | 600 | 1.40 | 0 | Badges, table headers |
+| `{typography.chart-label}` | Inter | 12px | 400 | 1.30 | 0 | Axis ticks, legends, map legend |
+| `{typography.button-md}` | Inter | 14px | 600 | 1.30 | 0 | Button labels |
+| `{typography.telemetry}` | JetBrains Mono | 13px | 400 | 1.40 | 0 | Coordinates, timestamps, IDs |
+| `{typography.eyebrow}` | JetBrains Mono | 12px | 500 | 1.40 | 1.5px | Uppercase eyebrow labels |
 
 ### Principles
-- Tight hero leading (1.05) on 80px display
-- Negative letter-spacing on display sizes (-2px to -0.5px)
-- Generous body leading (1.55) for documentation readability
-- 600 weight for headlines + 500 for buttons; 400 body
+- Tight leading and negative tracking on display sizes; generous 1.55 leading on body.
+- Eyebrows are uppercase mono. Nothing else is uppercase.
+- Mono is for machine-like values only. Never set a sentence in mono.
+- Numbers that line up in columns (tables, axis ticks) use `font-variant-numeric: tabular-nums`.
+- Always show units next to a value ("412 ppm", "14.2 °C"), and write dates unambiguously ("14 Nov 2026").
+- No text below 12px.
 
 ## Layout
 
-### Spacing System
-- **Base unit**: 4px (8px primary increment)
-- **Tokens**: `{spacing.xxs}` (4px) through `{spacing.hero}` (120px)
-- **Section rhythm**: Marketing pages use `{spacing.section-lg}` (96px); pricing tightens to `{spacing.section}` (64px)
+### Spacing system
+- **Base unit**: 4px, with 8px as the main increment.
+- **Tokens**: `{spacing.xxs}` (4px) through `{spacing.hero}` (120px).
+- **Section rhythm**: `{spacing.section-lg}` (96px) between major sections; `{spacing.section}` (64px) inside dense data pages.
 
-### Grid & Container
-- 1280px max-width with 32px gutters
-- Pricing: 4-tier card row at desktop with dense comparison table
-- Homepage: centered hero with workspace mockup below buttons; alternating colorful feature card sections
+### Grid and container
+- 1280px max width with 32px gutters (16px on mobile).
+- 12-column grid, 24px column gap. Chart cards span 6 or 12 columns; stat tiles span 3.
+- The hero is left-aligned on desktop: text in the left 6 columns, `hero-data-card` in the right 6. It stacks on mobile.
+- Data pages put filters in one row above the charts they control.
 
-### Whitespace Philosophy
-Marketing surfaces use generous breathing room between feature card bands. Workspace mockup card on hero gets full-width treatment with deep drop shadow.
+### Whitespace philosophy
+Dark interfaces feel crowded faster than light ones. Give data room: at least `{spacing.xl}` (24px) between cards, and never let two charts share a card.
 
 ## Elevation & Depth
 
+Shadows barely show on dark surfaces, so elevation is expressed by surface colour and border.
+
 | Level | Treatment | Use |
 |---|---|---|
-| 0 (flat) | No shadow; `{colors.hairline}` border | Default cards, table rows |
-| 1 (subtle) | `rgba(15, 15, 15, 0.04) 0px 1px 2px 0px` | Hover-elevated tiles |
-| 2 (card) | `rgba(15, 15, 15, 0.08) 0px 4px 12px 0px` | Feature cards |
-| 3 (mockup) | `rgba(15, 15, 15, 0.20) 0px 24px 48px -8px` | Hero workspace mockup card |
-| 4 (modal) | `rgba(15, 15, 15, 0.16) 0px 16px 48px -8px` | Modals, dropdowns |
+| 0 (page) | `{colors.canvas}`, no border | Page background |
+| 1 (card) | `{colors.surface}` + 1px `{colors.hairline}` | Cards, chart cards, tables |
+| 2 (raised) | `{colors.surface-raised}` + 1px `{colors.hairline-strong}` | Map controls, legends, table headers |
+| 3 (floating) | Level 2 + `rgba(0, 0, 0, 0.5) 0px 8px 24px -4px` | Tooltips, popups, dropdowns, modals |
+| Glow | `rgba(47, 111, 237, 0.18) 0px 0px 80px 0px` | `hero-data-card` only |
 
-### Decorative Depth
-- Hero workspace mockup card uses deep diffuse drop shadow (Level 3) — significant elevation against the navy band
-- Pastel feature cards carry their own visual weight via tint backgrounds
-- Sticky-note dot illustrations and mesh wires add atmospheric decoration to navy hero
+The blue glow is used once per page, on the hero data card. It is not a general-purpose effect.
 
 ## Shapes
 
-### Border Radius Scale
-
 | Token | Value | Use |
 |---|---|---|
-| `{rounded.xs}` | 4px | Tag chips |
-| `{rounded.sm}` | 6px | Type badges |
-| `{rounded.md}` | 8px | Buttons, inputs, search-pill |
-| `{rounded.lg}` | 12px | Cards, pricing tiers, agent tiles, workspace mockup |
-| `{rounded.xl}` | 16px | Larger feature panels |
-| `{rounded.xxl}` | 20px | Featured product showcases |
-| `{rounded.xxxl}` | 24px | Larger feature cards |
-| `{rounded.full}` | 9999px | Status badges, pill tabs (NOT regular buttons) |
-
-Notion's geometry is sober-editorial — `{rounded.md}` (8px) buttons distinguish it from pill-button-everywhere brands.
+| `{rounded.xs}` | 4px | Bar chart data-ends, small chips |
+| `{rounded.sm}` | 6px | Badges, ghost buttons |
+| `{rounded.md}` | 8px | Buttons, inputs, tooltips, map controls |
+| `{rounded.lg}` | 12px | Cards, chart cards, map container |
+| `{rounded.xl}` | 16px | Hero data card, CTA banner |
+| `{rounded.full}` | 9999px | Pill tabs, live badge, map markers |
 
 ## Components
 
-> Per the no-hover policy, hover states are NOT documented.
+### Interaction states (apply to every interactive component)
+- **Hover**: one surface step lighter, or `primary` to `primary-pressed`. Transition 150ms ease.
+- **Pressed**: the `-pressed` token where one exists.
+- **Focus**: a 2px `{colors.link}` outline with a 2px offset. Always visible for keyboard users; never removed.
+- **Disabled**: `surface-raised` background, `text-disabled` label, no pointer events.
+- Respect `prefers-reduced-motion`: no transitions, no animated map flights, no auto-playing timelines.
 
 ### Buttons
 
-**`button-primary`** — Signature purple rectangular primary CTA, the dominant action.
-- Background `{colors.primary}`, text `{colors.on-primary}`, typography `{typography.button-md}`, padding `10px 18px`, rounded `{rounded.md}`.
-- Pressed state `button-primary-pressed` deepens to `{colors.primary-pressed}`.
-- Disabled state uses `{colors.hairline}` background.
+**`button-primary`**: the main action on a screen. One per view.
+- Background `{colors.primary}`, text `{colors.on-primary}`, typography `{typography.button-md}`, padding `12px 20px`, rounded `{rounded.md}`. Pressed uses `{colors.primary-pressed}`.
 
-**`button-dark`** — Black rectangular CTA on light backgrounds.
-- Background `{colors.ink-deep}`, text `{colors.on-dark}`, typography `{typography.button-md}`, padding `10px 18px`, rounded `{rounded.md}`.
+**`button-accent`**: launch-orange button for the single most important call to action on the whole site (for example "Explore the data" in the hero). At most one per page; if in doubt, use `button-primary`.
+- Background `{colors.accent}`, text `{colors.on-accent}`, same size as primary.
 
-**`button-secondary`** — Outlined rectangular for secondary actions ("Request a demo").
-- Background transparent, text `{colors.ink}`, border `1px solid {colors.hairline-strong}`, typography `{typography.button-md}`, padding `10px 18px`, rounded `{rounded.md}`.
+**`button-secondary`**: outlined, for secondary actions.
+- Transparent, text `{colors.ink}`, border `1px solid {colors.border-control}`.
 
-**`button-on-dark`** — White button on dark hero bands.
-- Background `{colors.on-dark}`, text `{colors.ink}`, typography `{typography.button-md}`, padding `10px 18px`, rounded `{rounded.md}`.
+**`button-ghost`**: low-emphasis actions inside cards and toolbars.
+- Transparent, text `{colors.text-secondary}`, padding `8px 12px`, rounded `{rounded.sm}`.
 
-**`button-secondary-on-dark`** — Outlined button on dark.
-- Background transparent, text `{colors.on-dark}`, border `1px solid {colors.on-dark-muted}`, typography `{typography.button-md}`, padding `10px 18px`, rounded `{rounded.md}`.
+**`button-link`**: inline text link.
+- Text `{colors.link}`, underlined on hover and focus.
 
-**`button-ghost`** — Quieter ghost button.
-- Background transparent, text `{colors.ink}`, typography `{typography.button-md}`, padding `8px 12px`, rounded `{rounded.sm}`.
+All buttons have a minimum touch height of 44px.
 
-**`button-link`** — Inline blue text link (NOT primary purple).
-- Background transparent, text `{colors.link-blue}`, typography `{typography.body-sm-medium}`, padding `0`.
+### Cards and containers
 
-### Cards & Containers
+**`card-base`**: standard content card. Background `{colors.surface}`, rounded `{rounded.lg}`, padding `{spacing.xl}`, border `1px solid {colors.hairline}`.
 
-**`card-base`** — Standard content card.
-- Background `{colors.canvas}`, rounded `{rounded.lg}`, padding `{spacing.xl}`, border `1px solid {colors.hairline}`.
+**`card-feature`**: the same with `{spacing.xxl}` padding, for feature explanations.
 
-**`card-feature`** — Feature card with larger padding.
-- Background `{colors.canvas}`, rounded `{rounded.lg}`, padding `{spacing.xxl}`, border `1px solid {colors.hairline}`.
+**`card-raised`**: a card that must stand out from its neighbours. Background `{colors.surface-raised}`, border `{colors.hairline-strong}`.
 
-**`card-feature-yellow-bold`** — Bold yellow feature banner for high-emphasis content ("Ask your on-demand assistants").
-- Background `{colors.card-tint-yellow-bold}`, text `{colors.charcoal}`, rounded `{rounded.lg}`, padding `{spacing.xxl}`.
+**`cta-banner`**: closing call to action. Background `{colors.surface}`, rounded `{rounded.xl}`, padding `{spacing.section}`.
 
-**`card-feature-peach`** + **`card-feature-rose`** + **`card-feature-mint`** + **`card-feature-sky`** + **`card-feature-lavender`** + **`card-feature-yellow`** + **`card-feature-cream`** — Pastel-tinted feature cards.
-- Each variant uses its corresponding `card-tint-*` color as background, text `{colors.charcoal}`, rounded `{rounded.lg}`, padding `{spacing.xxl}`.
+### Inputs and forms
 
-**`card-agent-tile`** — Agent assistant tile.
-- Background `{colors.canvas}`, rounded `{rounded.lg}`, padding `{spacing.xl}`, border `1px solid {colors.hairline}`.
+**`text-input`** and **`select-input`**: background `{colors.canvas}`, text `{colors.ink}`, border `1px solid {colors.border-control}`, rounded `{rounded.md}`, height 44px. Every input has a visible label above it; placeholders are not labels.
 
-**`card-template`** — Template thumbnail card.
-- Background `{colors.canvas}`, rounded `{rounded.lg}`, padding `{spacing.lg}`, border `1px solid {colors.hairline}`.
+**`text-input-focused`**: border becomes `2px solid {colors.link}`.
 
-**`card-startup-perk`** — Startup-program perk grid item.
-- Background `{colors.canvas}`, rounded `{rounded.lg}`, padding `{spacing.xl}`, border `1px solid {colors.hairline}`.
-
-**`pricing-card`** — Standard pricing tier card.
-- Background `{colors.canvas}`, rounded `{rounded.lg}`, padding `{spacing.xxl}`, border `1px solid {colors.hairline}`.
-
-**`pricing-card-featured`** — Featured pricing tier (Plus or Business — purple-bordered).
-- Background `{colors.surface}`, rounded `{rounded.lg}`, padding `{spacing.xxl}`, border `2px solid {colors.primary}`.
-
-### Inputs & Forms
-
-**`text-input`** — Standard text field.
-- Background `{colors.canvas}`, text `{colors.ink}`, border `1px solid {colors.hairline-strong}`, rounded `{rounded.md}`, padding `{spacing.sm} {spacing.md}`, height 44px.
-
-**`text-input-focused`** — Activated state.
-- Border switches to `2px solid {colors.primary}` (purple).
-
-**`search-pill`** — Search bar.
-- Background `{colors.surface}`, text `{colors.steel}`, typography `{typography.body-md}`, rounded `{rounded.md}`, height 44px, border `1px solid {colors.hairline}`.
+**`text-input-error`**: border `2px solid {colors.semantic-error-text}`, with an error message below in `{colors.semantic-error-text}` and an icon.
 
 ### Tabs
 
-**`pill-tab`** + **`pill-tab-active`** — Pill-style tab nav for top-level switching.
-- Inactive: text `{colors.steel}`, border `1px solid {colors.hairline}`, padding `{spacing.xs} {spacing.md}`, rounded `{rounded.full}`.
-- Active: background `{colors.ink-deep}`, text `{colors.on-dark}`.
+**`pill-tab`** and **`pill-tab-active`**: top-level switching (for example between datasets). Inactive: text `{colors.text-secondary}`, border `{colors.hairline-strong}`. Active: background `{colors.ink}`, text `{colors.void}`.
 
-**`segmented-tab`** + **`segmented-tab-active`** — Underline-style tab navigation.
-- Inactive: text `{colors.steel}`, no border. Active: text `{colors.ink}`, 2px bottom border in `{colors.ink}`.
+**`segmented-tab`** and **`segmented-tab-active`**: underline tabs inside a section. Active: text `{colors.ink}` with a 2px `{colors.accent}` underline.
 
-### Badges & Status
+### Badges
 
-**`badge-purple`** — Purple status badge (matches primary CTA).
-- Background `{colors.primary}`, text `{colors.on-primary}`, typography `{typography.caption-bold}`, rounded `{rounded.full}`, padding `4px 10px`.
+**`badge-blue`**, **`badge-orange`**: neutral category tags. Dark tint background with light text.
 
-**`badge-pink`** — Pink accent badge.
-- Background `{colors.brand-pink}`, text `{colors.on-primary}`, typography `{typography.caption-bold}`, rounded `{rounded.full}`, padding `4px 10px`.
+**`badge-success`**, **`badge-warning`**, **`badge-error`**: status tags. Always include a short label; add an icon when space allows.
 
-**`badge-orange`** — Orange accent badge.
-- Background `{colors.brand-orange}`, text `{colors.on-primary}`, typography `{typography.caption-bold}`, rounded `{rounded.full}`, padding `4px 10px`.
+**`badge-live`**: pill-shaped mono badge for "LIVE" or "UPDATED 14 NOV". Only use "LIVE" when the data really is live.
 
-**`badge-tag-purple`** — Soft-purple feature tag chip.
-- Background `{colors.card-tint-lavender}`, text `{colors.brand-purple-800}`, typography `{typography.caption-bold}`, rounded `{rounded.sm}`, padding `2px 8px`.
+### Hero
 
-**`badge-tag-orange`** — Soft-orange feature tag.
-- Background `{colors.card-tint-peach}`, text `{colors.brand-orange-deep}`, typography `{typography.caption-bold}`, rounded `{rounded.sm}`, padding `2px 8px`.
+**`hero-orbit`**: the signature hero band.
+- Background `{colors.void}`, padding `{spacing.hero} {spacing.xxl}`.
+- **Content, left**: `hero-eyebrow` (uppercase mono in `{colors.accent}`, for example the challenge name), headline in `{typography.hero-display}`, subtitle in `{typography.subtitle}` and `{colors.text-secondary}`, then a button row (`button-accent` or `button-primary`, plus `button-secondary`).
+- **Content, right**: `hero-data-card`.
+- **Below**: `telemetry-strip`.
+- **Decoration**, all original, drawn in CSS or inline SVG:
+  - A sparse star field: small dots in `{colors.text-muted}` at 20 to 60 percent opacity. Static, or a very slow twinkle that is disabled under reduced motion.
+  - One or two thin orbital arcs: 1px elliptical strokes in `{colors.hairline-strong}`, with a single 6px `{colors.accent}` dot on one arc as the "satellite".
+  - A horizon glow: a wide radial gradient of `{colors.primary}` at about 20 percent opacity rising from the bottom edge, suggesting the limb of a planet.
+- Decoration sits behind content, is hidden from assistive technology, and never reduces text contrast. No stock rocket clip art, no photo backgrounds behind text.
 
-**`badge-tag-green`** — Soft-mint feature tag.
-- Background `{colors.card-tint-mint}`, text `{colors.brand-green}`, typography `{typography.caption-bold}`, rounded `{rounded.sm}`, padding `2px 8px`.
+**`hero-data-card`**: the hero's proof. It holds a **real** chart or map built from the project's NASA data, not a mockup or a screenshot of another product.
+- Background `{colors.surface}`, rounded `{rounded.xl}`, border `1px solid {colors.hairline-strong}`, blue glow (see Elevation).
+- It includes its own `data-source-caption`.
 
-**`badge-popular`** — "Most Popular" tier indicator.
-- Background `{colors.primary}`, text `{colors.on-primary}`, typography `{typography.caption-bold}`, rounded `{rounded.full}`, padding `4px 10px`.
+**`telemetry-strip`**: a row of three or four mono readouts under the hero, separated by hairlines. Each is an eyebrow label plus a value, for example `DATASET  MODIS Terra`, `COVERAGE  2000 to 2026`, `UPDATED  14 Nov 2026`.
+- Every value must be true and traceable to `docs/DATA_SOURCES.md`. Do not invent readouts for atmosphere.
 
-**`promo-banner`** — Light surface promo strip ABOVE the top nav.
-- Background `{colors.surface}`, text `{colors.ink}`, typography `{typography.body-sm-medium}`, padding `{spacing.sm} {spacing.md}`. ("Developers: Get a first look at our new Developer Platform on May 13.")
+### Data display
 
-### Tables
+**`stat-tile`**: one headline number.
+- Layout, top to bottom: label in `{typography.caption}` and `{colors.text-secondary}`; value in `{typography.stat-value}` with its unit in `{typography.body-md}`; an optional change line ("+2.1 ppm vs 2025") with an arrow icon and a semantic colour; an optional sparkline.
+- If a single number tells the story, use a stat tile instead of a chart.
 
-**`comparison-table`** — Pricing feature comparison table.
-- Background `{colors.canvas}`, text `{colors.ink}`, typography `{typography.body-sm}`, rounded `{rounded.md}`, border `1px solid {colors.hairline}`.
+**`data-table`**, **`data-table-header`**, **`data-table-row`**: the accessible view of any dataset.
+- Numbers are right-aligned with tabular figures; text is left-aligned. Header row is sticky. Units go in the header, not in every cell.
+- Every chart and map offers a "View as table" control that shows this component.
 
-**`comparison-row`** — Individual feature row.
-- Background `{colors.canvas}`, text `{colors.ink}`, padding `{spacing.md} {spacing.lg}`, bottom border `1px solid {colors.hairline-soft}`.
+**`data-source-caption`**: **required under every chart, map, stat tile and figure.**
+- Format: `Source: <dataset name>, <provider>. Accessed <date>.` with the dataset name linking to the source page.
+- Text `{colors.text-muted}`, typography `{typography.caption}`.
 
-### Documentation Components
+### Charts
 
-**`workspace-mockup-card`** — Embedded Notion workspace UI mockup on hero band ("Ramp HQ" kanban board).
-- Background `{colors.canvas}`, rounded `{rounded.lg}`, border `1px solid {colors.hairline}`, deep shadow `rgba(15, 15, 15, 0.20) 0px 24px 48px -8px`. Carries actual Notion product UI mock.
+**`chart-card`**: the frame for one chart. One chart per card.
+- Layout, top to bottom: `chart-title` (says what the chart shows, ideally the finding); `chart-subtitle` (measure, unit, period); optional filter row; legend; plot area; `data-source-caption`.
+- Background `{colors.surface}`, rounded `{rounded.lg}`, padding `{spacing.xl}`.
+- Plot area minimum height 240px on mobile, 320px on desktop.
 
-**`testimonial-card`** — Customer testimonial card.
-- Background `{colors.canvas}`, rounded `{rounded.lg}`, padding `{spacing.xxl}`, border `1px solid {colors.hairline}`.
+**Choosing a form**
 
-**`logo-wall-item`** — Customer logo wordmark cell.
-- Background transparent, text `{colors.steel}`, typography `{typography.body-md-medium}`, padding `{spacing.lg}`.
+| The data's job | Use |
+|---|---|
+| One headline number | `stat-tile` |
+| Change over time | Line chart (area only for a single series) |
+| Compare categories | Horizontal or vertical bars, sorted |
+| Part of a whole | Stacked bar. No pie charts beyond 3 slices, no donuts with a meaningless centre |
+| Relationship between two measures | Scatter plot |
+| Magnitude over a grid or over geography | Heatmap or choropleth with the sequential ramp |
+| Above and below a baseline (anomalies) | Diverging ramp or diverging bars |
 
-**`faq-accordion-item`** — FAQ panel.
-- Background `{colors.canvas}`, rounded `{rounded.md}`, padding `{spacing.xl}`, bottom border `1px solid {colors.hairline}`.
+**Colour by job**
+- **Categorical** (identity): `{colors.chart-1}` to `{colors.chart-8}`, assigned **in order and never cycled**. A colour follows its entity: filtering must not repaint the remaining series. More than 8 series means grouping the rest as "Other" or using small multiples.
+- For scatter plots, choropleths and small multiples, where any two colours can end up side by side, use only `chart-1` to `chart-3`.
+- **Sequential** (magnitude): `{colors.seq-1}` (low, recedes into the dark surface) to `{colors.seq-7}` (high). One hue only.
+- **Diverging** (polarity): `{colors.div-cool-2}`, `{colors.div-cool-1}`, `{colors.div-neutral}`, `{colors.div-warm-1}`, `{colors.div-warm-2}`. The neutral midpoint is the baseline. State what the baseline is.
+- **Never a rainbow scale.** It distorts the data and fails colourblind readers.
+- Status colours (`semantic-*`) and the chrome colours (`primary`, `accent`) are never used as series colours.
+- Text in a chart (values, labels, legend text) uses text tokens, never the series colour. A coloured mark next to the text carries identity.
 
-**`stat-row`** — Stats strip with bar chart visualization ("More productivity. Fewer tools.").
-- Background `{colors.surface}`, text `{colors.ink}`, rounded `{rounded.lg}`, padding `{spacing.section-sm}`.
+The categorical palette was validated against `{colors.surface}`: all eight slots sit in the dark-mode lightness band, clear 3:1 contrast against the surface, and adjacent slots stay distinguishable under simulated protanopia and deuteranopia. The first three slots also pass when every pair is compared. Re-validate if a hex value or the order changes.
 
-**`cta-banner-light`** — Light surface CTA banner.
-- Background `{colors.surface}`, text `{colors.ink}`, rounded `{rounded.lg}`, padding `{spacing.section}`.
+**Marks**
+- Lines: 2px stroke, round joins. Point markers at least 8px, shown on hover or where data is sparse.
+- Bars: `{rounded.xs}` (4px) corners on the data end only, square at the baseline. 2px gap in `{colors.surface}` between adjacent or stacked segments.
+- Overlapping points get a 2px `{colors.surface}` ring.
+- Gridlines: 1px `{colors.chart-grid}`, horizontal only by default. Axis and baseline: 1px `{colors.chart-axis}`.
+- `chart-axis-label`: `{typography.chart-label}` in `{colors.text-muted}`, tabular figures. Value axes for bars start at zero.
+- **One value axis per chart.** No dual-axis charts; use two charts or index both series to a common base.
+
+**Legend and labels**
+- `chart-legend-item`: a 10px colour swatch plus a label in `{colors.text-secondary}`. Placed above the plot, left-aligned.
+- Two or more series always have a legend. With four or fewer series, also label the lines directly at their right-hand end.
+- A single series needs no legend; the title names it.
+- Do not print a value on every point. Label the latest value, the extremes, or the point the story is about.
+
+**`chart-tooltip`**
+- Background `{colors.surface-raised}`, border `1px solid {colors.hairline-strong}`, rounded `{rounded.md}`, floating shadow.
+- Line and area charts: a vertical crosshair in `{colors.chart-axis}` with one tooltip listing every series at that x value. Bars, points and cells: a tooltip per mark.
+- Content: the x value as a heading, then swatch, series name, value and unit per row.
+- Hit targets are larger than the mark. Tooltips also open on keyboard focus and on tap.
+
+**`chart-state`**: every chart implements all three.
+- **Loading**: a skeleton in `{colors.surface-raised}` at the chart's final size, so the layout does not jump.
+- **Empty**: a plain sentence saying why ("No observations for this period") and what to try.
+- **Error**: an icon, a plain sentence, and a retry `button-secondary`. Never show a blank card or a raw error message.
+
+**Accessibility**
+- Each chart has a text alternative: a one-sentence summary of the finding, plus the "View as table" control.
+- Identity is never carried by colour alone: legends, direct labels, or distinct line dashes back it up.
+
+### Maps
+
+**`map-container`**: the frame for a map.
+- Background `{colors.void}`, rounded `{rounded.lg}`, border `1px solid {colors.hairline}`, overflow hidden.
+- Height: at least 360px on mobile, 480px or more on desktop. A map never traps page scroll: on touch devices, pan with two fingers; on desktop, zoom with the scroll wheel only after the map has been clicked or with a modifier key.
+- **Basemap**: dark and low-contrast, with muted labels, so the data layer is the brightest thing on the map. NASA GIBS imagery layers are a good fit for imagery-led maps; confirm the layer and its terms for the chosen challenge before relying on it.
+
+**`map-control`**: zoom in, zoom out, reset view, locate.
+- 44px square buttons, background `{colors.surface-raised}`, border `1px solid {colors.hairline-strong}`, rounded `{rounded.md}`, icon in `{colors.ink}`. Stacked in the top-right with `{spacing.xs}` between them. Each has an accessible name.
+
+**`map-legend`**: required whenever colour or size encodes a value.
+- Bottom-left panel. Background `{colors.surface-raised}`, padding `{spacing.sm}`.
+- Continuous data: a horizontal gradient bar of the `seq-*` or `div-*` ramp, with min, mid and max ticks and **the unit in the title** ("Sea surface temperature, °C").
+- Classed data: a swatch per class with its range.
+- Always includes a "No data" swatch in `{colors.no-data}` when gaps exist.
+
+**`map-layer-panel`**: turn data layers on and off.
+- Top-left panel. A checkbox or radio per layer with its name, and an optional opacity slider. Show at most one sequential layer at a time; two colour ramps on one map cannot be read.
+
+**`map-marker`**: a point of interest.
+- 12px circle in `{colors.accent}` with a 2px `{colors.void}` ring; hit target 44px. The selected marker grows to 16px with a `{colors.ink}` ring.
+- Categories of points use `chart-1` to `chart-3` plus a different shape for each category, not colour alone.
+- Cluster markers when points overlap: a `{colors.surface-raised}` circle with the count in `{typography.caption-bold}`.
+
+**`map-popup`**: details for a clicked feature.
+- Background `{colors.surface-raised}`, rounded `{rounded.md}`, floating shadow, maximum width 320px.
+- Content: place or feature name in `{typography.body-md-medium}`; coordinates in `{typography.telemetry}`; value with unit; observation date; an optional `button-link`.
+- Has a close button and closes on Escape.
+
+**`map-timeline`**: the time scrubber for time-series layers.
+- A bar docked to the bottom of the map: play/pause button, a slider, and the current date in `{typography.telemetry}`.
+- The slider thumb and the filled track are `{colors.accent}`; the unfilled track is `{colors.hairline-strong}`.
+- Paused by default. Works with arrow keys. Under reduced motion, playback steps frame by frame instead of animating.
+
+**`map-attribution`**: required on every map.
+- Bottom-right. Text `{colors.text-muted}` on `{colors.void}` at 80 percent opacity. Credits the basemap provider and every data layer. The full citation also goes in the `data-source-caption` below the map.
+
+**Map states and accessibility**
+- Loading, empty and error states follow `chart-state`.
+- Every map has a text summary of what it shows, and its underlying data is available through `data-table`.
+- State the projection or the caveat when area or distance matters to the claim being made.
 
 ### Navigation
 
-**Top Navigation (Marketing)** — Sticky white bar.
-- Background `{colors.canvas}`, height ~64px, bottom border `1px solid {colors.hairline}`.
-- Left: Notion "N" logo + "Product / AI / Solutions / Resources / Enterprise / Pricing / Request a demo" links.
-- Right: "Get Notion free" purple button + "Log in" link.
+**`top-nav`**: sticky bar, height 64px, background `{colors.canvas}`, bottom border `1px solid {colors.hairline}`.
+- Left: the wordmark in Space Grotesk 700. Centre or right: page links in `{typography.body-sm-medium}` and `{colors.text-secondary}`; the current page is `{colors.ink}` with a 2px `{colors.accent}` underline. Far right: one `button-primary`.
+- Collapses to a menu button below 1024px.
 
-### Signature Components
+**`faq-accordion-item`**: a question in `{typography.heading-4}` with a chevron, bottom border `1px solid {colors.hairline}`.
 
-**`hero-band-dark`** — Deep navy hero band with embedded workspace mockup and decorative dots/wires.
-- Background `{colors.brand-navy}`, text `{colors.on-dark}`, padding `{spacing.hero}`.
-- Layout: centered headline `{typography.hero-display}`, subtitle, button row (`button-primary` purple + `button-secondary-on-dark`), `workspace-mockup-card` below.
-- Atmospheric decoration: scattered colorful sticky-note dots and mesh wire illustrations around the hero content (NOT a literal pattern fill — handled per-page via SVG/illustration).
-
-**`footer-region`** — Multi-column light footer.
-- Background `{colors.canvas}`, padding `{spacing.section} {spacing.xxl}`, top border `1px solid {colors.hairline}`.
-- 6-column link grid (Product / Download / Resources / Notion for / Company / Legal).
-
-**`footer-link`** — Individual footer link.
-- Background transparent, text `{colors.steel}`, typography `{typography.body-sm}`, padding `{spacing.xxs} 0`.
+**`footer-region`** and **`footer-link`**: background `{colors.void}`, top border `1px solid {colors.hairline}`.
+- Must include: the team name, a "Data sources" link, the list of NASA datasets used with links, and a line stating that the project was made for the NASA Space Apps Challenge 2026 and is not endorsed by NASA.
 
 ## Do's and Don'ts
 
 ### Do
-- Use `{colors.primary}` (purple) as the dominant CTA across all surfaces — it's the brand's recognizable signal
-- Pair deep navy hero bands ({colors.brand-navy}) with the purple button + decorative sticky-note dots
-- Use pastel feature card tints (peach, rose, mint, lavender, sky, yellow) generously
-- Use `{colors.card-tint-yellow-bold}` for high-emphasis "Ask the assistant"-style banner cards
-- Apply `{rounded.md}` (8px) to buttons consistently — Notion uses rectangles, not pills
-- Apply `{rounded.lg}` (12px) to all card families
-- Maintain Notion-Sans across every UI surface
-- Use the workspace mockup card on hero bands to show actual product UI
+- Put real data in the hero.
+- Use `{colors.primary}` for the main action and `{colors.accent}` for the one thing that must be noticed.
+- Put a `data-source-caption` under every chart, map and figure.
+- Show units with every number.
+- Use the sequential ramp for magnitude and the diverging ramp for anomalies.
+- Give every chart and map loading, empty and error states and a table view.
+- Keep text on `ink`, `text-secondary` or `text-muted`.
 
 ### Don't
-- Don't use the purple for body text or large background surfaces
-- Don't use pill-shaped buttons; Notion's geometry is rectangular-sober
-- Don't mix link-blue ({colors.link-blue}) with primary-purple ({colors.primary}) — they have distinct roles
-- Don't apply heavy shadows on flat documentation cards
-- Don't replace Notion-Sans with a generic Inter
+- Don't use NASA's insignia, logotype or seal, or imply NASA endorsement.
+- Don't use rainbow colour scales, dual-axis charts, 3D charts or decorative charts with invented data.
+- Don't use launch orange for more than a couple of elements per viewport, and don't use it as a series colour.
+- Don't use `{colors.primary}` for text; use `{colors.link}`.
+- Don't put white text on `{colors.accent}`.
+- Don't use hairline tokens for input or button borders.
+- Don't add a light theme, new colours or new fonts without updating this file first.
+- Don't place text over photographs or imagery without a solid `surface-raised` panel behind it.
+- Don't use pill-shaped buttons; pills are for tabs and the live badge.
 
 ## Responsive Behavior
 
 ### Breakpoints
-| Name | Width | Key Changes |
+| Name | Width | Key changes |
 |---|---|---|
-| Mobile (small) | < 480px | Single column. Hero 36px. Pricing 1-up. |
-| Mobile (large) | 480 – 767px | Feature cards 2-up. Hero 48px. |
-| Tablet | 768 – 1023px | 2-column feature grids. Hero 56px. |
-| Desktop | 1024 – 1279px | 4-tier pricing card row. Hero 72px. |
-| Wide Desktop | ≥ 1280px | Full 80px hero presentation. |
+| Mobile (small) | < 480px | Single column. Hero headline 36px. Stat tiles 1-up. |
+| Mobile (large) | 480 to 767px | Stat tiles 2-up. Hero headline 44px. |
+| Tablet | 768 to 1023px | Two-column card grids. Hero headline 56px. |
+| Desktop | 1024 to 1279px | Hero becomes two columns. Hero headline 64px. |
+| Wide desktop | ≥ 1280px | Full 72px hero headline. |
 
-### Touch Targets
-- Buttons render at 40–44px effective height
-- Form inputs render at 44px height
-- Pill tabs ~32px → 44px on mobile
+### Touch targets
+- Buttons, inputs, map controls and tab hit areas are at least 44px tall.
+- Map markers and chart marks have hit areas larger than the visible mark.
 
-### Collapsing Strategy
-- **Promo banner** stays full-width; truncates at < 480px
-- **Top nav** below 1024px collapses to hamburger
-- **Hero band**: workspace mockup card moves below text/buttons on mobile
-- **Pricing tiers**: 4-column → 2-column tablet → 1-column mobile
-- **Feature cards**: 3-up desktop → 2-up tablet → 1-up mobile
-- **Hero typography**: 80px → 56px → 48px → 36px
-- **Footer**: 6-column desktop → 3-column tablet → accordion mobile
-
-### Image Behavior
-- Workspace mockup card maintains aspect ratio
-- Pastel illustrations inside feature cards scale proportionally
-- Customer logo wall: wordmarks at consistent 60–80px height
+### Collapsing strategy
+- **Top nav**: collapses to a menu button below 1024px.
+- **Hero**: `hero-data-card` moves below the text and buttons; `telemetry-strip` wraps to a two-by-two grid; orbital arcs are simplified or hidden below 480px.
+- **Charts**: full width. Reduce axis tick count rather than shrinking text. Legends wrap above the plot. Direct labels are dropped before the legend is.
+- **Maps**: full width. `map-layer-panel` and `map-legend` collapse into toggle buttons that open a bottom sheet. `map-timeline` stays docked at the bottom.
+- **Tables**: scroll horizontally inside their own container with the first column pinned. The page itself never scrolls sideways.
+- **Card grids**: 3-up desktop, 2-up tablet, 1-up mobile.
 
 ## Iteration Guide
 
-1. Focus on ONE component at a time
-2. Reference component names and tokens directly
-3. Run `npx @google/design.md lint DESIGN.md` after edits
-4. Add new variants as separate `components:` entries
-5. Default to `{typography.body-md}` for body
-6. Keep `{colors.primary}` (purple) as the primary CTA — distinct from `{colors.link-blue}` for inline links
-7. Use `{rounded.md}` for buttons (rectangles), `{rounded.lg}` for cards, `{rounded.full}` for pill tabs/badges only
+1. Work on one component at a time.
+2. Reference component names and tokens directly; never hard-code a hex value or pixel size in a component.
+3. Add new variants as separate `components:` entries here first, then implement them.
+4. Default to `{typography.body-md}` for body text.
+5. If a colour changes, re-check its contrast and update the table in **Colors**. If a `chart-*` value or its order changes, re-validate the palette for colourblind safety.
+6. Mirror the tokens once in the code (`src/styles/`) and keep that file in step with this one.
 
 ## Known Gaps
 
-- Specific dark-mode token values not surfaced beyond hero bands
-- Animation/transition timings not extracted; recommend 150–200ms ease
-- Form validation success state not explicitly captured
-- Pastel-tint mapping (which feature uses which tint) is observation-based — the actual brand library may have more entries
+- Dark-only by decision. No light theme tokens exist.
+- No logo or mark has been designed; the wordmark is plain text.
+- The project name, challenge and headline copy are not chosen yet, so the hero and telemetry examples are placeholders.
+- The basemap provider and map library are not chosen; confirm licence and attribution wording when they are.
+- Icon set not chosen. Pick one open-licensed set and use it throughout.
+- The diverging ramp's two warm steps were matched to the cool steps by lightness but have not been tested in a rendered map.
+- No texture or pattern fills are defined for print or forced-colours mode.
