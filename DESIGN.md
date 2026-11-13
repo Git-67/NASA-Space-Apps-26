@@ -1,7 +1,8 @@
 ---
 version: alpha
 name: Martian-Map-mission-control
-description: An original "mission control" design system for a Mars map and Marswalk planning website, built for the NASA Space Apps Challenge 2026 "Interplanetary Survival Guide - Martian Map" challenge. Two themes, dark (default) and light. Deep-space surfaces ({colors.void}, {colors.canvas}), an orbit-blue primary action ({colors.primary}), and a single launch-orange accent ({colors.accent}) used sparingly for the one thing that matters on screen. Headlines are set in Space Grotesk, body in Inter, and telemetry (coordinates, timestamps, dataset IDs) in JetBrains Mono. The hero is an orbital band that leads with a live data visual, and the system ships first-class chart and map components with a validated, colourblind-safe data palette. It is NASA-inspired, not NASA-branded: no NASA insignia, logotype or seal is used anywhere.
+description: >-
+  An original "mission control" design system for a Mars map and Marswalk planning website, built for the NASA Space Apps Challenge 2026 "Interplanetary Survival Guide - Martian Map" challenge. Two themes, dark (default) and light. Deep-space surfaces ({colors.void}, {colors.canvas}), an orbit-blue primary action ({colors.primary}), and a single launch-orange accent ({colors.accent}) used sparingly for the one thing that matters on screen. Headlines are set in Space Grotesk, body in Inter, and telemetry (coordinates, timestamps, dataset IDs) in JetBrains Mono. The hero is an orbital band that leads with a live data visual, and the system ships first-class chart and map components with a validated, colourblind-safe data palette. It is NASA-inspired, not NASA-branded: no NASA insignia, logotype or seal is used anywhere.
 
 colors:
   # Surfaces (darkest to lightest)
