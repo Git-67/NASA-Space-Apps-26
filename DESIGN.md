@@ -628,9 +628,8 @@ The Sol Stroll logo is a wordmark with the mark built into it. Files are in `pub
 |---|---|
 | `logo-on-dark.svg` | Dark theme: top nav, hero, slides with a dark background |
 | `logo-on-light.svg` | Light theme and light slides |
-| `favicon.svg` | Browser tab icon, and anywhere too small for the wordmark: the sun disc alone |
 
-- Minimum width: 80px for the wordmark. Below that, use the sun disc alone.
+- Minimum width: 80px for the wordmark. There is no icon-only version and no favicon; where the wordmark will not fit, use plain text.
 - Clear space: at least the diameter of the sun on every side.
 - Do not recolour, stretch, rotate, add effects, or place it over imagery. The sun is always `{colors.accent}`; this is the one fixed use of the accent outside the "sparingly" rule.
 - In running text, write "Sol Stroll" as plain text. Never imitate the logo by colouring a letter.
@@ -1112,7 +1111,7 @@ These apply on top of the map components above. They exist because Mars is an or
 - The route colour was checked against sample Mars tones only, not against the actual imagery.
 - Slope and hazard thresholds, walking-speed assumptions and the coordinate convention are not decided; each needs a cited source.
 - The study site is not chosen. The hero and telemetry examples use Jezero Crater as a placeholder.
-- The logo was drawn quickly and reviewed only as a rendered preview by its author; no one else has critiqued it, and it has not been checked against existing marks.
+- The logo was checked by web search on 13 Nov 2026: no product or brand named "Sol Stroll" was found, and no identical mark. This was a text search, not an image search or a trademark search, and other "Sol" brands do use a sun in place of the "o".
 - The project name and headline copy are not chosen yet.
 - The basemap source and map library are not chosen; confirm licence and attribution wording when they are. The challenge's official resource list was not readable when this was written, and more resources are due on 14 Nov, so the layer names here are examples.
 - Icon set not chosen. Pick one open-licensed set and use it throughout.
