@@ -27,7 +27,19 @@ A briefing for **one real Marswalk** in the boxwork region of Mount Sharp, Gale 
 
 Out of scope: other sites, a 3D globe, a helmet display, automatic route finding. See `docs/COMPETITIVE_ANALYSIS.md` for why, and `docs/DATA_SOURCES.md` for what each data source can and cannot support.
 
-> **TODO (team):** write the one-sentence problem statement and choose the project name.
+### Team roles (agreed 13 Nov 2026)
+
+| Role | Owns |
+|---|---|
+| Developer: map | Basemap, route, stops, photo comparison |
+| Developer: data and charts | Python data scripts, walk window, storm replay |
+| Science and data lead | `docs/DATA_SOURCES.md`, the stops, the science question, safety limits, citations |
+| Storyteller | The 7 slides or 30-second video |
+| Editor and critic | Project summary and details text; two scheduled reviews against the judging criteria (Saturday evening, Sunday midday) |
+
+Changes to data, limits or scientific claims go through the science and data lead. Developers must be able to explain every part of the code to a judge; do not merge code the team cannot explain.
+
+> **TODO (team):** write the one-sentence problem statement and confirm the project name (working name: "Sol Stroll").
 
 ## 2. Stack and commands
 
