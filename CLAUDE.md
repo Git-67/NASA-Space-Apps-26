@@ -6,6 +6,8 @@ If a rule here conflicts with a request, say so before proceeding instead of qui
 ## 1. Project context
 
 - **What:** a website plus a product pitch for the NASA Space Apps Challenge 2026 (Singapore, virtual).
+- **Challenge:** "Interplanetary Survival Guide: Martian Map". Build a layered, integrated view of a location or route on Mars that combines data from several NASA science missions, to help a human explorer plan a successful Marswalk while doing science along the way.
+- **Official brief and resources:** https://www.spaceappschallenge.org/2026/challenges/interplanetary-survival-guide-martian-map/?tab=resources (more resources are due on 14 Nov; re-read it before choosing datasets).
 - **Window:** Sat 14 Nov 2026 09:00 SGT to Sun 15 Nov 2026 23:59 SGT. Submission is a hard deadline.
 - **Deliverables:** project summary, demo (30-second video or 7 slides), a public project link, project details.
 - **Judged 1 to 5 on:** Impact, Creativity, Validity, Relevance, Presentation.
@@ -13,7 +15,7 @@ If a rule here conflicts with a request, say so before proceeding instead of qui
 
 Every piece of work should move at least one judging criterion. If it moves none, it is not a priority this weekend.
 
-> **TODO (team):** fill in the chosen challenge, the one-sentence problem statement, and the stack in section 2.
+> **TODO (team):** fill in the study site, the one-sentence problem statement, and the stack in section 2.
 > Until then, do not scaffold a framework or add dependencies without asking.
 
 ## 2. Stack and commands
@@ -90,6 +92,9 @@ public/              Static assets.
 - Show the source in the UI next to any chart, map or figure that uses it.
 - Do not commit files over about 25 MB. Commit a fetch script or a trimmed sample and document where the full set lives.
 - Claims in the pitch and the UI must be traceable to a dataset or a cited source.
+- The challenge asks for data from **multiple** missions. For each layer, record the mission, instrument and product ID.
+- Mars data has its own conventions. For every dataset, record the coordinate convention (planetocentric or planetographic latitude, east- or west-positive longitude), the elevation datum, the map projection, the resolution, and the time basis (sol, Mars year, UTC). Convert to one convention at the data boundary.
+- Derived values (slope, route cost, walking time, dose) are computed by committed code, labelled as derived or estimated in the UI, and state their assumptions and sources.
 
 ## 8. UI and UX: DESIGN.md is the source of truth
 
@@ -99,6 +104,7 @@ public/              Static assets.
 - Tokens are defined once in `src/styles/` (CSS variables or theme config) and mirrored from `DESIGN.md`. Components reference tokens by name.
 - Build from its named components (`button-primary`, `card-base`, `text-input`, and so on). A new variant is added to `DESIGN.md` first, then implemented.
 - Follow its Do's and Don'ts and its responsive breakpoints and collapsing rules. Design mobile and desktop together.
+- The site has a dark and a light theme. Every UI change is checked in both.
 - **If `DESIGN.md` is silent or contradicts itself, stop and ask.** Do not improvise a style and do not "improve" on the spec.
 - If `DESIGN.md` changes, update the token files in the same change.
 

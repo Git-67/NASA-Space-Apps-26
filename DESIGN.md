@@ -1,7 +1,7 @@
 ---
 version: alpha
-name: Space-Apps-26-mission-control
-description: An original, space-themed "mission control" design system for a NASA Space Apps Challenge 2026 data website. Dark-only. Deep-space surfaces ({colors.void}, {colors.canvas}), an orbit-blue primary action ({colors.primary}), and a single launch-orange accent ({colors.accent}) used sparingly for the one thing that matters on screen. Headlines are set in Space Grotesk, body in Inter, and telemetry (coordinates, timestamps, dataset IDs) in JetBrains Mono. The hero is an orbital band that leads with a live data visual, and the system ships first-class chart and map components with a validated, colourblind-safe data palette. It is NASA-inspired, not NASA-branded: no NASA insignia, logotype or seal is used anywhere.
+name: Martian-Map-mission-control
+description: An original "mission control" design system for a Mars map and Marswalk planning website, built for the NASA Space Apps Challenge 2026 "Interplanetary Survival Guide - Martian Map" challenge. Two themes, dark (default) and light. Deep-space surfaces ({colors.void}, {colors.canvas}), an orbit-blue primary action ({colors.primary}), and a single launch-orange accent ({colors.accent}) used sparingly for the one thing that matters on screen. Headlines are set in Space Grotesk, body in Inter, and telemetry (coordinates, timestamps, dataset IDs) in JetBrains Mono. The hero is an orbital band that leads with a live data visual, and the system ships first-class chart and map components with a validated, colourblind-safe data palette. It is NASA-inspired, not NASA-branded: no NASA insignia, logotype or seal is used anywhere.
 
 colors:
   # Surfaces (darkest to lightest)
@@ -65,6 +65,61 @@ colors:
   chart-grid: "#1c2438"
   chart-axis: "#3a4666"
   no-data: "#1c2438"
+  # Map overlays (theme-independent: they sit on Mars imagery, not on a UI surface)
+  route: "#4de1f5"
+  route-casing: "#04060c"
+  map-ink: "#f2f5fa"
+  # Light theme. Each token replaces the dark token of the same name without the "light-" prefix.
+  light-void: "#efebe5"
+  light-canvas: "#f7f5f2"
+  light-surface: "#ffffff"
+  light-surface-raised: "#ffffff"
+  light-hairline: "#e4dfd7"
+  light-hairline-strong: "#cfc8bd"
+  light-border-control: "#8a8275"
+  light-ink: "#14161c"
+  light-text-secondary: "#474b57"
+  light-text-muted: "#5f6472"
+  light-text-disabled: "#9a9ca5"
+  light-link: "#2459c7"
+  light-accent: "#b83c0c"
+  light-tint-blue: "#e3ecfd"
+  light-tint-orange: "#fde8df"
+  light-tint-green: "#dff3e7"
+  light-tint-amber: "#fbefcc"
+  light-tint-red: "#fde3e3"
+  light-on-tint-blue: "#1d4fb8"
+  light-on-tint-orange: "#9a3412"
+  light-on-tint-green: "#17663a"
+  light-on-tint-amber: "#7a5200"
+  light-on-tint-red: "#a82020"
+  light-semantic-success: "#146c34"
+  light-semantic-warning: "#8a5a00"
+  light-semantic-error: "#c62828"
+  light-semantic-error-text: "#c62828"
+  light-chart-1: "#2a78d6"
+  light-chart-2: "#eb6834"
+  light-chart-3: "#1baf7a"
+  light-chart-4: "#eda100"
+  light-chart-5: "#e87ba4"
+  light-chart-6: "#008300"
+  light-chart-7: "#6250d6"
+  light-chart-8: "#e34948"
+  light-seq-1: "#cde2fb"
+  light-seq-2: "#9ec5f4"
+  light-seq-3: "#6da7ec"
+  light-seq-4: "#3987e5"
+  light-seq-5: "#256abf"
+  light-seq-6: "#184f95"
+  light-seq-7: "#0d366b"
+  light-div-cool-2: "#184f95"
+  light-div-cool-1: "#6da7ec"
+  light-div-neutral: "#e9e6e0"
+  light-div-warm-1: "#ee8a8a"
+  light-div-warm-2: "#a83232"
+  light-chart-grid: "#ece8e1"
+  light-chart-axis: "#cfc8bd"
+  light-no-data: "#e4dfd7"
 
 typography:
   hero-display:
@@ -461,10 +516,40 @@ components:
     border: "1px solid {colors.hairline-strong}"
     shadow: "rgba(0, 0, 0, 0.5) 0px 8px 24px -4px"
   map-marker:
-    backgroundColor: "{colors.accent}"
+    backgroundColor: "{colors.map-ink}"
     rounded: "{rounded.full}"
-    size: 12px
-    border: "2px solid {colors.void}"
+    size: 14px
+    border: "2px solid {colors.route-casing}"
+  map-waypoint:
+    backgroundColor: "{colors.route-casing}"
+    textColor: "{colors.map-ink}"
+    typography: "{typography.caption-bold}"
+    rounded: "{rounded.full}"
+    size: 24px
+    border: "2px solid {colors.route}"
+  map-route:
+    backgroundColor: "{colors.route}"
+    height: 4px
+    border: "2px solid {colors.route-casing}"
+  map-scale:
+    backgroundColor: "{colors.surface-raised}"
+    textColor: "{colors.text-secondary}"
+    typography: "{typography.telemetry}"
+    rounded: "{rounded.sm}"
+    padding: "2px 6px"
+    border: "1px solid {colors.hairline-strong}"
+  route-summary:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
+    typography: "{typography.body-sm}"
+    rounded: "{rounded.lg}"
+    padding: "{spacing.xl}"
+    border: "1px solid {colors.hairline}"
+  theme-toggle:
+    backgroundColor: "transparent"
+    textColor: "{colors.text-secondary}"
+    rounded: "{rounded.md}"
+    size: 44px
   map-timeline:
     backgroundColor: "{colors.surface-raised}"
     textColor: "{colors.text-secondary}"
@@ -504,14 +589,18 @@ components:
 
 ## Overview
 
-This is a **mission control** identity: the calm, dark, instrument-panel look of an operations room, built to make data the brightest thing on screen. It is our own identity, inspired by spaceflight, and it does not copy any company's brand.
+This is a **mission control** identity: the calm, instrument-panel look of an operations room, built to make data the brightest thing on screen. It is our own identity, inspired by spaceflight, and it does not copy any company's brand.
 
-The site is **dark-only**. Surfaces step up from `{colors.void}` (the hero and footer) through `{colors.canvas}` (the page) to `{colors.surface}` and `{colors.surface-raised}` (cards and floating panels). Depth comes from those steps and from hairline borders, not from drop shadows.
+**The product** is a layered, interactive map of a place or route on Mars. It combines data from several NASA missions so that a human explorer can plan a safe Marswalk and do science along the way. The map is the product: every page either is the map or exists to explain it.
 
-Two colours carry meaning in the chrome. **Orbit blue** (`{colors.primary}`) is the action colour: the main button on any screen. **Launch orange** (`{colors.accent}`) is the signal colour: one eyebrow label, one active tab underline, one map marker, one "live" badge. If orange appears more than a couple of times in a viewport, it has stopped being a signal.
+The site has **two themes**: dark (the default, described first) and light (see **Themes**). In dark, surfaces step up from `{colors.void}` (the hero and footer) through `{colors.canvas}` (the page) to `{colors.surface}` and `{colors.surface-raised}` (cards and floating panels). Depth comes from those steps and from hairline borders, not from drop shadows.
+
+Two colours carry meaning in the chrome. **Orbit blue** (`{colors.primary}`) is the action colour: the main button on any screen. **Launch orange** (`{colors.accent}`) is the signal colour: one eyebrow label, one active tab underline, one "live" badge. It is never used on the map itself, where it would vanish against Mars imagery. If orange appears more than a couple of times in a viewport, it has stopped being a signal.
 
 **Key characteristics:**
-- Dark-only, deep-space surfaces with hairline borders
+- Two themes, dark by default; the map viewport looks the same in both
+- Deep-space surfaces with hairline borders
+- Grayscale Mars basemaps under data layers, so colour always means data
 - Orbit-blue primary action, launch-orange signal accent used sparingly
 - Space Grotesk headlines, Inter body, JetBrains Mono for telemetry
 - A hero that leads with a real data visual, not an illustration
@@ -557,7 +646,36 @@ Two colours carry meaning in the chrome. **Orbit blue** (`{colors.primary}`) is 
 ### Data palette
 Defined under **Charts** below. The `chart-*`, `seq-*` and `div-*` tokens are for data marks only. They are never used for buttons, text or decoration, and chrome colours are never used as series colours.
 
-### Checked contrast (WCAG ratio)
+### Themes
+
+- **Dark is the default.** On first visit the site follows the visitor's system setting (`prefers-color-scheme`); the `theme-toggle` in the top nav overrides it and the choice is remembered.
+- **Light is a token swap, not a redesign.** Every token that has a `light-` twin in the front matter is replaced by it (`surface` becomes `light-surface`, `chart-1` becomes `light-chart-1`, and so on). Component specs are written once, against the unprefixed names.
+- **Shared by both themes**: `primary`, `primary-pressed`, `on-primary`, the `accent` fill with `on-accent` text, and the map overlay tokens (`route`, `route-casing`, `map-ink`).
+- **Light surfaces are warm**: `light-canvas` is a paper tone, cards are white, and `light-void` (hero, footer) is a slightly deeper sand. These are neutral warm greys, not a Mars orange wash.
+- **Accent text differs.** `accent` is too pale for text on light surfaces. In light, eyebrow labels and tab underlines use `light-accent`; the orange button fill is unchanged.
+- **Ramps flip.** In light, `seq-1` (low) is the palest step and `seq-7` the darkest, so low values still recede into the surface. The diverging ramp likewise has dark poles and a pale neutral midpoint.
+- **The map viewport does not change with the theme.** Mars imagery, data layers and route overlays are identical in both. Only the floating panels around the map (controls, legend, popups) follow the theme. Data layers on the map always use the dark-theme ramp order.
+- **Slides and the demo video use the light theme** unless the room is known to be dark; light projects more reliably.
+- Never mix themes on one page, and never hard-code a colour that only works in one theme.
+
+### Checked contrast, light theme (WCAG ratio)
+
+| Pair | On light-void | On light-canvas | On light-surface |
+|---|---|---|---|
+| `light-ink` | 15.2 | 16.6 | 18.1 |
+| `light-text-secondary` | 7.3 | 8.0 | 8.7 |
+| `light-text-muted` | 5.0 | 5.4 | 5.9 |
+| `light-link` | 5.3 | 5.8 | 6.3 |
+| `light-accent` | 4.8 | 5.2 | 5.7 |
+| `light-semantic-success` | 5.5 | 6.0 | 6.5 |
+| `light-semantic-warning` | 5.0 | 5.4 | 5.9 |
+| `light-semantic-error` | 4.7 | 5.2 | 5.6 |
+
+`light-border-control` is 3.2 to 3.8 against all three. All light badge pairs are about 6.0. `light-text-disabled` is for disabled labels only.
+
+Three light chart colours (`light-chart-3`, `light-chart-4`, `light-chart-5`) are below 3:1 against white. That is allowed **only because** every chart has direct labels or a legend plus a table view; never rely on those three colours alone.
+
+### Checked contrast, dark theme (WCAG ratio)
 
 | Pair | On canvas | On surface | On surface-raised |
 |---|---|---|---|
@@ -628,7 +746,7 @@ Dark interfaces feel crowded faster than light ones. Give data room: at least `{
 
 ## Elevation & Depth
 
-Shadows barely show on dark surfaces, so elevation is expressed by surface colour and border.
+Shadows barely show on dark surfaces, so in dark elevation is expressed by surface colour and border. In light, cards and raised panels are both white, so raised and floating levels add a soft shadow: level 2 uses `rgba(20, 22, 28, 0.06) 0px 2px 8px 0px`, level 3 uses `rgba(20, 22, 28, 0.14) 0px 12px 32px -4px`. The hero glow is dark-theme only; in light the hero data card uses the level 3 shadow.
 
 | Level | Treatment | Use |
 |---|---|---|
@@ -722,13 +840,14 @@ All buttons have a minimum touch height of 44px.
   - A sparse star field: small dots in `{colors.text-muted}` at 20 to 60 percent opacity. Static, or a very slow twinkle that is disabled under reduced motion.
   - One or two thin orbital arcs: 1px elliptical strokes in `{colors.hairline-strong}`, with a single 6px `{colors.accent}` dot on one arc as the "satellite".
   - A horizon glow: a wide radial gradient of `{colors.primary}` at about 20 percent opacity rising from the bottom edge, suggesting the limb of a planet.
+- In the light theme the band is `light-void`; the star field is dropped, the orbital arcs are drawn in `light-hairline-strong`, and the horizon glow becomes a soft `accent` wash at about 12 percent opacity, like a dusty Martian horizon.
 - Decoration sits behind content, is hidden from assistive technology, and never reduces text contrast. No stock rocket clip art, no photo backgrounds behind text.
 
-**`hero-data-card`**: the hero's proof. It holds a **real** chart or map built from the project's NASA data, not a mockup or a screenshot of another product.
+**`hero-data-card`**: the hero's proof. It holds the **real, working map** (or a live crop of it showing a route), built from the project's NASA data, not a mockup or a screenshot of another product.
 - Background `{colors.surface}`, rounded `{rounded.xl}`, border `1px solid {colors.hairline-strong}`, blue glow (see Elevation).
 - It includes its own `data-source-caption`.
 
-**`telemetry-strip`**: a row of three or four mono readouts under the hero, separated by hairlines. Each is an eyebrow label plus a value, for example `DATASET  MODIS Terra`, `COVERAGE  2000 to 2026`, `UPDATED  14 Nov 2026`.
+**`telemetry-strip`**: a row of three or four mono readouts under the hero, separated by hairlines. Each is an eyebrow label plus a value, for example `SITE  Jezero Crater`, `LAT / LON  18.4° N, 77.5° E`, `TERRAIN  MGS MOLA`, `IMAGERY  MRO CTX`.
 - Every value must be true and traceable to `docs/DATA_SOURCES.md`. Do not invent readouts for atmosphere.
 
 ### Data display
@@ -809,7 +928,7 @@ The categorical palette was validated against `{colors.surface}`: all eight slot
 **`map-container`**: the frame for a map.
 - Background `{colors.void}`, rounded `{rounded.lg}`, border `1px solid {colors.hairline}`, overflow hidden.
 - Height: at least 360px on mobile, 480px or more on desktop. A map never traps page scroll: on touch devices, pan with two fingers; on desktop, zoom with the scroll wheel only after the map has been clicked or with a modifier key.
-- **Basemap**: dark and low-contrast, with muted labels, so the data layer is the brightest thing on the map. NASA GIBS imagery layers are a good fit for imagery-led maps; confirm the layer and its terms for the chosen challenge before relying on it.
+- **Basemap**: Mars imagery or shaded relief; see **Mars map rules** below. The area outside the imagery is `{colors.void}` in both themes.
 
 **`map-control`**: zoom in, zoom out, reset view, locate.
 - 44px square buttons, background `{colors.surface-raised}`, border `1px solid {colors.hairline-strong}`, rounded `{rounded.md}`, icon in `{colors.ink}`. Stacked in the top-right with `{spacing.xs}` between them. Each has an accessible name.
@@ -823,9 +942,10 @@ The categorical palette was validated against `{colors.surface}`: all eight slot
 **`map-layer-panel`**: turn data layers on and off.
 - Top-left panel. A checkbox or radio per layer with its name, and an optional opacity slider. Show at most one sequential layer at a time; two colour ramps on one map cannot be read.
 
-**`map-marker`**: a point of interest.
-- 12px circle in `{colors.accent}` with a 2px `{colors.void}` ring; hit target 44px. The selected marker grows to 16px with a `{colors.ink}` ring.
-- Categories of points use `chart-1` to `chart-3` plus a different shape for each category, not colour alone.
+**`map-marker`**: a point of interest, such as a science stop or a landing site.
+- 14px circle in `{colors.map-ink}` with a 2px `{colors.route-casing}` ring; hit target 44px. The selected marker grows to 18px with a `{colors.route}` ring.
+- **Markers are never orange or red.** Mars imagery is orange, tan and brown, so warm markers disappear on it.
+- Categories of points use a different icon or shape for each category, with a label, not colour alone.
 - Cluster markers when points overlap: a `{colors.surface-raised}` circle with the count in `{typography.caption-bold}`.
 
 **`map-popup`**: details for a clicked feature.
@@ -841,6 +961,51 @@ The categorical palette was validated against `{colors.surface}`: all eight slot
 **`map-attribution`**: required on every map.
 - Bottom-right. Text `{colors.text-muted}` on `{colors.void}` at 80 percent opacity. Credits the basemap provider and every data layer. The full citation also goes in the `data-source-caption` below the map.
 
+### Mars map rules
+
+These apply on top of the map components above. They exist because Mars is an orange planet and this is a planning tool.
+
+**Basemap**
+- **Use a grayscale basemap whenever a data layer or a route is shown** (for example shaded relief, or grayscale orbital imagery). Colour imagery is for looking at the place with no data on top. This keeps one rule true everywhere: on the map, colour means data.
+- The layer panel names each basemap and data layer by **mission and instrument**, not by a nickname: "MGS MOLA elevation", "MRO HiRISE imagery", "MRO CTX mosaic".
+- Never stretch imagery beyond its real resolution without showing the visitor that it is zoomed past its limit.
+
+**Encoding the layers**
+
+| Layer type | Encoding |
+|---|---|
+| Elevation | Sequential ramp, or the diverging ramp around the 0 m datum. Hillshade underneath. **Not** the rainbow ramp often seen on MOLA maps |
+| Slope and traversability | Three ordered classes: passable, caution, impassable. Semantic colours plus a hatch pattern on "impassable", each with a text label in the legend |
+| Mineralogy and composition | Categorical, `chart-1` to `chart-3` only, with labels |
+| Temperature, pressure, radiation, dust | Sequential ramp for a surface; a `stat-tile` or chart for a single station |
+| Anomalies (difference from a mean) | Diverging ramp, with the baseline named |
+
+- Class thresholds (for example the slope limit for a suited walker) come from a cited source and are printed in the legend. Do not invent them.
+- Semi-transparent data layers sit at 60 to 80 percent opacity over the basemap, so terrain stays readable.
+
+**`map-route`**: the planned walk.
+- A 4px line in `{colors.route}` with a 2px `{colors.route-casing}` casing on each side. The casing is what keeps the route readable on both pale dust and dark basalt; never draw a route without it.
+- Segments that cross "caution" or "impassable" terrain are dashed, and flagged in the `route-summary`. Colour alone never marks a hazard.
+- A draft route (being drawn) is the same line at 60 percent opacity.
+
+**`map-waypoint`**: a numbered stop on the route.
+- 24px circle, fill `{colors.route-casing}`, number in `{colors.map-ink}`, 2px `{colors.route}` ring. Start and end are labelled "Start" and "End", not just numbered. Hit target 44px; draggable with the pointer and movable with arrow keys when focused.
+
+**`map-scale`**: required on every map.
+- A scale bar in metres or kilometres, bottom-left above the legend, in `{typography.telemetry}`. It updates with zoom. A north arrow appears whenever the map can be rotated.
+
+**`route-summary`**: the planning read-out beside or below the map.
+- A card listing distance, total ascent and descent, steepest slope, hazards crossed, and science stops, each with a unit.
+- **Anything estimated** (walking time, consumables, radiation dose) is labelled "estimate", and the assumption behind it is stated next to the number with its source.
+- Includes an **elevation profile**: a line chart of elevation against distance along the route, built as a `chart-card` plot, with waypoints marked and hazard segments shaded. Hovering the profile highlights the matching point on the map.
+
+**Mars conventions (show them, do not assume them)**
+- **Coordinates**: show latitude and longitude in `{typography.telemetry}`, and state the convention once near the map (planetocentric or planetographic latitude, east-positive or west-positive longitude). Datasets differ; convert at the data boundary and use one convention in the UI.
+- **Elevation** is relative to the Mars datum (areoid), not "sea level". Say "elevation (m, MOLA datum)".
+- **Time**: use sols and local Mars time where the data does, and show the Earth date (UTC) beside it.
+- **Units**: SI throughout. Metres, kilometres, kelvin or degrees Celsius, pascals, and so on, always written out next to the value.
+- Say which Mars year, season or date range an environmental reading covers. A reading from one rover at one site is not the weather for the whole planet.
+
 **Map states and accessibility**
 - Loading, empty and error states follow `chart-state`.
 - Every map has a text summary of what it shows, and its underlying data is available through `data-table`.
@@ -849,7 +1014,9 @@ The categorical palette was validated against `{colors.surface}`: all eight slot
 ### Navigation
 
 **`top-nav`**: sticky bar, height 64px, background `{colors.canvas}`, bottom border `1px solid {colors.hairline}`.
-- Left: the wordmark in Space Grotesk 700. Centre or right: page links in `{typography.body-sm-medium}` and `{colors.text-secondary}`; the current page is `{colors.ink}` with a 2px `{colors.accent}` underline. Far right: one `button-primary`.
+- Left: the wordmark in Space Grotesk 700. Centre or right: page links in `{typography.body-sm-medium}` and `{colors.text-secondary}`; the current page is `{colors.ink}` with a 2px `{colors.accent}` underline. Far right: `theme-toggle`, then one `button-primary`.
+
+**`theme-toggle`**: a 44px icon button (sun or moon) that switches theme. It has an accessible name that states the action ("Switch to light theme"), and the choice persists.
 - Collapses to a menu button below 1024px.
 
 **`faq-accordion-item`**: a question in `{typography.heading-4}` with a chevron, bottom border `1px solid {colors.hairline}`.
@@ -865,6 +1032,8 @@ The categorical palette was validated against `{colors.surface}`: all eight slot
 - Put a `data-source-caption` under every chart, map and figure.
 - Show units with every number.
 - Use the sequential ramp for magnitude and the diverging ramp for anomalies.
+- Check every screen in both themes before calling it done.
+- Draw routes with their dark casing, and show a scale bar on every map.
 - Give every chart and map loading, empty and error states and a table view.
 - Keep text on `ink`, `text-secondary` or `text-muted`.
 
@@ -875,7 +1044,10 @@ The categorical palette was validated against `{colors.surface}`: all eight slot
 - Don't use `{colors.primary}` for text; use `{colors.link}`.
 - Don't put white text on `{colors.accent}`.
 - Don't use hairline tokens for input or button borders.
-- Don't add a light theme, new colours or new fonts without updating this file first.
+- Don't add new colours or fonts without updating this file first, and don't add a colour without its twin in the other theme.
+- Don't put orange, red or brown markers, routes or labels on Mars imagery.
+- Don't show a data layer over colour imagery; switch to the grayscale basemap.
+- Don't present an estimate (walking time, dose, consumables) as a measurement.
 - Don't place text over photographs or imagery without a solid `surface-raised` panel behind it.
 - Don't use pill-shaped buttons; pills are for tabs and the live badge.
 
@@ -898,6 +1070,7 @@ The categorical palette was validated against `{colors.surface}`: all eight slot
 - **Top nav**: collapses to a menu button below 1024px.
 - **Hero**: `hero-data-card` moves below the text and buttons; `telemetry-strip` wraps to a two-by-two grid; orbital arcs are simplified or hidden below 480px.
 - **Charts**: full width. Reduce axis tick count rather than shrinking text. Legends wrap above the plot. Direct labels are dropped before the legend is.
+- **Map page**: on desktop the map fills the viewport height below the nav with `route-summary` in a side panel about 360px wide; below 1024px the summary becomes a bottom sheet over the map.
 - **Maps**: full width. `map-layer-panel` and `map-legend` collapse into toggle buttons that open a bottom sheet. `map-timeline` stays docked at the bottom.
 - **Tables**: scroll horizontally inside their own container with the first column pinned. The page itself never scrolls sideways.
 - **Card grids**: 3-up desktop, 2-up tablet, 1-up mobile.
@@ -913,10 +1086,14 @@ The categorical palette was validated against `{colors.surface}`: all eight slot
 
 ## Known Gaps
 
-- Dark-only by decision. No light theme tokens exist.
+- The light theme's text and UI pairs were computed, but neither theme has been rendered and reviewed on a real page yet.
+- The light diverging ramp was chosen by eye from the sequential steps and has not been validated.
+- The route colour was checked against sample Mars tones only, not against the actual imagery.
+- Slope and hazard thresholds, walking-speed assumptions and the coordinate convention are not decided; each needs a cited source.
+- The study site is not chosen. The hero and telemetry examples use Jezero Crater as a placeholder.
 - No logo or mark has been designed; the wordmark is plain text.
-- The project name, challenge and headline copy are not chosen yet, so the hero and telemetry examples are placeholders.
-- The basemap provider and map library are not chosen; confirm licence and attribution wording when they are.
+- The project name and headline copy are not chosen yet.
+- The basemap source and map library are not chosen; confirm licence and attribution wording when they are. The challenge's official resource list was not readable when this was written, and more resources are due on 14 Nov, so the layer names here are examples.
 - Icon set not chosen. Pick one open-licensed set and use it throughout.
 - The diverging ramp's two warm steps were matched to the cool steps by lightness but have not been tested in a rendered map.
 - No texture or pattern fills are defined for print or forced-colours mode.
