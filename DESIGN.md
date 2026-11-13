@@ -614,7 +614,27 @@ Two colours carry meaning in the chrome. **Orbit blue** (`{colors.primary}`) is 
 - **Do not use the NASA insignia ("meatball"), the NASA logotype ("worm"), the NASA seal, or the Space Apps logo as part of our own identity.** Their use is restricted, and using them implies an endorsement we do not have. If the Space Apps organisers supply an official participant badge, use it exactly as supplied and only where their guidelines allow.
 - NASA imagery and data are generally free to use, but check the usage note on each source page and **credit the source** every time (see `data-source-caption`).
 - Do not ship another organisation's proprietary fonts, logos or illustrations. All three typefaces here are open-licensed (SIL Open Font License).
-- Our own wordmark is set in Space Grotesk 700. Keep it plain text until the team designs a mark.
+- Our own logo is described under **Logo** below.
+
+### Logo
+
+The Sol Stroll logo is a mark plus a wordmark. Files are in `public/brand/`.
+
+- **Mark**: a half sun in `{colors.accent}` rising over a horizon line, with a dotted route of four waypoints beneath it. The sunrise stands for a new sol (when), the dotted line for the walk (where).
+- **Wordmark**: "Sol Stroll" in Space Grotesk 700, converted to outlines so it renders without the font.
+- **Tagline**: "Know before you go." Set in `{typography.body-sm}` and `{colors.text-secondary}` when shown with the logo. It is never part of the logo file.
+
+| File | Use |
+|---|---|
+| `logo-on-dark.svg` | Dark theme: top nav, hero, slides with a dark background |
+| `logo-on-light.svg` | Light theme and light slides |
+| `mark-on-dark.svg`, `mark-on-light.svg` | Where space is tight |
+| `favicon.svg` | Browser tab icon |
+
+- Minimum width: 96px for the full logo, 16px for the favicon. Below 96px, use the mark alone.
+- Clear space: at least the height of the sun on every side.
+- Do not recolour, stretch, rotate, add effects, or place it over imagery. The sun is always `{colors.accent}`; this is the one fixed use of the accent outside the "sparingly" rule.
+- The logo files hold fixed colour values, because an image file cannot read theme tokens. If `accent`, `ink` or `light-ink` change, regenerate the files.
 
 ## Colors
 
@@ -1015,7 +1035,7 @@ These apply on top of the map components above. They exist because Mars is an or
 ### Navigation
 
 **`top-nav`**: sticky bar, height 64px, background `{colors.canvas}`, bottom border `1px solid {colors.hairline}`.
-- Left: the wordmark in Space Grotesk 700. Centre or right: page links in `{typography.body-sm-medium}` and `{colors.text-secondary}`; the current page is `{colors.ink}` with a 2px `{colors.accent}` underline. Far right: `theme-toggle`, then one `button-primary`.
+- Left: the logo (`logo-on-dark.svg` or `logo-on-light.svg` by theme), 28px tall, linking to the home page. Centre or right: page links in `{typography.body-sm-medium}` and `{colors.text-secondary}`; the current page is `{colors.ink}` with a 2px `{colors.accent}` underline. Far right: `theme-toggle`, then one `button-primary`.
 
 **`theme-toggle`**: a 44px icon button (sun or moon) that switches theme. It has an accessible name that states the action ("Switch to light theme"), and the choice persists.
 - Collapses to a menu button below 1024px.
@@ -1092,7 +1112,7 @@ These apply on top of the map components above. They exist because Mars is an or
 - The route colour was checked against sample Mars tones only, not against the actual imagery.
 - Slope and hazard thresholds, walking-speed assumptions and the coordinate convention are not decided; each needs a cited source.
 - The study site is not chosen. The hero and telemetry examples use Jezero Crater as a placeholder.
-- No logo or mark has been designed; the wordmark is plain text.
+- The logo was drawn quickly and reviewed only as a rendered preview by its author; no one else has critiqued it, and it has not been checked against existing marks.
 - The project name and headline copy are not chosen yet.
 - The basemap source and map library are not chosen; confirm licence and attribution wording when they are. The challenge's official resource list was not readable when this was written, and more resources are due on 14 Nov, so the layer names here are examples.
 - Icon set not chosen. Pick one open-licensed set and use it throughout.
