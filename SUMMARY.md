@@ -6,7 +6,7 @@ Written the night of 13 Nov 2026 for the next working session. Read this first, 
 
 - **The hackathon starts Sat 14 Nov 2026, 09:00 SGT** and ends Sun 15 Nov, 23:59 SGT.
 - **Nothing is built.** The repository holds planning documents and a logo. There is no website yet.
-- **All work is on the branch `claude/clever-rubin-0bn3pi`, not on `main`.** `main` has only the licence and an old Notion-based design file. GitHub Pages serves `main`, so nothing here is live until this branch is merged. No pull request has been opened; the user has not asked for one.
+- **Work happens on the branch `claude/clever-rubin-0bn3pi` and reaches `main` by pull request.** Earlier work was merged to `main` in pull requests 1 and 2. GitHub Pages serves `main`. Check that the latest pull request has been merged before assuming `main` is current.
 - The organisers confirmed that work done before the event is allowed.
 
 ## The project in one paragraph
@@ -104,7 +104,7 @@ Then, in order: the walk-window view, the orbit and ground photo comparison at e
 ## Open items for the user
 
 1. Review first, or build first?
-2. Merge this branch to `main`, or keep working on the branch? A pull request has not been requested.
+2. Merge the open pull request so `main` holds the logo, science brief, pitch outline and this summary.
 3. The organisers publish more resources on 14 Nov. Paste the Resources tab into the session, since the page could not be fetched from here.
 4. The opening's closing line is a suggestion awaiting confirmation: "Your map tells you where. Sol Stroll tells you when, and when not to."
 
