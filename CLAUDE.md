@@ -15,8 +15,19 @@ If a rule here conflicts with a request, say so before proceeding instead of qui
 
 Every piece of work should move at least one judging criterion. If it moves none, it is not a priority this weekend.
 
-> **TODO (team):** confirm the angle proposed in `docs/COMPETITIVE_ANALYSIS.md`, then record the study site and the one-sentence problem statement here.
-> Until then, do not scaffold the site or add dependencies without asking.
+### What we are building (agreed 13 Nov 2026)
+
+A briefing for **one real Marswalk** in the boxwork region of Mount Sharp, Gale Crater, that answers five questions on one map:
+
+1. **Why go:** one science question, and what a human can do at each stop that the rover could not.
+2. **Where:** Curiosity's real path as the proven route. Do not write a pathfinder.
+3. **When:** a go / caution / no-go window by season, from Curiosity's weather record.
+4. **How sure:** the orbital view beside the rover's ground photo at each stop. Stretch: a data confidence layer.
+5. **What if:** replay a real bad day (the 2018 dust storm, the 2017 solar storm) against the plan.
+
+Out of scope: other sites, a 3D globe, a helmet display, automatic route finding. See `docs/COMPETITIVE_ANALYSIS.md` for why, and `docs/DATA_SOURCES.md` for what each data source can and cannot support.
+
+> **TODO (team):** write the one-sentence problem statement and choose the project name.
 
 ## 2. Stack and commands
 

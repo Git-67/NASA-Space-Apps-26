@@ -1,6 +1,6 @@
 # Competitive analysis: Martian Map challenge
 
-Researched 13 Nov 2026, the day before the hackathon. **Status: proposal, not yet agreed by the team.**
+Researched 13 Nov 2026, the day before the hackathon. **Status: the team agreed a wider version of the proposed angle on 13 Nov 2026. The agreed scope is in `CLAUDE.md` section 1; the single-angle proposal below is kept as the reasoning behind it.**
 
 ## How far to trust this
 
