@@ -618,22 +618,22 @@ Two colours carry meaning in the chrome. **Orbit blue** (`{colors.primary}`) is 
 
 ### Logo
 
-The Sol Stroll logo is a mark plus a wordmark. Files are in `public/brand/`.
+The Sol Stroll logo is a wordmark with the mark built into it. Files are in `public/brand/`.
 
-- **Mark**: a half sun in `{colors.accent}` rising over a horizon line, with a dotted route of four waypoints beneath it. The sunrise stands for a new sol (when), the dotted line for the walk (where).
 - **Wordmark**: "Sol Stroll" in Space Grotesk 700, converted to outlines so it renders without the font.
+- **The sun**: the "o" in "Sol" is replaced by a solid disc in `{colors.accent}`. It is the sun, and a sol is one Martian day. There is no separate symbol.
 - **Tagline**: "Know before you go." Set in `{typography.body-sm}` and `{colors.text-secondary}` when shown with the logo. It is never part of the logo file.
 
 | File | Use |
 |---|---|
 | `logo-on-dark.svg` | Dark theme: top nav, hero, slides with a dark background |
 | `logo-on-light.svg` | Light theme and light slides |
-| `mark-on-dark.svg`, `mark-on-light.svg` | Where space is tight |
-| `favicon.svg` | Browser tab icon |
+| `favicon.svg` | Browser tab icon, and anywhere too small for the wordmark: the sun disc alone |
 
-- Minimum width: 96px for the full logo, 16px for the favicon. Below 96px, use the mark alone.
-- Clear space: at least the height of the sun on every side.
+- Minimum width: 80px for the wordmark. Below that, use the sun disc alone.
+- Clear space: at least the diameter of the sun on every side.
 - Do not recolour, stretch, rotate, add effects, or place it over imagery. The sun is always `{colors.accent}`; this is the one fixed use of the accent outside the "sparingly" rule.
+- In running text, write "Sol Stroll" as plain text. Never imitate the logo by colouring a letter.
 - The logo files hold fixed colour values, because an image file cannot read theme tokens. If `accent`, `ink` or `light-ink` change, regenerate the files.
 
 ## Colors
