@@ -39,7 +39,7 @@ Out of scope: other sites, a 3D globe, a helmet display, automatic route finding
 
 Changes to data, limits or scientific claims go through the science and data lead. Developers must be able to explain every part of the code to a judge; do not merge code the team cannot explain.
 
-> **TODO (team):** write the one-sentence problem statement and choose a tagline. The project name is **Sol Stroll** (confirmed 13 Nov 2026).
+> **TODO (team):** write the one-sentence problem statement. The project name is **Sol Stroll** and the tagline is **"Know before you go."** (both confirmed 13 Nov 2026).
 
 ## 2. Stack and commands
 
