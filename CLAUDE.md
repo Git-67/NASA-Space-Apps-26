@@ -15,37 +15,44 @@ If a rule here conflicts with a request, say so before proceeding instead of qui
 
 Every piece of work should move at least one judging criterion. If it moves none, it is not a priority this weekend.
 
-> **TODO (team):** fill in the study site, the one-sentence problem statement, and the stack in section 2.
-> Until then, do not scaffold a framework or add dependencies without asking.
+> **TODO (team):** confirm the angle proposed in `docs/COMPETITIVE_ANALYSIS.md`, then record the study site and the one-sentence problem statement here.
+> Until then, do not scaffold the site or add dependencies without asking.
 
 ## 2. Stack and commands
 
-> **TODO (team):** replace this section once the stack is chosen. Keep it to real, working commands.
+Chosen for a team that knows Python, HTML, CSS and basic JavaScript, and for free hosting on GitHub Pages.
+
+- **Site:** static HTML, CSS and JavaScript (ES modules). **No framework and no build step**, so what is in the repo is what Pages serves.
+- **Types:** plain JavaScript with JSDoc types and `// @ts-check` at the top of each file. This replaces TypeScript, which would need a build step.
+- **Map:** Leaflet. **Charts:** one small charting library, to be chosen with the first chart. Both are vendored or loaded from a pinned CDN version.
+- **Data preparation:** Python scripts in `scripts/` turn raw NASA data into small JSON, GeoJSON or image files in `data/processed/`. The browser never parses raw mission files.
+- **Hosting:** GitHub Pages, served from `main`. The repository must be public for this on a free plan.
 
 | Task | Command |
 |---|---|
-| Install | _TBD_ |
-| Dev server | _TBD_ |
-| Lint + format | _TBD_ |
-| Type check | _TBD_ |
-| Test | _TBD_ |
-| Production build | _TBD_ |
+| Dev server | `python3 -m http.server 8000` then open http://localhost:8000 |
+| Prepare data | `python3 scripts/<name>.py` (each script documents its inputs and outputs) |
+| Python dependencies | `pip install -r requirements.txt` (pinned versions) |
+| Lint, format, test | _TBD with the first code_ |
 
-Defaults unless the team decides otherwise: TypeScript in strict mode, one package manager (commit its lockfile, never mix), a formatter and linter wired up before the first feature.
+All paths in the site are relative, because Pages serves the project from a sub-path, not from the domain root.
 
 ## 3. Repository layout
 
 Organise by feature, not by file type. Target shape (adapt names to the framework's conventions):
 
 ```
+index.html           Entry page at the root, as GitHub Pages expects.
+scripts/             Python data preparation. One script per dataset.
 src/
-  app/ or pages/     Routes and page shells only. No business logic.
+  pages/             Page scripts and shells only. No business logic.
   features/<name>/   One folder per feature: its components, hooks, logic, tests.
   components/ui/     Shared, presentational primitives built from DESIGN.md tokens.
   lib/               Framework-agnostic helpers, API clients, data parsing.
   styles/            Design tokens and global styles. The only home for raw values.
   types/             Shared types.
-data/                NASA and other datasets (or scripts that fetch them), with provenance.
+data/raw/            Untouched downloads (or a note on where to fetch them). Never edited by hand.
+data/processed/      Output of scripts/. The only data the site loads.
 docs/                DATA_SOURCES.md, pitch material, architecture notes.
 public/              Static assets.
 ```
@@ -57,7 +64,7 @@ public/              Static assets.
 
 ## 4. Code standards
 
-- **Types:** no `any`, no `@ts-ignore`, no non-null `!` to silence the compiler. Validate external data (API responses, CSV/JSON files) at the boundary and convert it into typed objects once.
+- **Types:** every JavaScript file starts with `// @ts-check` and uses JSDoc types. No `any`, no `@ts-ignore`. Python uses type hints. Validate external data (API responses, CSV/JSON files) at the boundary and convert it into typed objects once.
 - **Naming:** names say what a thing is or does. No abbreviations beyond common ones (`id`, `url`). Booleans read as `is/has/should`.
 - **Functions:** small, single purpose, early returns over nesting. Pure logic lives outside components so it can be tested.
 - **No magic values:** numbers, strings, URLs, dataset IDs and thresholds go in named constants or config.
