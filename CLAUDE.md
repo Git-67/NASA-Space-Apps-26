@@ -6,6 +6,8 @@ If a rule here conflicts with a request, say so before proceeding instead of qui
 ## 1. Project context
 
 - **What:** a website plus a product pitch for the NASA Space Apps Challenge 2026 (Singapore, virtual).
+- **Challenge:** "Interplanetary Survival Guide: Martian Map". Build a layered, integrated view of a location or route on Mars that combines data from several NASA science missions, to help a human explorer plan a successful Marswalk while doing science along the way.
+- **Official brief and resources:** https://www.spaceappschallenge.org/2026/challenges/interplanetary-survival-guide-martian-map/?tab=resources (more resources are due on 14 Nov; re-read it before choosing datasets).
 - **Window:** Sat 14 Nov 2026 09:00 SGT to Sun 15 Nov 2026 23:59 SGT. Submission is a hard deadline.
 - **Deliverables:** project summary, demo (30-second video or 7 slides), a public project link, project details.
 - **Judged 1 to 5 on:** Impact, Creativity, Validity, Relevance, Presentation.
@@ -13,37 +15,55 @@ If a rule here conflicts with a request, say so before proceeding instead of qui
 
 Every piece of work should move at least one judging criterion. If it moves none, it is not a priority this weekend.
 
-> **TODO (team):** fill in the chosen challenge, the one-sentence problem statement, and the stack in section 2.
-> Until then, do not scaffold a framework or add dependencies without asking.
+### What we are building (agreed 13 Nov 2026)
+
+A briefing for **one real Marswalk** in the boxwork region of Mount Sharp, Gale Crater, that answers five questions on one map:
+
+1. **Why go:** one science question, and what a human can do at each stop that the rover could not.
+2. **Where:** Curiosity's real path as the proven route. Do not write a pathfinder.
+3. **When:** a go / caution / no-go window by season, from Curiosity's weather record.
+4. **How sure:** the orbital view beside the rover's ground photo at each stop. Stretch: a data confidence layer.
+5. **What if:** replay a real bad day (the 2018 dust storm, the 2017 solar storm) against the plan.
+
+Out of scope: other sites, a 3D globe, a helmet display, automatic route finding. See `docs/COMPETITIVE_ANALYSIS.md` for why, and `docs/DATA_SOURCES.md` for what each data source can and cannot support.
+
+> **TODO (team):** write the one-sentence problem statement and choose the project name.
 
 ## 2. Stack and commands
 
-> **TODO (team):** replace this section once the stack is chosen. Keep it to real, working commands.
+Chosen for a team that knows Python, HTML, CSS and basic JavaScript, and for free hosting on GitHub Pages.
+
+- **Site:** static HTML, CSS and JavaScript (ES modules). **No framework and no build step**, so what is in the repo is what Pages serves.
+- **Types:** plain JavaScript with JSDoc types and `// @ts-check` at the top of each file. This replaces TypeScript, which would need a build step.
+- **Map:** Leaflet. **Charts:** one small charting library, to be chosen with the first chart. Both are vendored or loaded from a pinned CDN version.
+- **Data preparation:** Python scripts in `scripts/` turn raw NASA data into small JSON, GeoJSON or image files in `data/processed/`. The browser never parses raw mission files.
+- **Hosting:** GitHub Pages, served from `main`. The repository must be public for this on a free plan.
 
 | Task | Command |
 |---|---|
-| Install | _TBD_ |
-| Dev server | _TBD_ |
-| Lint + format | _TBD_ |
-| Type check | _TBD_ |
-| Test | _TBD_ |
-| Production build | _TBD_ |
+| Dev server | `python3 -m http.server 8000` then open http://localhost:8000 |
+| Prepare data | `python3 scripts/<name>.py` (each script documents its inputs and outputs) |
+| Python dependencies | `pip install -r requirements.txt` (pinned versions) |
+| Lint, format, test | _TBD with the first code_ |
 
-Defaults unless the team decides otherwise: TypeScript in strict mode, one package manager (commit its lockfile, never mix), a formatter and linter wired up before the first feature.
+All paths in the site are relative, because Pages serves the project from a sub-path, not from the domain root.
 
 ## 3. Repository layout
 
 Organise by feature, not by file type. Target shape (adapt names to the framework's conventions):
 
 ```
+index.html           Entry page at the root, as GitHub Pages expects.
+scripts/             Python data preparation. One script per dataset.
 src/
-  app/ or pages/     Routes and page shells only. No business logic.
+  pages/             Page scripts and shells only. No business logic.
   features/<name>/   One folder per feature: its components, hooks, logic, tests.
   components/ui/     Shared, presentational primitives built from DESIGN.md tokens.
   lib/               Framework-agnostic helpers, API clients, data parsing.
   styles/            Design tokens and global styles. The only home for raw values.
   types/             Shared types.
-data/                NASA and other datasets (or scripts that fetch them), with provenance.
+data/raw/            Untouched downloads (or a note on where to fetch them). Never edited by hand.
+data/processed/      Output of scripts/. The only data the site loads.
 docs/                DATA_SOURCES.md, pitch material, architecture notes.
 public/              Static assets.
 ```
@@ -55,7 +75,7 @@ public/              Static assets.
 
 ## 4. Code standards
 
-- **Types:** no `any`, no `@ts-ignore`, no non-null `!` to silence the compiler. Validate external data (API responses, CSV/JSON files) at the boundary and convert it into typed objects once.
+- **Types:** every JavaScript file starts with `// @ts-check` and uses JSDoc types. No `any`, no `@ts-ignore`. Python uses type hints. Validate external data (API responses, CSV/JSON files) at the boundary and convert it into typed objects once.
 - **Naming:** names say what a thing is or does. No abbreviations beyond common ones (`id`, `url`). Booleans read as `is/has/should`.
 - **Functions:** small, single purpose, early returns over nesting. Pure logic lives outside components so it can be tested.
 - **No magic values:** numbers, strings, URLs, dataset IDs and thresholds go in named constants or config.
@@ -90,6 +110,9 @@ public/              Static assets.
 - Show the source in the UI next to any chart, map or figure that uses it.
 - Do not commit files over about 25 MB. Commit a fetch script or a trimmed sample and document where the full set lives.
 - Claims in the pitch and the UI must be traceable to a dataset or a cited source.
+- The challenge asks for data from **multiple** missions. For each layer, record the mission, instrument and product ID.
+- Mars data has its own conventions. For every dataset, record the coordinate convention (planetocentric or planetographic latitude, east- or west-positive longitude), the elevation datum, the map projection, the resolution, and the time basis (sol, Mars year, UTC). Convert to one convention at the data boundary.
+- Derived values (slope, route cost, walking time, dose) are computed by committed code, labelled as derived or estimated in the UI, and state their assumptions and sources.
 
 ## 8. UI and UX: DESIGN.md is the source of truth
 
@@ -99,6 +122,7 @@ public/              Static assets.
 - Tokens are defined once in `src/styles/` (CSS variables or theme config) and mirrored from `DESIGN.md`. Components reference tokens by name.
 - Build from its named components (`button-primary`, `card-base`, `text-input`, and so on). A new variant is added to `DESIGN.md` first, then implemented.
 - Follow its Do's and Don'ts and its responsive breakpoints and collapsing rules. Design mobile and desktop together.
+- The site has a dark and a light theme. Every UI change is checked in both.
 - **If `DESIGN.md` is silent or contradicts itself, stop and ask.** Do not improvise a style and do not "improve" on the spec.
 - If `DESIGN.md` changes, update the token files in the same change.
 
