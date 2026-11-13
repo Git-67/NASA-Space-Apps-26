@@ -25,6 +25,8 @@ A briefing for **one real Marswalk** in the boxwork region of Mount Sharp, Gale 
 4. **How sure:** the orbital view beside the rover's ground photo at each stop. Stretch: a data confidence layer.
 5. **What if:** replay a real bad day (the 2018 dust storm, the 2017 solar storm) against the plan.
 
+The verdict rests on daylight, how unusual the chosen sol is for its season, and whether a solar storm is under way. It does **not** use invented temperature, ultraviolet or dose thresholds; no citable Mars suit limits exist.
+
 Out of scope: other sites, a 3D globe, a helmet display, automatic route finding. See `docs/COMPETITIVE_ANALYSIS.md` for why, and `docs/DATA_SOURCES.md` for what each data source can and cannot support.
 
 ### Team roles (agreed 13 Nov 2026)
@@ -39,7 +41,10 @@ Out of scope: other sites, a 3D globe, a helmet display, automatic route finding
 
 Changes to data, limits or scientific claims go through the science and data lead. Developers must be able to explain every part of the code to a judge; do not merge code the team cannot explain.
 
-> **TODO (team):** write the one-sentence problem statement. The project name is **Sol Stroll** and the tagline is **"Know before you go."** (both confirmed 13 Nov 2026).
+- **Name and tagline:** **Sol Stroll.** "Know before you go." (confirmed 13 Nov 2026)
+- **Problem statement (draft, in `docs/PITCH.md`):** Mars maps show where to walk. Sol Stroll tells a crew whether to go: one briefing for one real Marswalk.
+- **Science question, stops and safety limits:** `docs/SCIENCE_BRIEF.md`. Facts in it are marked Read, Snippet, Derived or Ours. Only "Read" facts, or facts the science lead has since verified, may appear in the product or the pitch without a caveat.
+- **Pitch outline:** `docs/PITCH.md`.
 
 ## 2. Stack and commands
 
