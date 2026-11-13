@@ -4,9 +4,9 @@ Every dataset the project uses or plans to use. Update this file in the same cha
 
 **Status key:** *Reachable* means the endpoint answered and the content was inspected on the date shown. It does not mean the data has been processed or validated. Nothing here is in the product yet.
 
-**Study site:** the boxwork region on Mount Sharp, Gale Crater. Curiosity's waypoints for sols 4500 to 4840 fall within about latitude -4.793 to -4.810, longitude 137.379 to 137.390 (east-positive), at elevations of about -3,690 m to -3,598 m. The exact start and end sols of the boxwork campaign still need a cited source.
+**Study site:** the boxwork region on Mount Sharp, Gale Crater. Curiosity's waypoints for sols 4500 to 4840 fall within about latitude -4.793 to -4.810, longitude 137.379 to 137.390, at elevations of about -3,690 m to -3,598 m. The campaign ran from the Altadena drill (sol 4564, 8 Jun 2025) to the rover's exit in March 2026 (about sol 4836). Stops and their sources are in `docs/SCIENCE_BRIEF.md`.
 
-**Usage terms:** not yet checked for any source below. Confirm and record the terms and required credit line for each before submission.
+**Usage terms:** see the "Usage terms and credit lines" section at the end.
 
 ## Reachable (checked 13 Nov 2026)
 
@@ -71,3 +71,22 @@ Every dataset the project uses or plans to use. Update this file in the same cha
 
 - A cited account of what Curiosity found in the boxwork region and the sols it was there (angle 5).
 - Cited limits for a suited walker: temperature, ultraviolet, radiation dose, slope, walking speed. Any limit without a source must be labelled as the team's assumption.
+
+## Usage terms and credit lines
+
+Checked 13 Nov 2026 by reading the two policy pages below. This is a reading of public policy pages, not legal advice.
+
+| Source | Terms found | Credit line to show |
+|---|---|---|
+| NASA content in general | "Generally not subject to copyright in the United States." May be used for educational or informational purposes without explicit permission. NASA should be acknowledged as the source | "NASA" plus the specific credit below |
+| JPL images and video (rover images, releases) | "May be used for any purpose without prior permission", with exceptions for third-party material | "Courtesy NASA/JPL-Caltech", unless the caption says otherwise |
+| Curiosity Mastcam images | Covered by the JPL policy. The releases we read credit them as shown | "NASA/JPL-Caltech/MSSS" |
+| MRO HiRISE and CTX imagery via Mars Trek | **Not checked.** Mars Trek's own terms were not read | To be confirmed. Do not guess |
+| Curiosity REMS weather feed | Provider's disclaimer: "intended for outreach purposes only"; science users are directed to the Planetary Data System | To be confirmed. Must name Centro de Astrobiología, and the outreach-only note must appear in the product |
+| Curiosity waypoint and traverse files | **Not checked.** Published on a NASA mission site, so the general NASA terms probably apply | "NASA/JPL-Caltech" (to be confirmed) |
+
+Rules that apply to everything:
+- **No NASA insignia, logotype or seal, and no JPL logo.** Both policy pages say these need prior written approval and are not in the public domain.
+- **Never claim or imply endorsement** by NASA, JPL or Caltech.
+- **Third-party material** on NASA sites can be copyrighted. Use only images whose caption credits NASA or its mission partners.
+- Policy pages: https://www.nasa.gov/nasa-brand-center/images-and-media/ and https://www.jpl.nasa.gov/jpl-image-use-policy/
