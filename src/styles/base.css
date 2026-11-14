@@ -24,7 +24,8 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
-html { -webkit-text-size-adjust: 100%; }
+/* The nav is sticky, so anchor jumps and scrollIntoView stop below it rather than under it. */
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: var(--size-nav); }
 
 body {
   margin: 0;
@@ -122,14 +123,27 @@ a { color: var(--color-link); }
   border-top: 1px solid var(--color-hairline);
 }
 
+/*
+ * Desktop: the page itself scrolls, not a fixed-height panel. The map column is
+ * sticky, so it keeps filling the viewport below the nav (DESIGN.md, Map page),
+ * and its scale bar and controls stay in view while the briefing scrolls past.
+ */
 @media (min-width: 1024px) {
   .top-nav { padding: 0 var(--space-xxl); }
   .briefing {
     grid-template-columns: minmax(0, 1fr) var(--size-panel);
+    align-items: start;
+  }
+  .map-area {
+    position: sticky;
+    top: var(--size-nav);
     height: calc(100vh - var(--size-nav));
   }
-  .map-area { height: 100%; }
-  .panel { overflow-y: auto; padding: var(--space-xl); border-left: 1px solid var(--color-hairline); }
+  .panel {
+    min-height: calc(100vh - var(--size-nav));
+    padding: var(--space-xl);
+    border-left: 1px solid var(--color-hairline);
+  }
 }
 
 @media (max-width: 479px) {
