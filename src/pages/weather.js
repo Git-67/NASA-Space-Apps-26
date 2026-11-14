@@ -48,6 +48,17 @@ const BIN = 15;                  // degrees of Ls per season bin
 const MARS_YEAR_DAYS = 686.98;   // Earth days in a Mars year
 const MIN_SOLS_PER_CELL = 3;
 
+// ---- OUR CHOICES (not NASA thresholds). Every cutoff used by "At a glance" lives here.
+const UNUSUAL_PCT = 5;      // "unusual" = in the outer 5% at either end of past sols for this season
+const MIN_HISTORY = 10;     // fewest past sols needed before we compare against history
+const FLARE_DAYS = 3;       // a flare counts as active for this many days...
+const FLARE_CLASSES = "MX"; // ...if it is class M or X (the standard "major" classes)
+const SEP_DAYS = 3;         // a solar particle event counts as active for this many days
+
+// ---- NASA DONKI (space weather). A key in browser code is public. DEMO_KEY is rate limited.
+const DONKI_KEY = "DEMO_KEY";
+const DONKI = "https://api.nasa.gov/DONKI/";
+
 const num = (v) =>
   v === null || v === undefined || v === "" || Number.isNaN(Number(v)) ? null : Number(v);
 const r1 = (v) => Math.round(v * 10) / 10;
@@ -379,6 +390,177 @@ function dustCard(soles, source) {
   return c;
 }
 
+
+// ---------- At a glance
+const iso = (ms) => new Date(ms).toISOString().slice(0, 10);
+async function donki(path, days) {
+  const url = `${DONKI}${path}?startDate=${iso(Date.now() - days * 864e5)}&endDate=${iso(Date.now())}&api_key=${DONKI_KEY}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const t = await res.text();
+  return t.trim() ? JSON.parse(t) : [];   // DONKI sends an empty body when there are no events
+}
+
+// share of past sols, at the same time of year, that were below this sol's value
+function percentile(soles, latest, fn) {
+  const ls = num(latest.ls), v = fn(latest);
+  if (ls === null || v === null) return null;
+  const bin = Math.floor(ls / BIN), peers = [];
+  for (const x of soles) {
+    if (x === latest) continue;
+    const l = num(x.ls);
+    if (l === null || Math.floor(l / BIN) !== bin) continue;
+    const w = fn(x);
+    if (w !== null) peers.push(w);
+  }
+  if (peers.length < MIN_HISTORY) return null;
+  return 100 * peers.filter((w) => w < v).length / peers.length;
+}
+
+const BADGE = { ok: "✓", watch: "!", nodata: "–", info: "i" };
+const tile = (label, value, note, status, badge) => ({ label, value, note, status, badge });
+const NO = (label, why) => tile(label, "Not measured", why, "nodata", "Not measured");
+
+function compareTile(label, soles, latest, fn, value, low, high) {
+  const pct = percentile(soles, latest, fn);
+  if (pct === null) return tile(label, value, "Not enough history for this season to compare.", "info", "No comparison");
+  if (pct <= UNUSUAL_PCT) return tile(label, value, `${low} than ${Math.round(100 - pct)}% of past sols at this time of year.`, "watch", "Unusual");
+  if (pct >= 100 - UNUSUAL_PCT) return tile(label, value, `${high} than ${Math.round(pct)}% of past sols at this time of year.`, "watch", "Unusual");
+  return tile(label, value, "Within the usual range for this time of year.", "ok", "Usual");
+}
+
+function buildTiles(soles, dk) {
+  const latest = soles[soles.length - 1];
+  const mn = num(latest.min_temp), mx = num(latest.max_temp), pr = num(latest.pressure);
+  const mean = (s) => (num(s.min_temp) === null || num(s.max_temp) === null ? null : (num(s.min_temp) + num(s.max_temp)) / 2);
+  const rangeOf = (s) => (num(s.min_temp) === null || num(s.max_temp) === null ? null : num(s.max_temp) - num(s.min_temp));
+  const tiles = [];
+
+  tiles.push(mean(latest) === null ? NO("Temperature", "The feed gave no air temperature for the latest sol.")
+    : compareTile("Temperature", soles, latest, mean, `${r1(mn)} to ${r1(mx)} °C`, "Colder", "Warmer"));
+  tiles.push(pr === null ? NO("Pressure", "The feed gave no pressure for the latest sol.")
+    : compareTile("Pressure", soles, latest, (s) => num(s.pressure), `${r1(pr)} Pa`, "Lower", "Higher"));
+
+  const ws = num(latest.wind_speed), wd = latest.wind_direction && !/^-+$/.test(String(latest.wind_direction)) ? String(latest.wind_direction) : null;
+  tiles.push(ws === null && wd === null ? NO("Wind", "The feed gave no wind speed or direction. This sensor often has no data.")
+    : tile("Wind", `${ws === null ? "speed not given" : `${r1(ws)} m/s`}${wd ? `, direction ${wd}` : ""}`, "As reported by the feed for the latest sol.", "info", "Info"));
+
+  tiles.push(latest.local_uv_irradiance_index
+    ? tile("Sunlight (UV)", String(latest.local_uv_irradiance_index).replace(/_/g, " "), "Ground UV level as labelled by the feed. Not the same as radiation dose.", "info", "Info")
+    : NO("Sunlight (UV)", "The feed gave no UV level for the latest sol."));
+
+  const hm = (t) => { const m = /^(\d{1,2}):(\d{2})/.exec(String(t || "")); return m ? Number(m[1]) + Number(m[2]) / 60 : null; };
+  const up = hm(latest.sunrise), down = hm(latest.sunset);
+  tiles.push(up !== null && down !== null && down > up
+    ? tile("Daylight", `Sun up ${latest.sunrise} to ${latest.sunset}`, `${r1(down - up)} h of daylight, Mars local time, on the latest sol.`, "info", "Info")
+    : NO("Daylight", "The feed gave no sunrise and sunset for the latest sol."));
+
+  const bad = (r, label, why) => ({ failed: true, ...NO(label, `NASA DONKI could not be reached (${r.reason && r.reason.message}). ${why}`) });
+  const [fl, cme, sep] = dk;
+  if (fl.status === "rejected") tiles.push(bad(fl, "Solar flares", "Needs the DONKI service."));
+  else {
+    const rank = (c) => ("ABCMX".indexOf(String(c)[0]) + 1) * 1000 + (parseFloat(String(c).slice(1)) || 0);
+    const list = (fl.value || []).filter((f) => f.classType);
+    const top = list.sort((a, b) => rank(b.classType) - rank(a.classType))[0];
+    const recentMajor = list.filter((f) => FLARE_CLASSES.includes(String(f.classType)[0]) &&
+      Date.now() - Date.parse(f.peakTime || f.beginTime) <= FLARE_DAYS * 864e5);
+    tiles.push(recentMajor.length
+      ? tile("Solar flares", `${recentMajor.length} major in ${FLARE_DAYS} days, strongest ${top.classType}`, "Seen from Earth. Mars may not face the flare.", "watch", "Active")
+      : tile("Solar flares", top ? `Strongest in 7 days: ${top.classType}` : "None in 7 days", "Seen from Earth. Mars may not face the flare.", "ok", "Quiet"));
+  }
+  if (cme.status === "rejected") tiles.push(bad(cme, "Solar storms (CMEs)", "Needs the DONKI service."));
+  else {
+    const hits = [];
+    for (const a of cme.value || []) for (const e of a.enlilList || []) for (const i of e.impactList || [])
+      if (/mars/i.test(i.location || "")) { const t = Date.parse(i.arrivalTime); if (!Number.isNaN(t) && t >= Date.now() - 864e5) hits.push(t); }
+    tiles.push(hits.length
+      ? tile("Solar storms (CMEs)", `Forecast to reach Mars ${fmtDate(Math.min(...hits))}`, "DONKI model forecast, not a measurement at Mars.", "watch", "Forecast")
+      : tile("Solar storms (CMEs)", "None forecast for Mars", "In DONKI's model results. Not every CME is modelled.", "ok", "None forecast"));
+  }
+  if (sep.status === "rejected") tiles.push(bad(sep, "Particles and cosmic rays", "Needs the DONKI service."));
+  else {
+    const recent = (sep.value || []).filter((e) => Date.now() - Date.parse(e.eventTime) <= SEP_DAYS * 864e5);
+    tiles.push(recent.length
+      ? tile("Particles and cosmic rays", `Solar particle event in the last ${SEP_DAYS} days`, "Detected near Earth or by spacecraft. Deep-space cosmic rays are not measured live here.", "watch", "Active")
+      : tile("Particles and cosmic rays", `No solar particle event in ${SEP_DAYS} days`, "Detected near Earth or by spacecraft. Deep-space cosmic rays are not measured live here.", "ok", "Quiet"));
+  }
+
+  const a = analyse(soles), wins = a ? watchWindows(a) : [];
+  const inWin = wins.find((w) => w.start <= Date.now() && Date.now() <= w.end);
+  const next = wins.find((w) => w.start > Date.now());
+  const rp = percentile(soles, latest, rangeOf);
+  if (!a && rp === null) tiles.push(NO("Dust storms", "Not enough season history to infer dust."));
+  else {
+    const narrow = rp !== null && rp <= UNUSUAL_PCT;
+    const base = inWin ? `Watch dates now, until ${fmtDate(inWin.end)}` : narrow ? "Daily range unusually narrow" : "Outside watch dates";
+    tiles.push(tile("Dust storms",
+      `${base}${!inWin && next ? `. Next: ${fmtDate(next.start)} to ${fmtDate(next.end)}` : ""}`,
+      "Inferred from the daily temperature range, not measured. We can't predict storms.",
+      inWin || narrow ? "watch" : "info", inWin || narrow ? "Watch" : "Info"));
+  }
+
+  tiles.push(NO("Visibility", "No visibility measurement exists in the feed."));
+  tiles.push(latest.atmo_opacity
+    ? tile("Dust in the air", String(latest.atmo_opacity), "A coarse sky label from the feed. It is not an optical-depth measurement.", "info", "Info")
+    : NO("Dust in the air", "The feed gave no sky label for the latest sol."));
+  return tiles;
+}
+
+function asOf(d) {
+  const t = Date.parse(d);
+  if (Number.isNaN(t)) return "date unknown";
+  const days = Math.floor((Date.now() - t) / 864e5);
+  return `${fmtDate(t)}${days > 0 ? `, ${days} days ago` : ""}`;
+}
+
+function glanceCard(soles, dk) {
+  const c = card("At a glance");
+  const latest = soles[soles.length - 1];
+  const all = buildTiles(soles, dk);
+  const hidden = all.filter((t) => t.status === "nodata");            // nothing measured: not shown
+  const rank = { watch: 0, ok: 1, info: 2 };
+  const shown = all.filter((t) => t.status !== "nodata").sort((x, y) => rank[x.status] - rank[y.status]);
+  const watch = shown.filter((t) => t.status === "watch");
+  const okN = shown.filter((t) => t.status === "ok").length;
+
+  const failed = all.filter((t) => t.failed);   // a service error, unlike a sensor that never reports
+  const [status, head, sub] = watch.length
+    ? ["watch", "Check before you go", `Needs a look: ${watch.map((t) => t.label).join(", ")}.${failed.length ? ` Could not check: ${failed.map((t) => t.label).join(", ")}.` : ""}`]
+    : failed.length ? ["info", "Some checks could not run", `Could not check: ${failed.map((t) => t.label).join(", ")}.`]
+    : okN ? ["ok", "Nothing unusual found", "In the data available. Not a safety clearance."]
+    : ["info", "Not enough data", "Too little data to compare against."];
+  const banner = el("div", "glance-banner");
+  banner.dataset.status = status;
+  banner.append(el("p", "glance-head", `${BADGE[status]} ${head}`), el("p", "glance-sub", sub),
+    el("p", "glance-asof", `Weather as of sol ${latest.sol} (${asOf(latest.terrestrial_date)}).`));
+  c.append(banner);
+
+  const list = el("ul", "glance-list");
+  for (const t of shown) {
+    const li = el("li", "glance-row");
+    li.dataset.status = t.status;
+    li.title = t.note;
+    li.append(el("span", "glance-label", t.label), el("span", "glance-value", t.value));
+    if (t.status !== "info") li.append(el("span", "glance-badge", `${BADGE[t.status]} ${t.badge}`));
+    list.append(li);
+  }
+  c.append(list);
+
+  const more = el("details", "glance-more");
+  more.append(el("summary", "", "How to read this"));
+  const ul = el("ul");
+  for (const t of shown) ul.append(el("li", "", `${t.label}: ${t.note}`));
+  more.append(ul);
+  more.append(el("p", "basis",
+    `"Unusual" means outside the middle ${100 - 2 * UNUSUAL_PCT}% of past sols at the same time of year. That cutoff is our choice, not a NASA limit. ` +
+    "NASA has set no go / no-go limits for this site, so this summary never says go or no-go."));
+  for (const t of failed) more.append(el("p", "basis", `${t.label}: ${t.note}`));
+  const quiet = hidden.filter((t) => !t.failed);
+  if (quiet.length) more.append(el("p", "basis", `Not shown because no data was available: ${quiet.map((t) => t.label).join(", ")}.`));
+  c.append(more);
+  return c;
+}
+
 // ---------- Page wiring
 function renderError(panel, err) {
   const c = card("Weather at Gale Crater");
@@ -393,8 +575,10 @@ function renderError(panel, err) {
 async function load(panel) {
   panel.replaceChildren(el("p", "basis", "Loading weather…"));
   try {
+    const donkiP = Promise.allSettled([donki("FLR", 7), donki("CMEAnalysis", 10), donki("SEP", 7)]);
     const { soles, source } = await fetchData();
-    panel.replaceChildren(weatherCard(soles, source), dustCard(soles, source));
+    const dk = await donkiP;
+    panel.replaceChildren(glanceCard(soles, dk), weatherCard(soles, source), dustCard(soles, source));
   } catch (e) {
     renderError(panel, e);
   }
