@@ -25,6 +25,9 @@
  *   under it, a warning of a hazard just ahead (steep ground, sand);
  * - left: the next stop, its distance and walking time, and the minimap;
  * - right: the space weather level, its source, and a drill's countdown;
+ *   under it, a notice when something happens (a stop reached and its tasks,
+ *   a simulated alert, the walk complete). Read-only: the visor never asks
+ *   for input; tasks are ticked in the map view;
  * - chin: two gauges along the bottom of the visor against NASA's limits (time
  *   out of 8 h, distance from base of 2 km; both lunar figures), and a
  *   "simulation" label;
@@ -80,6 +83,12 @@ const EDGE_MARGIN = 110;
 const MINIMAP_X = 300;
 const MINIMAP_Y = 430;
 const MINIMAP_RADIUS = 78;
+/** Notice lines, right-aligned along the visor's right edge under the weather; at most this many after the title. */
+const NOTICE_LINE_COUNT = 4;
+const NOTICE_TOP_Y = 372;
+const NOTICE_LINE_GAP = 22;
+/** Longest notice line, in characters; longer ones end in an ellipsis (the full text is in the map view). */
+const NOTICE_LINE_MAX_CHARS = 40;
 /** Gauge labels add these words, so a level is never told by the fill alone. */
 const GAUGE_WORDS = { ok: '', near: ' · near limit', over: ' · at limit' };
 
@@ -207,6 +216,15 @@ export function createVisorView(container, handlers) {
   const weatherTime = edgeText('right', 328, 'visor-detail');
 
   const alertText = svg('text', { x: CENTRE_X, y: 490, class: 'visor-alert-text', 'text-anchor': 'middle' });
+  // A notice at the right edge: eyebrow, title, then a few short lines.
+  const noticeEyebrow = edgeText('right', NOTICE_TOP_Y, 'visor-label');
+  const noticeTitle = edgeText('right', NOTICE_TOP_Y + 24, 'visor-value');
+  const noticeLines = Array.from({ length: NOTICE_LINE_COUNT }, (_, index) => edgeText('right', NOTICE_TOP_Y + 48 + index * NOTICE_LINE_GAP, 'visor-detail'));
+  // One straight right edge for the whole notice, set where the visor curves in most (its lowest line):
+  // following the curve line by line made a ragged staircase.
+  const noticeRightX = Math.min(...[noticeEyebrow, noticeTitle, ...noticeLines].map((line) => Number(line.getAttribute('x'))));
+  for (const line of [noticeEyebrow, noticeTitle, ...noticeLines]) line.setAttribute('x', String(noticeRightX));
+  const notice = svg('g', { class: 'visor-notice' }, [noticeEyebrow, noticeTitle, ...noticeLines]);
   // A hazard just ahead, under the heading: the first thing below where the eyes rest.
   const hazardText = svg('text', { x: CENTRE_X, y: 214, class: 'visor-hazard', 'text-anchor': 'middle' });
   const outGauge = chinGauge('visor-out-guide', 150, 112);
@@ -236,6 +254,7 @@ export function createVisorView(container, handlers) {
     weatherLabel, weatherLevel, weatherText, weatherTime,
     alertText,
     hazardText,
+    notice,
     outGauge.group, baseGauge.group,
     simulationPath, svg('text', { class: 'visor-sim' }, [simulationText]),
   ]);
@@ -275,6 +294,19 @@ export function createVisorView(container, handlers) {
         top: offsetY + (MINIMAP_Y - MINIMAP_RADIUS) * scale,
         size: 2 * MINIMAP_RADIUS * scale,
       };
+    },
+    /**
+     * Show a read-only notice at the visor's right edge, or clear it.
+     * @param {{ eyebrow: string, title: string, lines: string[] } | null} content Null clears it.
+     */
+    setNotice(content) {
+      noticeEyebrow.textContent = content?.eyebrow ?? '';
+      noticeTitle.textContent = content?.title ?? '';
+      noticeLines.forEach((line, index) => {
+        const text = content?.lines[index] ?? '';
+        line.textContent = text.length > NOTICE_LINE_MAX_CHARS ? `${text.slice(0, NOTICE_LINE_MAX_CHARS - 1).trimEnd()}…` : text;
+      });
+      if (content) summary.textContent = `${content.eyebrow}. ${content.title}. ${content.lines.join(' ')}`;
     },
     /** @param {string | null} text A hazard just ahead, or null for none. */
     setHazard(text) {

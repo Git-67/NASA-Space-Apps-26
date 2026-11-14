@@ -86,7 +86,7 @@ export function createJourneyHud(handlers) {
   const visor = createVisorView(root, { onTogglePlay: handlers.onTogglePlay, onDrill: handlers.onDrill });
   root.append(el('div', { className: 'journey-side' }, [visorButton, soundButton]));
   // The pop-ups come last, so they sit above the visor as well as the panels.
-  root.append(dialogs.panel, dialogs.element);
+  root.append(dialogs.element);
   root.hidden = true;
   document.body.append(root);
 
@@ -97,7 +97,6 @@ export function createJourneyHud(handlers) {
     setVisor(isVisor) {
       document.body.classList.toggle('is-visor', isVisor);
       visor.setShown(isVisor);
-      dialogs.setVisor(isVisor);
       visorButton.setAttribute('aria-pressed', String(isVisor));
       this.placeMinimap();
     },

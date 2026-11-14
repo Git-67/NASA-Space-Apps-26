@@ -16,6 +16,10 @@
  * - A warning shows (and sounds) about 30 m before steep ground or a sandy
  *   hollow, with the distance counting down, until the walker is past it.
  * - "Visor view" swaps the panels for a simulated helmet visor (visor-view.js).
+ *   The visor never asks for input: a stop reached, an alert or the end of
+ *   the walk show as read-only notices at its edge. At a stop the walk waits;
+ *   Walk (outside the visor) carries on. Ticking tasks, finishing and ending
+ *   the walk happen in the map view, where the task pop-up appears again.
  * - Soft sound cues (lib/sound.js) mark arrivals, submitted tasks, the end of
  *   the walk, and changes in the space weather level; each goes with
  *   something on screen, and sound can be muted.
@@ -59,6 +63,10 @@ const WEATHER_REFRESH_MS = 15 * 60 * 1000;
 const LOOK_AHEAD_M = 25;
 /** Warn of a hazard (steep ground, sand) this many metres before it: about a minute's walk at 2 km/h. */
 const HAZARD_WARN_M = 30;
+/** A simulated alert's notice on the visor clears itself after this long, in milliseconds. */
+const VISOR_NOTICE_MS = 8000;
+/** At most this many of a stop's tasks are listed on the visor; the map view lists all. */
+const VISOR_TASK_COUNT = 2;
 /** Keep the warning shown until this many metres past the hazard's start... */
 const HAZARD_CLEAR_M = 10;
 /** ...and for at least this long in real time, in milliseconds: sped up, a walker passes 30 m in a second. */
@@ -123,25 +131,45 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather, limits, onEnd
   let isVisor = false;
   /** @type {WeatherSummary | null} The space weather last shown, for the visor and for alert sounds. */
   let shownWeather = null;
+  /**
+   * A stop reached whose tasks are not yet submitted. The walk waits while there is one. In the map
+   * view its pop-up is open; in the visor, a notice shows instead, until the walker goes on.
+   * @type {{ arrival: import('./journey-model.js').Arrival, stop: import('../plan/plan-model.js').Stop | undefined } | null}
+   */
+  let pendingArrival = null;
+  /** @type {number | null} Clears a drill's notice on the visor. */
+  let noticeTimer = null;
 
   const hud = createJourneyHud({
     onEnd: () => askToEnd(),
-    onTogglePlay: () => { isPlaying = !isPlaying; render(0); },
+    onTogglePlay: () => {
+      // In the visor, Walk at a stop means "done here, go on": the visor asks for nothing else.
+      if (pendingArrival && isVisor) { if (!pendingArrival.arrival.isFinish) finishStop(); return; }
+      isPlaying = !isPlaying;
+      render(0);
+    },
     onSpeed: () => { speedIndex = (speedIndex + 1) % SPEEDS.length; render(0); },
     onRecentre: () => { isFollowing = true; hud.setFollowing(true); render(0, true); },
     onDrill: () => startDrill(),
-    onVisor: () => {
-      if (!journey) return;
-      isVisor = !isVisor;
-      hud.setVisor(isVisor);
-      map.resize();
-      const here = positionAt(journey, progress.walkedM);
-      map.follow(here.lat, here.lon, isVisor ? MINIMAP_ZOOM : WALK_ZOOM, false);
-      isFollowing = true;
-      hud.setFollowing(true);
-      render(0, true);
-    },
+    onVisor: () => toggleVisor(),
   });
+
+  /** Switch between the map view and the visor; a stop's tasks move to wherever fits. */
+  function toggleVisor() {
+    if (!journey) return;
+    isVisor = !isVisor;
+    // The visor asks for nothing: an open pop-up closes, and a stop's tasks wait for the map view.
+    if (isVisor) hud.dialogs.close();
+    hud.setVisor(isVisor);
+    clearNotice();
+    map.resize();
+    const here = positionAt(journey, progress.walkedM);
+    map.follow(here.lat, here.lon, isVisor ? MINIMAP_ZOOM : WALK_ZOOM, false);
+    isFollowing = true;
+    hud.setFollowing(true);
+    presentArrival();
+    render(0, true);
+  }
   map.onUserPan(() => {
     if (!journey) return;
     isFollowing = false;
@@ -224,12 +252,48 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather, limits, onEnd
     showLeg();
     const stop = plan.stops.find((item) => item.id === arrival.stopId);
     playCue(arrival.isFinish ? 'complete' : 'arrival');
-    hud.dialogs.showArrival(arrival, stop, plan.stops.length, () => {
-      if (arrival.isFinish) { end(); return; }
-      playCue('submitted');
-      isPlaying = true;
-      render(0);
+    pendingArrival = { arrival, stop };
+    presentArrival();
+  }
+
+  /** Show the stop waiting for its tasks: the pop-up in the map view, a read-only notice in the visor. */
+  function presentArrival() {
+    if (!pendingArrival || !plan) return;
+    const { arrival, stop } = pendingArrival;
+    if (!isVisor) {
+      hud.visor.setNotice(null);
+      hud.dialogs.showArrival(arrival, stop, plan.stops.length, () => {
+        if (arrival.isFinish) { end(); return; }
+        finishStop();
+      });
+      return;
+    }
+    if (arrival.isFinish || !stop) {
+      hud.visor.setNotice({ eyebrow: 'BACK AT THE START', title: 'Walk complete', lines: ['Stow the samples.', 'Check in with the habitat.', 'Map view to finish'] });
+      return;
+    }
+    const tasks = stop.tasksOurs.slice(0, VISOR_TASK_COUNT).map((task) => `· ${task}`);
+    const more = stop.tasksOurs.length - VISOR_TASK_COUNT;
+    hud.visor.setNotice({
+      eyebrow: `ARRIVED · STOP ${arrival.visitNumber} OF ${plan.stops.length}`,
+      title: arrival.name,
+      lines: [...tasks, ...(more > 0 ? [`+${more} more in map view`] : []), 'Walk to go on'],
     });
+  }
+
+  /** A stop's work is done: walk on to the next. */
+  function finishStop() {
+    pendingArrival = null;
+    hud.visor.setNotice(null);
+    playCue('submitted');
+    isPlaying = true;
+    render(0);
+  }
+
+  function clearNotice() {
+    if (noticeTimer !== null) window.clearTimeout(noticeTimer);
+    noticeTimer = null;
+    hud.visor.setNotice(null);
   }
 
   /** @param {number} now performance.now() */
@@ -241,7 +305,7 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather, limits, onEnd
     const speed = SPEEDS[speedIndex];
     simulatedMs += elapsedMs * speed;
     if (drill && simulatedMs >= drill.endsAtMs) { drill = null; showWeather(); }
-    if (isPlaying && !hud.dialogs.isOpen()) {
+    if (isPlaying && !pendingArrival && !hud.dialogs.isOpen()) {
       const step = walkOn(journey, progress, elapsedMs * metresPerMs * speed);
       progress = { walkedM: step.walkedM, nextIndex: step.nextIndex };
       const warned = hazardsWithin(journey, hazardsWarned, progress.walkedM, HAZARD_WARN_M);
@@ -301,7 +365,7 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather, limits, onEnd
 
   function startDrill() {
     // Not over a stop's tasks or the end checks: an alert would replace them.
-    if (hud.dialogs.isOpen()) return;
+    if (hud.dialogs.isOpen() || pendingArrival) return;
     const next = weather.drill();
     const isPausing = isPlaying && next.level === 'no-go';
     if (isPausing) isPlaying = false;
@@ -310,12 +374,28 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather, limits, onEnd
     showWeather();
     // showWeather sounds only a change of level; a second alert of the same level still sounds.
     if (levelBefore === next.level) playCue(next.level);
-    hud.dialogs.showDrill(next, isPausing, () => render(0));
+    if (isVisor) {
+      // Read-only on the visor, clearing itself; the weather readout keeps the level and countdown.
+      clearNotice();
+      // The weather readout above already names the event; the notice gives the rule's message and advice.
+      const [message, ...advice] = next.text.split('. ').map((sentence) => sentence.replace(/\.$/, ''));
+      hud.visor.setNotice({
+        eyebrow: 'SIMULATED ALERT · DRILL',
+        title: message,
+        lines: [...advice, ...(isPausing ? ['Walk paused · Walk to go on'] : [])],
+      });
+      noticeTimer = window.setTimeout(clearNotice, VISOR_NOTICE_MS);
+    } else {
+      hud.dialogs.showDrill(next, isPausing, () => render(0));
+    }
     render(0);
   }
 
   function askToEnd() {
     if (!journey || hud.dialogs.isOpen()) return;
+    // The checks need input, so they happen in the map view.
+    if (isVisor) toggleVisor();
+    if (hud.dialogs.isOpen()) return; // a stop's tasks came back first
     hud.dialogs.askToEnd(() => { playCue('ended'); end(); }, () => render(0));
   }
 
@@ -340,6 +420,7 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather, limits, onEnd
     plan = nextPlan;
     journey = buildJourney(nextPlan);
     progress = { walkedM: 0, nextIndex: 0 };
+    pendingArrival = null;
     hazardsWarned = 0;
     shownHazard = null;
     isPlaying = true;
@@ -374,6 +455,8 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather, limits, onEnd
     journey = null;
     plan = null;
     drill = null;
+    pendingArrival = null;
+    clearNotice();
     if (frame !== null) { window.cancelAnimationFrame(frame); window.clearTimeout(frame); }
     if (weatherTimer !== null) window.clearInterval(weatherTimer);
     stopCompass?.();
