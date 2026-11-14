@@ -1,0 +1,10 @@
+{
+"type": "FeatureCollection",
+"name": "MSL_SurfaceSites",
+"features": [
+{ "type": "Feature", "properties": { "Name": "Mary Anning & Groken Drill Sites", "site": 82, "pos": 2176 }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 137.38943158, -4.73102372 ], [ 137.38943158, -4.7276496 ], [ 137.3928057, -4.7276496 ], [ 137.3928057, -4.73102372 ], [ 137.38943158, -4.73102372 ] ] ] } },
+{ "type": "Feature", "properties": { "Name": "Kimberley", "site": 31, "pos": 1330  }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 137.40012632, -4.6393478 ], [ 137.40012632, -4.63597367 ], [ 137.40350044, -4.63597367 ], [ 137.40350044, -4.6393478 ], [ 137.40012632, -4.6393478 ] ] ] } },
+{ "type": "Feature", "properties": { "Name": "Pahrump Hills", "site": 45, "pos": 366  }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 137.37620503, -4.66470537 ], [ 137.37620503, -4.66133125 ], [ 137.37957915, -4.66133125 ], [ 137.37957915, -4.66470537 ], [ 137.37620503, -4.66470537 ] ] ] } },
+{ "type": "Feature", "properties": { "Name": "Dingo Gap", "site": 26, "pos": 292  }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 137.40550927, -4.62819738 ], [ 137.40550927, -4.62482326 ], [ 137.40888339, -4.62482326 ], [ 137.40888339, -4.62819738 ], [ 137.40550927, -4.62819738 ] ] ] } }
+]
+}

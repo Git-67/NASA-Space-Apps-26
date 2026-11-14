@@ -8,17 +8,24 @@
  * tiles use a plain latitude/longitude grid, so the map uses the same grid
  * (Leaflet's EPSG:4326) with Mars' radius in place of Earth's, which makes
  * the scale bar and distances correct for Mars.
+ * Optional layers (colour imagery, contours, place names, grid) and their
+ * panel are added by map-layer-options.js.
  */
 import * as L from '../../../public/vendor/leaflet/leaflet-src.esm.js';
 import { MARS_RADIUS_M } from '../../lib/mars.js';
 import { el } from '../../lib/dom.js';
+import { addLayerOptions } from './map-layer-options.js';
 
 /** @typedef {import('../plan/plan-model.js').Route} Route */
+/** @typedef {import('./map-layer-data.js').Place} Place */
+/** @typedef {import('./map-layer-data.js').DemCalibration} DemCalibration */
 
 const TREK_TILES = 'https://trek.nasa.gov/tiles/Mars/EQ';
 /** Mars Trek puts the row before the column, the reverse of the usual order. */
 const TILE_PATH = '1.0.0/default/default028mm/{z}/{y}/{x}.png';
 const HIRISE_LAYER = 'curiosity_hirise_mosaic';
+/** MRO HiRISE elevation model of Gale Crater, the source of the contour lines. */
+const DEM_LAYER = 'Gale_DEM_SMG_1m';
 /** Deepest zoom the HiRISE mosaic is published at. The map never zooms past it, so imagery is never stretched. */
 const HIRISE_MAX_ZOOM = 16;
 const MIN_ZOOM = 12;
@@ -39,10 +46,12 @@ const MARS_CRS = L.extend({}, L.CRS.EPSG4326, { R: MARS_RADIUS_M });
  * Draw the map.
  * @param {HTMLElement} container Element that will hold the map.
  * @param {Route} route The prepared route.
+ * @param {{ places: Place[] | Error, calibration: DemCalibration | Error }} extras Data for the optional layers,
+ *   or why each could not be loaded; a missing one only disables its own layer.
  * @param {(stopId: string) => void} onStopChosen Called when a visitor activates a stop marker.
  * @returns {{ setVisitedStops: (stopIds: string[]) => void, highlightStop: (stopId: string) => void }}
  */
-export function createMapView(container, route, onStopChosen) {
+export function createMapView(container, route, extras, onStopChosen) {
   const map = L.map(container, {
     crs: MARS_CRS,
     minZoom: MIN_ZOOM,
@@ -62,10 +71,12 @@ export function createMapView(container, route, onStopChosen) {
   // Metric only: SI units throughout (DESIGN.md, Mars conventions).
   L.control.scale({ position: 'bottomleft', imperial: false }).addTo(map);
 
+  // The route and stops form one layer, so the colour view can hide them together.
+  const routeLayer = L.layerGroup();
   const path = route.points.map((point) => L.latLng(point.lat, point.lon));
   // Two lines, dark under bright: the casing keeps the route readable on pale dust and dark rock alike.
-  L.polyline(path, { className: 'map-route-casing', interactive: false }).addTo(map);
-  L.polyline(path, { className: 'map-route', interactive: false }).addTo(map);
+  L.polyline(path, { className: 'map-route-casing', interactive: false }).addTo(routeLayer);
+  L.polyline(path, { className: 'map-route', interactive: false }).addTo(routeLayer);
 
   /** @type {Map<string, HTMLElement>} */
   const markerElements = new Map();
@@ -99,11 +110,22 @@ export function createMapView(container, route, onStopChosen) {
       title: `Stop ${index + 1}: ${stop.name}`,
       alt: `Stop ${index + 1}: ${stop.name}`,
       keyboard: true,
-    }).addTo(map);
+    }).addTo(routeLayer);
     marker.on('click keypress', () => onStopChosen(stop.id));
   });
 
   map.fitBounds(L.latLngBounds(path), { padding: [ROUTE_PADDING_PX, ROUTE_PADDING_PX] });
+
+  addLayerOptions(map, {
+    routeLayer,
+    stopLabels: route.stops.map((stop, index) => {
+      const point = route.points[stop.pointIndex];
+      return { name: `${index + 1}. ${stop.name}`, lat: point.lat, lon: point.lon, hasMarker: false };
+    }),
+    places: extras.places,
+    calibration: extras.calibration,
+    demTileUrl: `${TREK_TILES}/${DEM_LAYER}/${TILE_PATH}`,
+  });
 
   return {
     /** Dim the stops that are not part of the current plan. */
