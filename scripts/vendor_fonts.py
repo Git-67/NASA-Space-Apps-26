@@ -20,9 +20,14 @@ CSS_FILE = REPO_ROOT / "src" / "styles" / "fonts.css"
 TEXT_FONTS = "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap"
 # Every icon the page uses, in alphabetical order as Google Fonts requires.
 ICON_NAMES = [
-    "add_location", "arrow_downward", "arrow_forward", "arrow_upward", "check_box_outline_blank", "close",
-    "directions_walk", "fast_forward", "filter_b_and_w", "flag", "grain", "grid_on", "label", "landscape",
-    "layers", "my_location", "palette", "pause", "play_arrow", "star", "today", "trending_up", "warning",
+    "add_location", "air", "arrow_downward", "arrow_forward", "arrow_upward", "blur_on",
+    "calendar_month", "check_box_outline_blank", "check_circle", "chevron_right", "close",
+    "close_fullscreen", "cloud", "compress", "cyclone", "dashboard", "directions_walk", "error",
+    "event", "fast_forward", "filter_b_and_w", "flag", "flare", "grain", "grid_on", "height",
+    "help", "info", "label", "landscape", "layers", "light_mode", "open_in_full", "palette",
+    "partly_cloudy_day", "pause", "play_arrow", "refresh", "scatter_plot", "schedule",
+    "show_chart", "star", "storm", "table_chart", "thermostat", "today", "trending_down",
+    "trending_flat", "trending_up", "visibility", "warning", "water_drop", "wb_twilight",
 ]
 ICON_FONT = ("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
              "&icon_names={names}&display=block")

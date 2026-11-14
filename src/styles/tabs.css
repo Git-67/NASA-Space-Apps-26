@@ -1,69 +1,278 @@
-/* Tabs for the sidebar. Colours are inherited so they follow your light/dark theme.
-   Swap in your real tokens from tokens.css if you want exact brand colours. */
+/* Tabs for the sidebar. Colours come from the DESIGN.md tokens (var(--token, fallback)).
+   The fallbacks are the dark-theme values; tokens.css should swap them for light.
+   Where a token is missing, colours are inherited so the tab still follows the theme. */
 .tabs {
   display: flex;
+  overflow-x: auto;
   gap: 0.25rem;
-  border-bottom: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-bottom: 1px solid var(--hairline, color-mix(in srgb, currentColor 25%, transparent));
   margin-block: 0.75rem;
 }
 .tab {
+  white-space: nowrap;
   background: none;
   border: 0;
   border-bottom: 2px solid transparent;
   color: inherit;
   font: inherit;
+  min-height: 2.75rem;
   padding: 0.5rem 0.9rem;
   cursor: pointer;
   opacity: 0.7;
 }
-.tab[aria-selected="true"] { border-bottom-color: currentColor; font-weight: 600; opacity: 1; }
-.tab:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.tab[aria-selected="true"] { border-bottom-color: var(--accent-text, var(--accent, currentColor)); font-weight: 600; opacity: 1; }
+.tab:focus-visible { outline: 2px solid var(--link, currentColor); outline-offset: 2px; }
 .tabpanel[hidden] { display: none; }
 
-/* Weather tab */
-.wx-list { display: grid; grid-template-columns: 1fr auto; gap: 0.35rem 1rem; margin: 0.5rem 0; }
-.wx-list dt { opacity: 0.8; }
-.wx-list dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+/* ---------- Shared bits ---------- */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.icon { width: 1.25em; text-align: center; font-size: 1rem; line-height: 1; flex: none; user-select: none; }
+.wx-badge .icon, .wx-stat-sub .icon { width: 1em; font-size: 0.85rem; }
+.card-title { display: flex; align-items: center; gap: 0.5rem; margin: 0 0 0.5rem; font-size: 1.1rem; }
+.wx-sub { display: flex; align-items: center; gap: 0.4rem; margin: 0.75rem 0 0.25rem; font-size: 0.95rem; }
+.wx-note { display: flex; align-items: flex-start; gap: 0.5rem; margin: 0.4rem 0; font-size: 0.9rem; }
+.wx-note .icon { margin-top: 0.05rem; color: var(--text-secondary, inherit); }
+.wx-btn, .wx-retry, .wx-toggle {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  min-height: 2.75rem; padding: 0 0.9rem;
+  background: none; color: inherit; font: inherit; font-weight: 600; cursor: pointer;
+  border: 1px solid var(--border-control, color-mix(in srgb, currentColor 45%, transparent));
+  border-radius: 0.5rem;
+}
+.wx-toggle[aria-pressed="true"] { background: color-mix(in srgb, currentColor 15%, transparent); }
+.wx-btn:focus-visible, .wx-retry:focus-visible, .wx-toggle:focus-visible,
+.subtab:focus-visible, .wx-plot svg:focus-visible {
+  outline: 2px solid var(--link, currentColor); outline-offset: 2px;
+}
+.data-source-caption { margin: 0.4rem 0 0; font-size: 0.8rem; color: var(--text-muted, inherit); opacity: 0.9; }
+.skeleton { height: 14rem; border-radius: 0.75rem; background: var(--surface-raised, color-mix(in srgb, currentColor 10%, transparent)); }
 
-/* Chart controls inside the Weather tab */
-.subtabs, .wx-range { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; margin-block: 0.5rem; }
-.wx-range-label { opacity: 0.8; margin-right: 0.25rem; }
+/* Status badge: icon + label, never colour alone */
+.wx-badge {
+  display: inline-flex; align-items: center; gap: 0.25rem; white-space: nowrap;
+  padding: 2px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+.wx-badge[data-status="ok"] { background: var(--tint-green, #0f2e1f); color: var(--on-tint-green, #6fdc9c); }
+.wx-badge[data-status="watch"] { background: var(--tint-amber, #33270a); color: var(--semantic-warning, #fab219); }
+
+/* ---------- Weather chart ---------- */
+.wx-controls { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-block: 0.5rem; }
+.wx-select {
+  position: relative; flex: 1 1 100%; min-width: 0; display: flex; align-items: center; gap: 0.5rem;
+  min-height: 2.75rem; padding-inline: 0.75rem;
+  border: 1px solid var(--border-control, color-mix(in srgb, currentColor 45%, transparent));
+  border-radius: 0.5rem; background: var(--canvas, transparent);
+}
+.wx-select-input {
+  flex: 1; min-height: 2.5rem; padding: 0 1.5rem 0 0; border: 0; background: transparent;
+  color: inherit; font: inherit; font-weight: 600; appearance: none; cursor: pointer;
+  outline: none;
+}
+.wx-select-input option { background: var(--surface, Canvas); color: var(--ink, CanvasText); padding: 0.6rem 0.75rem; }
+.wx-select:focus-within {
+  border-color: var(--link, currentColor);
+  box-shadow: 0 0 0 1px var(--link, currentColor);
+}
+.wx-chev { position: absolute; right: 0.6rem; width: auto; font-size: 1.25rem; pointer-events: none; }
+
+/* Custom dropdown menu (browsers with appearance: base-select; others keep the native menu) */
+@supports (appearance: base-select) {
+  .wx-select-input,
+  .wx-select-input::picker(select) { appearance: base-select; }
+  .wx-select-input::picker-icon { display: none; }   /* we draw our own arrow */
+
+  .wx-select-input::picker(select) {
+    margin-top: 0.25rem; padding: 0.25rem;
+    background: var(--surface-raised, Canvas); color: var(--ink, CanvasText);
+    border: 1px solid var(--hairline-strong, color-mix(in srgb, currentColor 30%, transparent));
+    border-radius: 0.5rem;
+    box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.35);
+  }
+  .wx-select-input option {
+    display: flex; align-items: center; min-height: 2.5rem;
+    border-radius: 0.375rem; cursor: pointer; font-weight: 500;
+    background: transparent;
+  }
+  .wx-select-input option::checkmark { display: none; }
+  .wx-select-input option:hover,
+  .wx-select-input option:focus-visible { background: color-mix(in srgb, currentColor 10%, transparent); outline: none; }
+  .wx-select-input option:checked { background: color-mix(in srgb, currentColor 16%, transparent); font-weight: 700; }
+}
+
+/* Dropdown arrow: points right, turns 90° clockwise when open */
+.wx-chev { transform: rotate(0deg); transform-origin: center; }
+.wx-select:has(.wx-select-input:open) .wx-chev { transform: rotate(90deg); }
+
+.wx-range { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.35rem; margin-block: 0.5rem; }
 .subtab {
-  background: none;
-  border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
-  border-radius: 999px;
-  color: inherit;
-  font: inherit;
-  padding: 0.3rem 0.8rem;
-  cursor: pointer;
+  background: none; border: 1px solid var(--hairline-strong, color-mix(in srgb, currentColor 35%, transparent));
+  border-radius: 999px; color: inherit; font: inherit; font-size: 0.9rem;
+  min-height: 2.75rem; padding: 0 0.25rem; cursor: pointer; white-space: nowrap;
 }
-.subtab[aria-selected="true"], .subtab[aria-pressed="true"] {
+.subtab[aria-pressed="true"] {
+  background: color-mix(in srgb, currentColor 14%, transparent);
   border-color: currentColor;
-  border-width: 2px;
-  padding: calc(0.3rem - 1px) calc(0.8rem - 1px);
+  color: inherit;
   font-weight: 600;
-  background: color-mix(in srgb, currentColor 15%, transparent);
 }
-.subtab:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
-.wx-chart svg { width: 100%; height: auto; display: block; }
 
-/* At a glance: compact list. Line 1: label and status. Line 2: value, full width. */
-.glance-banner { border: 2px solid currentColor; border-radius: 0.5rem; padding: 0.5rem 0.75rem; margin-block: 0.4rem; }
-.glance-banner[data-status="watch"] { border-style: double; border-width: 5px; }
-.glance-banner[data-status="info"] { border-style: dashed; }
+.wx-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr)); gap: 0.5rem; margin-block: 0.5rem; }
+.wx-stat {
+  padding: 0.6rem 0.75rem; border-radius: 0.5rem;
+  border: 1px solid var(--hairline, color-mix(in srgb, currentColor 20%, transparent));
+}
+.wx-stat-label { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: var(--text-secondary, inherit); }
+.wx-stat-value { font-size: 1.5rem; font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.wx-stat-sub { display: flex; align-items: center; gap: 0.25rem; font-size: 0.78rem; color: var(--text-muted, inherit); font-variant-numeric: tabular-nums; }
+
+.wx-legend { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; margin-block: 0.5rem 0.25rem; font-size: 0.8rem; color: var(--text-secondary, inherit); }
+.wx-legend-item { display: inline-flex; align-items: center; gap: 0.4rem; }
+
+/* Series colours: chart-1 to chart-3 from the palette */
+.wx-c1 { --c: var(--chart-1, #3987e5); }
+.wx-c2 { --c: var(--chart-2, #d95926); }
+.wx-c3 { --c: var(--chart-3, #199e70); }
+.wx-sw { width: 10px; height: 10px; border-radius: 2px; background: var(--c, currentColor); flex: none; }
+.wx-sw.low { background: none; border: 2px solid var(--c, currentColor); }
+.wx-usual-sw { background: none; width: 14px; height: 0; border-radius: 0; border-top: 2px dotted var(--text-muted, currentColor); }
+
+.wx-plot { position: relative; }
+.wx-plot svg { width: 100%; height: auto; display: block; touch-action: pan-y; border-radius: 0.25rem; }
+.wx-grid { stroke: var(--chart-grid, color-mix(in srgb, currentColor 14%, transparent)); }
+.wx-axis { stroke: var(--chart-axis, color-mix(in srgb, currentColor 35%, transparent)); }
+.wx-tick { fill: var(--text-muted, currentColor); font-size: 10px; font-variant-numeric: tabular-nums; }
+.wx-direct { fill: var(--text-secondary, currentColor); font-size: 10px; }
+.wx-line { fill: none; stroke: var(--c); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.wx-line.low { stroke-dasharray: 5 3; }
+.wx-usual { fill: none; stroke: var(--text-muted, currentColor); stroke-width: 1.5; stroke-dasharray: 1 4; stroke-linecap: round; }
+.wx-band { fill: var(--chart-1, #3987e5); fill-opacity: 0.12; stroke: none; }
+.wx-dot { fill: var(--c); stroke: var(--surface, Canvas); stroke-width: 2; }
+.wx-dot.low { fill: var(--surface, Canvas); stroke: var(--c); }
+.wx-cross { stroke: var(--chart-axis, currentColor); stroke-width: 1; }
+
+.wx-tip {
+  position: absolute; top: 0; z-index: 2; pointer-events: none; min-width: 8.5rem; max-width: 12rem;
+  padding: 0.4rem 0.6rem; font-size: 0.8rem;
+  background: var(--surface-raised, Canvas); color: var(--ink, CanvasText);
+  border: 1px solid var(--hairline-strong, color-mix(in srgb, currentColor 30%, transparent));
+  border-radius: 0.5rem; box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.5);
+}
+.wx-tip[data-side="mid"] { transform: translateX(-50%); }
+.wx-tip[data-side="left"] { transform: translateX(calc(-100% - 8px)); }
+.wx-tip[data-side="right"] { transform: translateX(8px); }
+.wx-tip-head { font-weight: 600; margin-bottom: 0.2rem; }
+.wx-tip-row { display: flex; align-items: center; gap: 0.4rem; }
+.wx-tip-name { flex: 1; color: var(--text-secondary, inherit); }
+.wx-tip-val { font-weight: 600; font-variant-numeric: tabular-nums; }
+.wx-tip-sub { color: var(--text-muted, inherit); font-size: 0.75rem; }
+
+.wx-table-wrap { overflow-x: auto; margin-block: 0.5rem; }
+.wx-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.wx-table th, .wx-table td { padding: 0.4rem 0.6rem; text-align: left; border-bottom: 1px solid var(--hairline, color-mix(in srgb, currentColor 20%, transparent)); }
+.wx-table th { position: sticky; top: 0; background: var(--surface-raised, Canvas); font-weight: 600; color: var(--text-secondary, inherit); white-space: nowrap; }
+.wx-table td.num, .wx-table th:nth-child(n+3) { text-align: right; font-variant-numeric: tabular-nums; }
+
+.wx-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; list-style: none; margin: 0.6rem 0; padding: 0; }
+.wx-chips li {
+  display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.85rem;
+  padding: 0.25rem 0.6rem; border-radius: 6px;
+  border: 1px solid var(--hairline, color-mix(in srgb, currentColor 20%, transparent));
+}
+.wx-chips .icon { font-size: 0.9rem; color: var(--text-secondary, inherit); }
+
+/* ---------- Dust watch ---------- */
+.dust-list { list-style: none; margin: 0.25rem 0; padding: 0; }
+.dust-row {
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.6rem;
+  padding: 0.5rem 0; border-bottom: 1px solid var(--hairline, color-mix(in srgb, currentColor 20%, transparent));
+}
+.dust-main { display: flex; flex-direction: column; }
+.dust-dates { font-weight: 600; font-size: 0.95rem; }
+.dust-ls { font-size: 0.78rem; color: var(--text-muted, inherit); font-variant-numeric: tabular-nums; }
+
+/* ---------- At a glance ---------- */
+.glance-banner {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.6rem 0.75rem; margin-block: 0.4rem; border-radius: 0.5rem;
+  border: 1px solid var(--hairline-strong, color-mix(in srgb, currentColor 30%, transparent));
+  border-left-width: 5px;
+}
+.glance-banner[data-status="watch"] { border-left-color: var(--semantic-warning, #fab219); }
+.glance-banner[data-status="ok"] { border-left-color: var(--semantic-success, #2fbf71); }
+.glance-banner[data-status="info"] { border-left-style: dashed; }
+.glance-banner-icon { font-size: 1.6rem; width: 1.6rem; }
+.glance-banner[data-status="watch"] .glance-banner-icon { color: var(--semantic-warning, #fab219); }
+.glance-banner[data-status="ok"] .glance-banner-icon { color: var(--semantic-success, #2fbf71); }
 .glance-head { font-size: 1.1rem; font-weight: 700; margin: 0; }
 .glance-sub, .glance-asof { margin: 0.1rem 0 0; font-size: 0.85rem; }
-.glance-asof { opacity: 0.75; font-size: 0.75rem; }
+.glance-asof { font-size: 0.75rem; color: var(--text-muted, inherit); }
+
 .glance-list { list-style: none; margin: 0.4rem 0; padding: 0; }
 .glance-row {
-  display: grid; grid-template-columns: 1fr auto; column-gap: 0.75rem; row-gap: 0.05rem; align-items: baseline;
-  padding: 0.4rem 0.5rem 0.4rem 0.6rem;
-  border-left: 5px solid transparent;            /* reserved so every row lines up */
-  border-bottom: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.6rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--hairline, color-mix(in srgb, currentColor 20%, transparent));
 }
-.glance-row[data-status="watch"] { border-left-style: double; border-left-color: currentColor; }
-.glance-label { grid-column: 1; grid-row: 1; font-size: 0.75rem; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.8; }
-.glance-badge { grid-column: 2; grid-row: 1; font-size: 0.8rem; font-weight: 600; white-space: nowrap; }
-.glance-value { grid-column: 1 / -1; grid-row: 2; font-size: 0.95rem; font-weight: 600; }
+.glance-ico { color: var(--text-secondary, inherit); }
+.glance-row[data-status="watch"] .glance-ico { color: var(--semantic-warning, #fab219); }
+.glance-main { display: flex; flex-direction: column; min-width: 0; }
+.glance-label { font-size: 0.78rem; color: var(--text-secondary, inherit); }
+.glance-value { font-size: 0.95rem; font-weight: 600; overflow-wrap: break-word; }
 .glance-more { font-size: 0.8rem; margin-block: 0.4rem; }
-.glance-more summary { cursor: pointer; }
+.glance-more summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: center; }
+.basis { font-size: 0.8rem; color: var(--text-muted, inherit); }
+
+/* <details> arrow: points right, turns 90° clockwise when open */
+.glance-more summary { list-style: none; gap: 0.25rem; }
+.glance-more summary::-webkit-details-marker { display: none; }
+.glance-more summary::before {
+  content: "chevron_right";
+  font-family: "Material Symbols Outlined";
+  font-size: 1.25rem; font-weight: normal; font-style: normal; line-height: 1;
+  letter-spacing: normal; text-transform: none; white-space: nowrap;
+  font-feature-settings: "liga"; -webkit-font-smoothing: antialiased;
+  display: inline-block; flex: none;
+  transform: rotate(0deg);
+}
+.glance-more[open] > summary::before { transform: rotate(90deg); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .wx-toggle, .subtab { transition: background-color 150ms ease; }
+  .wx-chev, .glance-more summary::before { transition: transform 150ms ease; }
+}
+
+/* ---------- Fonts and responsive layout ---------- */
+#tab-weather {
+  container-type: inline-size;
+  font-family: var(--font-body, "Inter", system-ui, -apple-system, "Segoe UI", sans-serif);
+  line-height: 1.5;
+}
+#tab-weather * { box-sizing: border-box; min-width: 0; }
+#tab-weather button, #tab-weather select { font-family: inherit; }
+.card-title, .wx-stat-value, .glance-head, .dust-dates {
+  font-family: var(--font-display, "Space Grotesk", "Inter", system-ui, sans-serif);
+}
+.wx-tick, .wx-direct, .wx-tip-sub, .dust-ls, .glance-asof { font-family: var(--font-body, "Inter", system-ui, sans-serif); }
+#tab-weather .card { margin-block: 0.75rem; overflow: hidden; }
+
+@container (min-width: 30rem) {
+  .wx-select { flex: 1 1 14rem; }
+  .wx-range { display: flex; flex-wrap: wrap; }
+  .subtab { padding-inline: 0.9rem; }
+  .wx-stat-value { font-size: 1.75rem; }
+}
+@container (min-width: 44rem) {
+  .glance-list { display: grid; grid-template-columns: 1fr 1fr; column-gap: 1.5rem; }
+  .wx-plot svg { max-height: 26rem; }
+}
+@container (max-width: 22rem) {
+  .glance-row { grid-template-columns: auto 1fr; }
+  .glance-row .wx-badge { grid-column: 2; justify-self: start; }
+  .dust-row { grid-template-columns: auto 1fr; }
+  .dust-row .wx-badge { grid-column: 2; justify-self: start; }
+  .wx-toggle { flex: 1 1 100%; justify-content: center; }
+}
