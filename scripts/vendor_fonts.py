@@ -21,8 +21,8 @@ TEXT_FONTS = "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&fa
 # Every icon the page uses, in alphabetical order as Google Fonts requires.
 ICON_NAMES = [
     "add_location", "arrow_downward", "arrow_forward", "arrow_upward", "check_box_outline_blank", "close",
-    "filter_b_and_w", "grain", "grid_on", "label", "landscape", "layers", "palette", "star", "today",
-    "trending_up", "warning",
+    "directions_walk", "fast_forward", "filter_b_and_w", "flag", "grain", "grid_on", "label", "landscape",
+    "layers", "palette", "pause", "play_arrow", "star", "today", "trending_up", "warning",
 ]
 ICON_FONT = ("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
              "&icon_names={names}&display=block")

@@ -1,0 +1,107 @@
+/*
+ * journey-hud (DESIGN.md): "Begin journey" mode. The top bar and the side
+ * panel are hidden, the map fills the screen, and a few large controls float
+ * over it on solid panels. Only tokens are used.
+ */
+
+/* Full-screen map: nothing else to press by mistake. */
+body.is-journey { overflow: hidden; }
+body.is-journey .top-nav,
+body.is-journey .panel,
+body.is-journey .skip-link,
+body.is-journey .leaflet-control-zoom,
+body.is-journey .map-layer-panel { display: none; }
+body.is-journey .map-area { position: fixed; inset: 0; z-index: 1; height: 100dvh; }
+body.is-journey .map-container { height: 100%; min-height: 0; border-radius: 0; }
+
+.journey-hud { position: fixed; inset: 0; z-index: 1600; pointer-events: none; }
+.journey-hud[hidden] { display: none; }
+.journey-top, .journey-bottom { position: absolute; left: var(--space-md); right: var(--space-md); display: flex; gap: var(--space-md); pointer-events: none; }
+.journey-top { top: var(--space-md); justify-content: space-between; align-items: flex-start; }
+.journey-bottom {
+  bottom: var(--space-xxxl);
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  margin: 0 auto;
+  max-width: var(--size-panel);
+  padding: var(--space-md);
+  background: var(--color-surface-raised);
+  color: var(--color-ink);
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-floating);
+  pointer-events: auto;
+}
+.journey-top > * { pointer-events: auto; }
+
+/* Large controls on solid panels, readable through dust. */
+.journey-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  min-height: var(--size-touch-large);
+  padding: 0 var(--space-lg);
+  background: var(--color-surface-raised);
+  color: var(--color-ink);
+  border: 2px solid var(--color-border-control);
+  border-radius: var(--radius-md);
+  font: var(--type-body-md-medium);
+  cursor: pointer;
+}
+.journey-button:hover { background: var(--color-surface); }
+.journey-primary { background: var(--color-primary); color: var(--color-on-primary); border-color: var(--color-primary); }
+.journey-primary:hover { background: var(--color-primary-pressed); }
+.journey-end { box-shadow: var(--shadow-floating); }
+.journey-controls { display: flex; gap: var(--space-sm); flex-wrap: wrap; justify-content: center; }
+
+.journey-sim { font: var(--type-eyebrow); letter-spacing: var(--tracking-eyebrow); text-transform: uppercase; color: var(--color-accent); }
+.journey-next { font: var(--type-heading-4); text-align: center; }
+.journey-facing { font: var(--type-caption); color: var(--color-text-secondary); }
+
+/* Space weather, top right. */
+.journey-weather {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+  max-width: min(var(--size-layer-panel), 60vw);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-surface-raised);
+  color: var(--color-ink);
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-floating);
+}
+.journey-weather .badge-live { align-self: flex-start; }
+.journey-weather-level { display: flex; align-items: center; gap: var(--space-xs); font: var(--type-heading-4); }
+.journey-weather-text { font: var(--type-body-sm); }
+.journey-weather-time { font: var(--type-caption); color: var(--color-text-muted); }
+.journey-weather[data-level="go"] .reason-symbol { background: var(--color-tint-green); color: var(--color-on-tint-green); }
+.journey-weather[data-level="caution"] .reason-symbol { background: var(--color-tint-amber); color: var(--color-semantic-warning); }
+.journey-weather[data-level="no-go"] .reason-symbol { background: var(--color-tint-red); color: var(--color-semantic-error-text); }
+.journey-weather[data-level="unknown"] .reason-symbol { background: var(--color-surface); color: var(--color-text-secondary); }
+
+/* Task pop-up on arrival. */
+.journey-dialog {
+  width: min(var(--size-panel), calc(100vw - var(--space-xxl)));
+  padding: var(--space-xl);
+  background: var(--color-surface-raised);
+  color: var(--color-ink);
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-floating);
+  pointer-events: auto;
+}
+.journey-dialog[open] { display: flex; flex-direction: column; gap: var(--space-sm); }
+.journey-dialog::backdrop { background: var(--color-void); opacity: 0.6; }
+.journey-tasks { display: flex; flex-direction: column; }
+.journey-tasks .check-row { min-height: var(--size-touch-large); border-bottom: 1px solid var(--color-hairline); }
+.journey-tasks input { width: var(--space-xl); height: var(--space-xl); accent-color: var(--color-primary); flex: none; }
+.journey-tasks label { font: var(--type-body-md); }
+
+@media (max-width: 479px) {
+  .journey-top { flex-direction: column; align-items: stretch; }
+  .journey-weather { max-width: none; }
+  .journey-bottom { left: var(--space-xs); right: var(--space-xs); bottom: var(--space-xl); }
+}

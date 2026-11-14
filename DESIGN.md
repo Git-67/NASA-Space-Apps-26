@@ -1013,6 +1013,15 @@ The categorical palette was validated against `{colors.surface}`: all eight slot
 
 **`map-arrow`**: a 20px `{colors.route-casing}` disc with a `{colors.map-ink}` arrow, halfway along each shown leg, pointing the way it is walked. Decorative for assistive technology: the stop list gives the order in words.
 
+**`journey-hud`**: "Begin journey" mode, a full-screen simulated walk of the plan.
+- The top nav, the side panel, the map's zoom buttons and layer panel are hidden: fewer things to press by mistake, and more map to see through a dusty visor. Pinch and scroll still zoom.
+- Controls are at least 56px tall (`--size-touch-large`), `{colors.surface-raised}` panels with a 2px `{colors.border-control}` edge, text in `{typography.body-md-medium}`.
+- Top left: "End journey" (Escape also ends it). Top right: the space weather card (a `badge-live` that says LIVE only when read live, the level in words and symbol, one line of text, and when it was read). Bottom centre: an eyebrow "SIMULATION · NOT A REAL POSITION" in `{colors.accent}`, the next stop with distance and walking time in `{typography.heading-4}`, the facing source, and Pause / speed buttons.
+- On arrival at a stop, a modal `<dialog>` lists that stop's tasks as 56px check rows, with one `button-primary` "Continue walk". The walk waits until it is pressed.
+- Under reduced motion, the walker moves in one-second steps and the map does not animate.
+
+**`map-astronaut`**: the walker. A 20px `{colors.map-ink}` dot with a 3px `{colors.route-casing}` ring and a 2px `{colors.route}` halo, inside an 88px box holding a 70° `{colors.map-ink}` cone at 75 percent opacity that points where the walker faces (0° north, clockwise): from the device compass where there is one, else the direction of travel. Theme-independent, like the other map overlays.
+
 **`connection-toggle`**: the top bar's live / offline control. A `badge-live` ("LIVE · NASA", or "OFFLINE · DATA TO 14 NOV 2026" on `{colors.surface-raised}` with `{colors.text-secondary}`) followed by the action ("Go offline" / "Go online") in `{typography.button-md}`, one 44px button. Below 768px only the badge's first word shows; the accessible name always carries the full state and the action. Never say LIVE unless the data is live.
 
 **`map-notice`**: a one-line status on the map, for example "Enlarged 4× past the imagery's own resolution". A `map-label`-style panel above the scale bar, in `{typography.caption}`. Shown only while it is true.

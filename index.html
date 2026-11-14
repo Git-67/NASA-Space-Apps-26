@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="src/styles/components.css">
   <link rel="stylesheet" href="src/styles/map.css">
   <link rel="stylesheet" href="src/styles/tabs.css">
+  <link rel="stylesheet" href="src/styles/journey.css">
   <!-- Leaflet 1.9.4, minified, as a classic script so it runs before the modules below (src/lib/leaflet.js). -->
   <script src="public/vendor/leaflet/leaflet.js"></script>
   <script type="module" src="src/pages/home.js"></script>
@@ -85,6 +86,8 @@
         <section class="card" aria-labelledby="where-title">
           <h2 id="where-title" class="card-title">Where</h2>
           <div id="stop-picker" class="stop-picker"></div>
+          <button id="begin-journey" class="button-primary" type="button"><span class="icon" aria-hidden="true">directions_walk</span>Begin journey</button>
+          <p class="basis">Opens a full-screen, simulated walk of this plan with tasks at each stop. Not a real position.</p>
           <p class="basis">Tap a stop to see its leg on the map. Hover or tap a leg for details.</p>
           <div id="totals" class="stat-grid"></div>
           <div id="sections"></div>
