@@ -1,25 +1,32 @@
 // @ts-check
 /**
- * Pure planning logic: turns Curiosity's path and the stops a visitor selects
- * into walking sections with distance, climb, time and difficulty.
+ * Pure planning logic: turns the stops a visitor selects into walking sections
+ * with distance, climb, time and difficulty.
  *
- * Dataset: data/processed/route.json (Curiosity waypoints, NASA/JPL-Caltech).
+ * Datasets: data/processed/route.json (stops at Curiosity waypoints) and
+ * data/processed/safe_paths.json (the safest path between each pair of stops,
+ * over ground Curiosity drove; see scripts/safe_paths.py).
  * Distances are in metres, elevations in metres, tilt in degrees.
  * Everything returned here is DERIVED, and the times rest on assumptions
  * that the interface must show next to the numbers.
  */
 
 /**
- * @typedef {{ sol: number, lat: number, lon: number, elevationM: number, tiltDeg: number, alongM: number,
- *   track: number[][] }} RoutePoint `track` is the path the rover drove from the previous point, as [lat, lon] pairs.
+ * @typedef {{ sol: number, lat: number, lon: number, elevationM: number, tiltDeg: number, alongM: number }} RoutePoint
  * @typedef {{ id: string, name: string, summary: string, terrain: 'transition' | 'ridge' | 'hollow', found: string,
  *   tasksOurs: string[], kitOurs: string[], workMinutesOurs: number, sourceLabel: string, sourceUrl: string,
  *   pointIndex: number }} Stop
- * @typedef {{ points: RoutePoint[], stops: Stop[] }} Route
  * @typedef {'easier' | 'moderate' | 'hard'} Difficulty
- * @typedef {{ fromId: string, toId: string, fromName: string, toName: string, fromIndex: number, toIndex: number,
+ * @typedef {{ difficulty: Difficulty, points: number[][] }} PathRun A stretch of one difficulty, as [lat, lon] pairs.
+ * @typedef {{ distanceM: number, ascentM: number, descentM: number, costM: number, maxTiltDeg: number,
+ *   steepest: number[], middle: number[], runs: PathRun[], profile: number[][] }} SafePath
+ *   One safest path, in walking direction. `profile` is [metres walked, elevation m] pairs; `costM` is
+ *   length weighted by difficulty (scripts/safe_paths.py).
+ * @typedef {{ points: RoutePoint[], stops: Stop[], safePaths: Record<string, SafePath> }} Route
+ *   `safePaths` is keyed "fromId|toId", stored for one direction of each pair.
+ * @typedef {{ fromId: string, toId: string, fromName: string, toName: string, path: SafePath,
  *   distanceM: number, ascentM: number, descentM: number, maxRoverTiltDeg: number, difficulty: Difficulty,
- *   walkMinutes: number, isReturn: boolean }} Section `fromIndex` and `toIndex` are route point indexes, in walking direction.
+ *   walkMinutes: number, isReturn: boolean }} Section
  * @typedef {{ stops: Stop[], sections: Section[], walkMinutes: number, workMinutes: number, totalMinutes: number,
  *   distanceM: number, ascentM: number }} Plan
  */
@@ -58,44 +65,32 @@ export function rateDifficulty(maxRoverTiltDeg) {
 }
 
 /**
- * Measure the rover's path between two points.
- * @param {RoutePoint[]} points The whole path.
- * @param {number} fromIndex Index of the first point.
- * @param {number} toIndex Index of the last point (must not be before fromIndex).
- * @returns {{ distanceM: number, ascentM: number, descentM: number, maxRoverTiltDeg: number }}
+ * The safest path between two stops, in walking direction. Paths are stored
+ * one way; walking the other way reverses the line and swaps climb and descent.
+ * @param {Route} route
+ * @param {string} fromId
+ * @param {string} toId
+ * @returns {SafePath}
+ * @throws {Error} When the pair is missing from the prepared file.
  */
-export function measurePath(points, fromIndex, toIndex) {
-  let ascentM = 0;
-  let descentM = 0;
-  let maxRoverTiltDeg = points[fromIndex].tiltDeg;
-  for (let i = fromIndex + 1; i <= toIndex; i += 1) {
-    const change = points[i].elevationM - points[i - 1].elevationM;
-    if (change > 0) ascentM += change;
-    else descentM -= change;
-    maxRoverTiltDeg = Math.max(maxRoverTiltDeg, points[i].tiltDeg);
-  }
-  return { distanceM: points[toIndex].alongM - points[fromIndex].alongM, ascentM, descentM, maxRoverTiltDeg };
+export function orientedPath(route, fromId, toId) {
+  const forward = route.safePaths[`${fromId}|${toId}`];
+  if (forward) return forward;
+  const back = route.safePaths[`${toId}|${fromId}`];
+  if (!back) throw new Error(`No safe path between ${fromId} and ${toId}. Run scripts/prepare_safe_paths.py again.`);
+  return {
+    ...back,
+    ascentM: back.descentM,
+    descentM: back.ascentM,
+    runs: back.runs.map((run) => ({ difficulty: run.difficulty, points: [...run.points].reverse() })).reverse(),
+    profile: back.profile.map(([walked, height]) => [back.distanceM - walked, height]).reverse(),
+  };
 }
 
 /**
- * Measure one section in walking direction, which may run against the rover's direction.
- * Walking the rover's path backwards turns every climb into a descent and the reverse.
- * @param {RoutePoint[]} points The whole path.
- * @param {number} fromIndex Point the walker starts from.
- * @param {number} toIndex Point the walker walks to.
- * @returns {{ distanceM: number, ascentM: number, descentM: number, maxRoverTiltDeg: number }}
- */
-export function measureLeg(points, fromIndex, toIndex) {
-  if (fromIndex <= toIndex) return measurePath(points, fromIndex, toIndex);
-  const forward = measurePath(points, toIndex, fromIndex);
-  return { ...forward, ascentM: forward.descentM, descentM: forward.ascentM };
-}
-
-/**
- * Build a walk along the rover's path that visits the chosen stops in the chosen order.
- * There is no route finding: every section follows Curiosity's own path between
- * two stops, forwards or backwards. The walk starts at the first stop on the
- * route (assumed to be where the crew parks) and returns there at the end.
+ * Build a walk that visits the chosen stops in the chosen order, each leg on
+ * its safest path. The walk starts at the first stop on the route (assumed to
+ * be where the crew parks) and returns there at the end.
  * @param {Route} route The prepared route.
  * @param {string[]} visitOrder Ids of the stops to visit, in visiting order. The start is added if missing and always comes first.
  * @param {number} walkingSpeedKmh Walking speed in km/h. Must be greater than zero.
@@ -114,17 +109,19 @@ export function buildPlan(route, visitOrder, walkingSpeedKmh) {
 
   /** @type {(from: Stop, to: Stop, isReturn: boolean) => Section} */
   const section = (from, to, isReturn) => {
-    const measured = measureLeg(route.points, from.pointIndex, to.pointIndex);
+    const path = orientedPath(route, from.id, to.id);
     return {
-      ...measured,
       fromId: from.id,
       toId: to.id,
       fromName: from.name,
       toName: to.name,
-      fromIndex: from.pointIndex,
-      toIndex: to.pointIndex,
-      difficulty: rateDifficulty(measured.maxRoverTiltDeg),
-      walkMinutes: measured.distanceM / metresPerMinute,
+      path,
+      distanceM: path.distanceM,
+      ascentM: path.ascentM,
+      descentM: path.descentM,
+      maxRoverTiltDeg: path.maxTiltDeg,
+      difficulty: rateDifficulty(path.maxTiltDeg),
+      walkMinutes: path.distanceM / metresPerMinute,
       isReturn,
     };
   };
@@ -147,18 +144,39 @@ export function buildPlan(route, visitOrder, walkingSpeedKmh) {
 }
 
 /**
- * The recommended visiting order: every stop, in the order they lie along the path.
- * Walking out along a single path and back covers each stretch exactly twice in
- * this order; any other order walks some stretch more often, so this is the
- * shortest walk that visits every stop.
+ * Every ordering of a list.
+ * @template T
+ * @param {T[]} items
+ * @returns {T[][]}
+ */
+function permutations(items) {
+  if (items.length <= 1) return [items];
+  return items.flatMap((item, index) => permutations([...items.slice(0, index), ...items.slice(index + 1)]).map((rest) => [item, ...rest]));
+}
+
+/**
+ * Total risk of visiting stops in an order and returning to the start: the sum
+ * of each leg's difficulty-weighted length (`costM`).
  * @param {Route} route
- * @returns {string[]} Stop ids after the start, nearest along the path first.
+ * @param {string[]} order Stop ids after the start.
+ * @returns {number}
+ */
+export function planRisk(route, order) {
+  const ids = [route.stops[0].id, ...order, route.stops[0].id];
+  return ids.slice(1).reduce((sum, id, index) => sum + orientedPath(route, ids[index], id).costM, 0);
+}
+
+/**
+ * The recommended plan: every stop, in the order with the lowest total risk.
+ * Tries every order; with four stops after the start that is 24 orders, which
+ * is instant even on a slow computer. Beyond about 8 stops this grows too fast
+ * and a smarter search would be needed.
+ * @param {Route} route
+ * @returns {string[]} Stop ids after the start, in the safest order.
  */
 export function recommendedOrder(route) {
-  const start = route.stops[0];
-  return route.stops.filter((stop) => stop !== start)
-    .sort((a, b) => Math.abs(a.pointIndex - start.pointIndex) - Math.abs(b.pointIndex - start.pointIndex))
-    .map((stop) => stop.id);
+  const others = route.stops.slice(1).map((stop) => stop.id);
+  return permutations(others).reduce((best, order) => (planRisk(route, order) < planRisk(route, best) ? order : best));
 }
 
 /**

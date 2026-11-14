@@ -2,8 +2,9 @@
 /**
  * The map: Mars imagery, Curiosity's path and the numbered stops.
  *
- * Imagery:  MRO HiRISE "Curiosity Roving Site Mosaic", served as tiles by NASA Mars Trek.
- * Route:    Curiosity waypoints (NASA/JPL-Caltech), from data/processed/route.json.
+ * Imagery:  MRO HiRISE (walk area) and MRO CTX (whole crater) from NASA Mars
+ *           Trek, stored with the site so it works offline (offline-tiles.js).
+ * Route:    the safest paths between stops (data/processed/safe_paths.json).
  * Coordinates are plotted exactly as the sources give them, in degrees. The
  * tiles use a plain latitude/longitude grid, so the map uses the same grid
  * (Leaflet's EPSG:4326) with Mars' radius in place of Earth's, which makes
@@ -11,35 +12,21 @@
  * Optional layers (colour imagery, contours, place names, grid) and their
  * panel are added by map-layer-options.js.
  */
-import * as L from '../../../public/vendor/leaflet/leaflet-src.esm.js';
+import L from '../../lib/leaflet.js';
 import { MARS_RADIUS_M } from '../../lib/mars.js';
 import { el } from '../../lib/dom.js';
 import { addLayerOptions } from './map-layer-options.js';
 import { createRouteLayer } from './route-layer.js';
+import { OFFLINE_TILES } from './offline-tiles.js';
 
 /** @typedef {import('../plan/plan-model.js').Route} Route */
 /** @typedef {import('../plan/plan-model.js').Plan} Plan */
 /** @typedef {import('./map-layer-data.js').Place} Place */
 /** @typedef {import('./map-layer-data.js').DemCalibration} DemCalibration */
 
-const TREK_TILES = 'https://trek.nasa.gov/tiles/Mars/EQ';
-/** Mars Trek puts the row before the column, the reverse of the usual order. */
-const TILE_PATH = '1.0.0/default/default028mm/{z}/{y}/{x}.png';
-const HIRISE_LAYER = 'curiosity_hirise_mosaic';
-/** MRO HiRISE elevation model of Gale Crater, the source of the contour lines. */
-const DEM_LAYER = 'Gale_DEM_SMG_1m';
-/** Wider MRO CTX mosaic of Gale Crater, shown beneath HiRISE so the map can zoom out to the whole crater. */
-const CTX_LAYER = 'curiosity_ctx_mosaic';
-/** Deepest zoom each mosaic is published at. Beyond it, tiles are enlarged and the map says so. */
-const HIRISE_MAX_ZOOM = 16;
-const CTX_MAX_ZOOM = 10;
-/** Zoom range of the map: from the whole crater to two steps past HiRISE's own resolution. */
+/** Zoom range of the map: from the whole crater to two steps past the stored HiRISE resolution. */
 const MIN_ZOOM = 8;
 const MAX_ZOOM = 18;
-/** Extent of the HiRISE mosaic, from its Mars Trek capabilities file: south-west and north-east corners. */
-const MOSAIC_BOUNDS = L.latLngBounds([-4.9254743, 137.1224669], [-4.2489588, 137.7298129]);
-/** Extent of the CTX mosaic, from its Mars Trek capabilities file. Panning stops at its edge. */
-const CTX_BOUNDS = L.latLngBounds([-7.2137273, 136.2768326], [-3.5804738, 139.3864225]);
 const ROUTE_PADDING_PX = 48;
 /** Side of the square hit area around each stop badge, in pixels (the 44px touch target). */
 const HIT_AREA_PX = 44;
@@ -58,9 +45,10 @@ function addOverZoomNotice(map) {
   const Notice = L.Control.extend({ onAdd: () => notice });
   new Notice({ position: 'bottomleft' }).addTo(map);
   const update = () => {
-    const isPast = map.getZoom() > HIRISE_MAX_ZOOM;
+    const stored = OFFLINE_TILES.hirise.maxZoom;
+    const isPast = map.getZoom() > stored;
     notice.hidden = !isPast;
-    notice.textContent = isPast ? `Enlarged ${2 ** (map.getZoom() - HIRISE_MAX_ZOOM)}× past the imagery's own resolution` : '';
+    notice.textContent = isPast ? `Enlarged ${2 ** (map.getZoom() - stored)}× past the imagery's own resolution` : '';
   };
   map.on('zoomend', update);
   update();
@@ -83,21 +71,15 @@ export function createMapView(container, route, extras, onStopChosen) {
     crs: MARS_CRS,
     minZoom: MIN_ZOOM,
     maxZoom: MAX_ZOOM,
-    maxBounds: CTX_BOUNDS,
+    maxBounds: OFFLINE_TILES.ctx.bounds,
     zoomControl: false,
     attributionControl: false,
   });
 
-  L.tileLayer(`${TREK_TILES}/${CTX_LAYER}/${TILE_PATH}`, {
-    bounds: CTX_BOUNDS,
-    maxNativeZoom: CTX_MAX_ZOOM,
-    maxZoom: MAX_ZOOM,
-  }).addTo(map);
-  L.tileLayer(`${TREK_TILES}/${HIRISE_LAYER}/${TILE_PATH}`, {
-    bounds: MOSAIC_BOUNDS,
-    maxNativeZoom: HIRISE_MAX_ZOOM,
-    maxZoom: MAX_ZOOM,
-  }).addTo(map);
+  // CTX covers the crater at every zoom (enlarged past zoom 10); HiRISE covers the walk area from zoom 12.
+  for (const tiles of [OFFLINE_TILES.ctx, OFFLINE_TILES.hirise]) {
+    L.tileLayer(tiles.url, { bounds: tiles.bounds, minZoom: tiles.minZoom, maxNativeZoom: tiles.maxZoom, maxZoom: MAX_ZOOM }).addTo(map);
+  }
 
   L.control.zoom({ position: 'topright', zoomInTitle: 'Zoom in', zoomOutTitle: 'Zoom out' }).addTo(map);
   // Metric only: SI units throughout (DESIGN.md, Mars conventions).
@@ -154,7 +136,6 @@ export function createMapView(container, route, extras, onStopChosen) {
     }),
     places: extras.places,
     calibration: extras.calibration,
-    demTileUrl: `${TREK_TILES}/${DEM_LAYER}/${TILE_PATH}`,
   });
 
   return {

@@ -4,7 +4,7 @@
  * It starts closed, as a 44px "Layers" button, so it never covers the map
  * until asked; this is also how it collapses on small screens.
  */
-import * as L from '../../../public/vendor/leaflet/leaflet-src.esm.js';
+import L from '../../lib/leaflet.js';
 import { el } from '../../lib/dom.js';
 import { icon } from '../../components/ui/icon.js';
 

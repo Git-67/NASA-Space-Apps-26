@@ -5,16 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sol Stroll: know before you go</title>
   <meta name="description" content="A go / no-go briefing for one real Marswalk in the boxwork region of Mount Sharp, built from NASA mission data.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap">
-  <!-- Material Symbols (Apache 2.0): only the icons the page uses, listed alphabetically as Google Fonts requires. -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&amp;icon_names=add_location,arrow_downward,arrow_forward,arrow_upward,check_box_outline_blank,close,filter_b_and_w,grain,grid_on,label,landscape,layers,palette,star,today,trending_up,warning&amp;display=block">
+  <!-- Everything below is local: the site works with no network (fonts: scripts/vendor_fonts.py). -->
+  <link rel="stylesheet" href="src/styles/fonts.css">
   <link rel="stylesheet" href="public/vendor/leaflet/leaflet.css">
   <link rel="stylesheet" href="src/styles/tokens.css">
   <link rel="stylesheet" href="src/styles/base.css">
   <link rel="stylesheet" href="src/styles/components.css">
   <link rel="stylesheet" href="src/styles/map.css">
+  <!-- Leaflet 1.9.4, minified, as a classic script so it runs before the modules below (src/lib/leaflet.js). -->
+  <script src="public/vendor/leaflet/leaflet.js"></script>
   <script type="module" src="src/pages/home.js"></script>
 </head>
 <body>
@@ -44,7 +43,7 @@
         <header class="panel-intro">
           <p class="eyebrow">Mount Sharp · Gale Crater · Mars</p>
           <h1>The boxwork Marswalk</h1>
-          <p class="lede">Walk Curiosity's path to find out how long water lasted here. Pick your stops and a day; we tell you if it's safe to go.</p>
+          <p class="lede">Walk the safest way over Curiosity's tracks to find out how long water lasted here. Pick your stops and a day; we tell you if it's safe to go.</p>
         </header>
 
         <section class="card verdict-card" aria-labelledby="verdict-title">

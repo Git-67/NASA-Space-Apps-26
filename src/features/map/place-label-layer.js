@@ -4,7 +4,7 @@
  * (DESIGN.md: no bare text over imagery), and labels that would overlap are
  * stacked downwards; see label-stacking.js.
  */
-import * as L from '../../../public/vendor/leaflet/leaflet-src.esm.js';
+import L from '../../lib/leaflet.js';
 import { el } from '../../lib/dom.js';
 import { stackLabels } from './label-stacking.js';
 

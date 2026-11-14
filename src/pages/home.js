@@ -14,11 +14,9 @@ import { createStopPicker } from '../features/plan/stop-picker.js';
 import { compareWithSeason, decideVerdict } from '../features/conditions/conditions-model.js';
 import { renderConditions, renderSpaceWeather, renderVerdict } from '../features/conditions/conditions-view.js';
 import { assessSpaceWeather } from '../features/conditions/space-weather-model.js';
-import { fetchLiveSpaceWeather } from '../features/conditions/space-weather-live.js';
 import { loadBriefingData } from './load-briefing-data.js';
 
 /** @typedef {import('./load-briefing-data.js').BriefingData} BriefingData */
-/** @typedef {import('../features/conditions/space-weather-model.js').SpaceWeather} SpaceWeather */
 
 /** Sol the page opens on: the sol Curiosity reached the last stop, in the boxwork itself. */
 const DEFAULT_SOL = 4711;
@@ -41,8 +39,6 @@ function start({ route, records, places, calibration, spaceWeather }) {
     /** The chosen stop: its leg is brought forward on the map and its tasks highlighted. Null shows the whole walk. */
     activeStopId: /** @type {string | null} */ (null),
     sol: DEFAULT_SOL,
-    /** Live space weather for the present sol: undefined until asked for, null while loading. */
-    liveSpaceWeather: /** @type {SpaceWeather | Error | null | undefined} */ (undefined),
   };
 
   const solInput = /** @type {HTMLInputElement} */ (requireElement('sol-input'));
@@ -62,7 +58,7 @@ function start({ route, records, places, calibration, spaceWeather }) {
   };
   const mapView = createMapView(requireElement('map'), route, { places, calibration }, focusStop);
   const recommendedKm = (buildPlan(route, recommended, DEFAULT_WALKING_SPEED_KMH).distanceM / 1000).toFixed(1);
-  const picker = createStopPicker(requireElement('stop-picker'), route, `All ${route.stops.length} stops, shortest walk (${recommendedKm} km)`, {
+  const picker = createStopPicker(requireElement('stop-picker'), route, `All ${route.stops.length} stops, safest order (${recommendedKm} km)`, {
     onAdd: (stopId) => { state.visitOrder = [...state.visitOrder, stopId]; redraw(); },
     onRecommended: () => { state.visitOrder = recommended; redraw(); },
     onRemove: (stopId) => {
@@ -91,22 +87,22 @@ function start({ route, records, places, calibration, spaceWeather }) {
     const comparison = record ? compareWithSeason(record, records) : null;
     const isPresent = state.sol === presentSol;
     const date = isPresent ? today.toISOString().slice(0, 10) : record?.earthDate ?? earthDateOfSol(state.sol, reference);
-    const weatherForDate = isPresent ? state.liveSpaceWeather : spaceWeather;
+    // Offline there is no live feed: for today, use the newest day in the bundled record and say how old it is.
+    const latest = spaceWeather instanceof Error ? null : spaceWeather.coverageEnd;
+    const weatherDate = isPresent && latest !== null && latest < date ? latest : date;
 
     solInput.value = String(state.sol);
     solSlider.value = String(state.sol);
     presentButton.setAttribute('aria-pressed', String(isPresent));
     presentNote.hidden = !isPresent;
-    presentNote.textContent = `Today, ${date} (about sol ${presentSol}). No rover weather after sol ${reference.sol}, so only space weather is checked.`;
+    presentNote.textContent = `Today, ${date} (about sol ${presentSol}). No rover weather after sol ${reference.sol}. Space weather is the latest on board: ${latest ?? 'none'}.`;
 
     renderVerdict(requireElement('verdict'), decideVerdict({
       planMinutes: plan.totalMinutes, record, comparison,
-      spaceWeather: weatherForDate === null || weatherForDate === undefined
-        ? { level: 'unknown', text: "Checking today's space weather…", basis: 'NASA DONKI, live.' }
-        : assessSpaceWeather(weatherForDate, date),
+      spaceWeather: assessSpaceWeather(spaceWeather, weatherDate),
     }));
     renderConditions(requireElement('conditions'), state.sol, record, comparison);
-    renderSpaceWeather(requireElement('space-weather'), weatherForDate ?? null, date);
+    renderSpaceWeather(requireElement('space-weather'), spaceWeather, weatherDate);
     picker.update(state.visitOrder, state.activeStopId);
     renderPlan({
       sections: requireElement('sections'),
@@ -125,13 +121,6 @@ function start({ route, records, places, calibration, spaceWeather }) {
     const sol = Math.round(Number(value));
     if (!Number.isFinite(sol)) return;
     state.sol = Math.min(presentSol, Math.max(firstSol, sol));
-    if (state.sol === presentSol && state.liveSpaceWeather === undefined) {
-      state.liveSpaceWeather = null;
-      fetchLiveSpaceWeather(today)
-        .then((weather) => { state.liveSpaceWeather = weather; })
-        .catch((error) => { state.liveSpaceWeather = error instanceof Error ? error : new Error(String(error)); })
-        .finally(redraw);
-    }
     redraw();
   };
   solInput.addEventListener('change', () => setSol(solInput.value));

@@ -39,7 +39,7 @@ export function matchesQuery(stop, query) {
  * Build the picker.
  * @param {HTMLElement} container
  * @param {Route} route
- * @param {string} recommendedLabel Text of the recommended option, for example "All 5 stops, shortest walk (2.2 km)".
+ * @param {string} recommendedLabel Text of the recommended option, for example "All 5 stops, safest order (2.0 km)".
  * @param {PickerHandlers} handlers
  * @returns {{ update: (visitOrder: string[], focusedId: string | null) => void }}
  */

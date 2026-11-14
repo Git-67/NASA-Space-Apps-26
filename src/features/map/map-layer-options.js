@@ -25,7 +25,7 @@ const GRID = 'grid';
 
 /**
  * Report a tiled layer's progress and failures in the panel.
- * @param {import('../../../public/vendor/leaflet/leaflet-src.esm.js').GridLayer} layer
+ * @param {import('../../lib/leaflet.js').MapLayer} layer
  * @param {(message: string) => void} setStatus
  * @param {string} loadingMessage Shown while tiles load.
  * @param {string} failureMessage Shown when any tile in the view failed.
@@ -39,16 +39,15 @@ function reportProgress(layer, setStatus, loadingMessage, failureMessage) {
 
 /**
  * Add the optional layers and their panel to a map.
- * @param {import('../../../public/vendor/leaflet/leaflet-src.esm.js').Map} map
+ * @param {import('../../lib/leaflet.js').MapView} map
  * @param {object} options
  * @param {LabelledPlace[]} options.stopLabels Names of the walk's stops, at their positions.
  * @param {Place[] | Error} options.places Places Curiosity explored, or why they could not be loaded.
  * @param {DemCalibration | Error} options.calibration Scale of the elevation tiles, or why it could not be loaded.
- * @param {string} options.demTileUrl Mars Trek tile URL of the elevation model, with {z}, {y} and {x}.
  */
-export function addLayerOptions(map, { stopLabels, places, calibration, demTileUrl }) {
+export function addLayerOptions(map, { stopLabels, places, calibration }) {
   const colourLayer = createColourImageryLayer();
-  const contourLayer = calibration instanceof Error ? null : createContourLayer(demTileUrl);
+  const contourLayer = calibration instanceof Error ? null : createContourLayer();
   const stopLabelLayer = createPlaceLabelLayer(stopLabels);
   const placeLabelLayer = places instanceof Error ? null
     : createPlaceLabelLayer(places.map((place) => ({ ...place, hasMarker: true })));
@@ -58,7 +57,7 @@ export function addLayerOptions(map, { stopLabels, places, calibration, demTileU
 
   /** Put every layer in the state the choices ask for. */
   const apply = () => {
-    /** @type {[import('../../../public/vendor/leaflet/leaflet-src.esm.js').Layer | null, boolean][]} */
+    /** @type {[import('../../lib/leaflet.js').MapLayer | null, boolean][]} */
     const wanted = [
       [colourLayer, isColour],
       [contourLayer, shown.has(CONTOURS)],
@@ -79,8 +78,8 @@ export function addLayerOptions(map, { stopLabels, places, calibration, demTileU
 
   const panel = createLayerPanel({
     imagery: [
-      { id: GRAYSCALE, label: 'MRO HiRISE, grayscale', icon: 'filter_b_and_w', note: 'NASA Mars Trek. MRO CTX fills in when zoomed out.' },
-      { id: COLOUR, label: 'MRO HiRISE, colour', icon: 'palette', note: "NASA's Curiosity map. Covers only the rover's drive." },
+      { id: GRAYSCALE, label: 'MRO HiRISE, grayscale', icon: 'filter_b_and_w', note: 'NASA Mars Trek. Sharp around the walk; MRO CTX elsewhere.' },
+      { id: COLOUR, label: 'MRO HiRISE, colour', icon: 'palette', note: "NASA's Curiosity map. Around the walk only." },
     ],
     overlays: [
       { id: CONTOURS, label: 'Contour lines', icon: 'landscape', note: contourNote, unavailableReason: calibration instanceof Error ? calibration.message : undefined },
@@ -94,9 +93,9 @@ export function addLayerOptions(map, { stopLabels, places, calibration, demTileU
 
   if (contourLayer) {
     reportProgress(contourLayer, (message) => panel.setStatus(CONTOURS, message),
-      'Loading elevation from NASA…', 'Some elevation tiles failed to load. Lines may be missing.');
+      'Drawing contours…', 'Some elevation tiles are missing. Lines may be missing.');
   }
   reportProgress(colourLayer, (message) => panel.setStatus(COLOUR, message),
-    'Loading colour imagery from NASA…', 'Some colour tiles failed to load.');
+    'Loading colour imagery…', 'Some colour tiles are missing.');
   apply();
 }

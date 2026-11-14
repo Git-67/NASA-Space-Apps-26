@@ -3,26 +3,20 @@
  * Colour orbital imagery of Curiosity's drive.
  *
  * Dataset: "MSL_Gale_HiRISE-LRGB_78quads", a colour MRO HiRISE mosaic of the
- *          area around Curiosity's drive, served by NASA's Curiosity location
- *          map on mars.nasa.gov (credit NASA/JPL/University of Arizona).
+ *          area around Curiosity's drive, from NASA's Curiosity location map
+ *          (credit NASA/JPL/University of Arizona). The walk area is stored
+ *          with the site (offline-tiles.js), re-encoded as JPEG.
  * Grid:    the source is cut in Web Mercator tiles numbered from the bottom
  *          (TMS). The map uses Mars Trek's plain latitude/longitude tiles, so
  *          each map tile is assembled from the Mercator rows that cover it;
  *          see mercator-tiles.js. Nothing is resampled beyond that placement.
  */
-import * as L from '../../../public/vendor/leaflet/leaflet-src.esm.js';
+import L from '../../lib/leaflet.js';
 import { mercatorRowsForBand, toTmsRow } from './mercator-tiles.js';
+import { OFFLINE_TILES } from './offline-tiles.js';
 
 const TILE_PX = 256;
-const COLOUR_TILES = 'https://mars.nasa.gov/mmgis-maps/MSL/Layers/MSL_Gale_HiRISE-LRGB_78quads';
-/** Deepest zoom the colour mosaic is published at. */
-const COLOUR_MAX_ZOOM = 18;
-/** Deepest map zoom drawn from the source: one Mercator zoom deeper is the mosaic's limit. Leaflet enlarges beyond it. */
-const COLOUR_MAX_MAP_ZOOM = COLOUR_MAX_ZOOM - 1;
-/** The mission map publishes the mosaic from Mercator zoom 10, so map zoom 9 is the widest drawn from source. */
-const COLOUR_MIN_MAP_ZOOM = 9;
-/** Extent of the colour mosaic, from the mission map's configuration. */
-const COLOUR_BOUNDS = L.latLngBounds([-4.87560429259321, 137.32672354505786], [-4.55506331169111, 137.4785574965306]);
+const COLOUR = OFFLINE_TILES.colour;
 
 /**
  * @param {string} url
@@ -56,7 +50,7 @@ export function createColourImageryLayer() {
       const north = 90 - coords.y * tileDeg;
       const mercatorZoom = coords.z + 1;
       const rows = mercatorRowsForBand(north, north - tileDeg, mercatorZoom, TILE_PX);
-      Promise.all(rows.map(({ row }) => loadImage(`${COLOUR_TILES}/${mercatorZoom}/${coords.x}/${toTmsRow(row, mercatorZoom)}.png`)))
+      Promise.all(rows.map(({ row }) => loadImage(COLOUR.url.replace('{z}', String(mercatorZoom)).replace('{x}', String(coords.x)).replace('{y}', String(toTmsRow(row, mercatorZoom))))))
         .then((images) => {
           const context = tile.getContext('2d');
           if (!context || images.every((image) => image === null)) {
@@ -72,5 +66,5 @@ export function createColourImageryLayer() {
     },
   });
 
-  return new ColourLayer({ bounds: COLOUR_BOUNDS, minNativeZoom: COLOUR_MIN_MAP_ZOOM, maxNativeZoom: COLOUR_MAX_MAP_ZOOM, className: 'map-colour-layer' });
+  return new ColourLayer({ bounds: COLOUR.bounds, minZoom: COLOUR.minZoom, maxNativeZoom: COLOUR.maxZoom, className: 'map-colour-layer' });
 }

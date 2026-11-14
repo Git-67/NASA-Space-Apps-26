@@ -76,7 +76,7 @@ export function renderPlan(targets, route, plan) {
     tile('At stops', formatDuration(plan.workMinutes), ''),
   );
 
-  targets.profile.replaceChildren(renderElevationProfile(route, plan));
+  targets.profile.replaceChildren(renderElevationProfile(plan));
 
   const dangers = listDangers(plan);
   targets.dangers.replaceChildren(el('ul', { className: 'carousel', attrs: { 'aria-label': `${dangers.length} dangers. Scroll sideways.` } },

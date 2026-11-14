@@ -1,14 +1,13 @@
 // @ts-check
 /**
- * Elevation profile: height of the rover's path against distance walked,
- * drawn as an inline SVG so no charting library is needed.
+ * Elevation profile: height of the walk against distance walked, drawn as an
+ * inline SVG so no charting library is needed.
  *
- * Data: route.json. Elevation is the source's `elev_geoid` field in metres;
- * distance is derived along the waypoints, in metres.
+ * Data: safe_paths.json profiles (elevation from the Curiosity traverse file,
+ * metres; distance along the path, metres). Derived.
  */
 import { el } from '../../lib/dom.js';
 
-/** @typedef {import('./plan-model.js').Route} Route */
 /** @typedef {import('./plan-model.js').Plan} Plan */
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -32,37 +31,36 @@ function svg(tag, attrs, text) {
 }
 
 /**
- * Heights along the outward walk, in visiting order, with each stop's position.
- * A section walked against the rover's direction is read backwards.
- * @param {Route} route
+ * Heights along the outward walk, in visiting order, with each stop's position,
+ * joined from the legs' precomputed profiles.
  * @param {Plan} plan
  * @returns {{ series: { walkedM: number, elevationM: number }[], marks: { walkedM: number, elevationM: number, number: number }[] }}
  */
-export function walkProfile(route, plan) {
+export function walkProfile(plan) {
+  /** @type {{ walkedM: number, elevationM: number }[]} */
   const series = [];
-  const start = route.points[plan.stops[0].pointIndex];
-  const marks = [{ walkedM: 0, elevationM: start.elevationM, number: 1 }];
-  let walkedM = 0;
+  const marks = [];
+  let offset = 0;
   for (const section of plan.sections.filter((item) => !item.isReturn)) {
-    const step = section.toIndex >= section.fromIndex ? 1 : -1;
-    for (let i = section.fromIndex; i !== section.toIndex + step; i += step) {
-      if (i !== section.fromIndex) walkedM += Math.abs(route.points[i].alongM - route.points[i - step].alongM);
-      if (series.length === 0 || i !== section.fromIndex) series.push({ walkedM, elevationM: route.points[i].elevationM });
-    }
+    const profile = section.path.profile;
+    if (marks.length === 0) marks.push({ walkedM: 0, elevationM: profile[0][1], number: 1 });
+    profile.forEach(([walked, height], index) => {
+      if (index > 0 || series.length === 0) series.push({ walkedM: offset + walked, elevationM: height });
+    });
+    offset += section.distanceM;
     // Numbered by visiting order, matching the badges on the map.
-    marks.push({ walkedM, elevationM: route.points[section.toIndex].elevationM, number: marks.length + 1 });
+    marks.push({ walkedM: offset, elevationM: profile[profile.length - 1][1], number: marks.length + 1 });
   }
   return { series, marks };
 }
 
 /**
  * Draw the profile of the outward walk, in visiting order.
- * @param {Route} route The prepared route.
  * @param {Plan} plan The current plan.
  * @returns {HTMLElement} A figure holding the chart and its text alternative.
  */
-export function renderElevationProfile(route, plan) {
-  const { series, marks } = walkProfile(route, plan);
+export function renderElevationProfile(plan) {
+  const { series, marks } = walkProfile(plan);
   const figure = el('figure', { className: 'profile' });
   if (series.length < 2) {
     figure.append(el('p', { className: 'chart-state', text: 'Add a stop to see the climb.' }));
@@ -99,7 +97,7 @@ export function renderElevationProfile(route, plan) {
 
   figure.append(chart, el('figcaption', {
     className: 'data-source-caption',
-    text: 'Height on the way out, in visiting order. Source: Curiosity waypoints, NASA/JPL-Caltech.',
+    text: 'Height on the way out, on the safest paths. Source: Curiosity traverse, NASA/JPL-Caltech.',
   }));
   return figure;
 }

@@ -6,6 +6,7 @@
  * its own part of the page.
  */
 import { loadJson } from '../lib/load-json.js';
+import { fromColumns } from '../lib/columns.js';
 import { parseDemCalibration, parseLandmarks } from '../features/map/map-layer-data.js';
 import { parseSpaceWeather } from '../features/conditions/space-weather-model.js';
 
@@ -28,16 +29,24 @@ const WEATHER_FILE = 'data/processed/weather.json';
 const LANDMARKS_FILE = 'data/processed/landmarks.json';
 const DEM_CALIBRATION_FILE = 'data/processed/dem_calibration.json';
 const SPACE_WEATHER_FILE = 'data/processed/space_weather.json';
+const SAFE_PATHS_FILE = 'data/processed/safe_paths.json';
 
 /**
- * @param {any} data
+ * Check the route and the safe paths, and join them into one route.
+ * @param {any} data route.json
+ * @param {any} paths safe_paths.json
  * @returns {Route}
  */
-function parseRoute(data) {
-  const isValid = Array.isArray(data?.points) && Array.isArray(data?.stops) && data.points.length >= 2 && data.stops.length >= 1
-    && data.points.every((/** @type {any} */ point) => Array.isArray(point?.track));
-  if (!isValid) throw new Error('The route file is empty or damaged. Run scripts/prepare_route.py again.');
-  return data;
+function parseRoute(data, paths) {
+  if (!Array.isArray(data?.points) || !Array.isArray(data?.stops) || data.points.length < 2 || data.stops.length < 1) {
+    throw new Error('The route file is empty or damaged. Run scripts/prepare_route.py again.');
+  }
+  const pairs = paths?.pairs;
+  const ids = data.stops.map((/** @type {any} */ stop) => stop.id);
+  const isComplete = pairs && ids.every((/** @type {string} */ a, /** @type {number} */ i) => ids.slice(i + 1)
+    .every((/** @type {string} */ b) => Array.isArray(pairs[`${a}|${b}`]?.runs) || Array.isArray(pairs[`${b}|${a}`]?.runs)));
+  if (!isComplete) throw new Error('The safe paths file is missing or damaged. Run scripts/prepare_safe_paths.py again.');
+  return { ...data, safePaths: pairs };
 }
 
 /**
@@ -45,10 +54,14 @@ function parseRoute(data) {
  * @returns {WeatherRecord[]}
  */
 function parseWeather(data) {
-  if (!Array.isArray(data?.records) || data.records.length === 0) {
-    throw new Error('The weather file is empty or damaged. Run scripts/prepare_weather.py again.');
+  let records;
+  try {
+    records = fromColumns(data?.records);
+  } catch {
+    records = [];
   }
-  return data.records;
+  if (records.length === 0) throw new Error('The weather file is empty or damaged. Run scripts/prepare_weather.py again.');
+  return /** @type {WeatherRecord[]} */ (records);
 }
 
 /**
@@ -72,12 +85,13 @@ async function loadOptional(path, parse) {
  * @throws {Error} When a required file cannot be loaded.
  */
 export async function loadBriefingData() {
-  const [routeData, weatherData, places, calibration, spaceWeather] = await Promise.all([
+  const [routeData, pathData, weatherData, places, calibration, spaceWeather] = await Promise.all([
     loadJson(ROUTE_FILE),
+    loadJson(SAFE_PATHS_FILE),
     loadJson(WEATHER_FILE),
     loadOptional(LANDMARKS_FILE, parseLandmarks),
     loadOptional(DEM_CALIBRATION_FILE, parseDemCalibration),
     loadOptional(SPACE_WEATHER_FILE, parseSpaceWeather),
   ]);
-  return { route: parseRoute(routeData), records: parseWeather(weatherData), places, calibration, spaceWeather };
+  return { route: parseRoute(routeData, pathData), records: parseWeather(weatherData), places, calibration, spaceWeather };
 }

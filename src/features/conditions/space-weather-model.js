@@ -3,7 +3,8 @@
  * Pure logic for the verdict's solar storm check, from NASA DONKI.
  *
  * Dataset: data/processed/space_weather.json (scripts/prepare_space_weather.py),
- *          or, for the present day, DONKI read live (space-weather-live.js).
+ *          bundled with the site: on Mars there is no live feed, so a crew
+ *          would receive an updated file from Earth.
  * Times:   UTC. A sol is matched to the UTC Earth date it falls on.
  *
  * Event types, and what each can and cannot say about Mars:
@@ -19,11 +20,13 @@
  * glancing arrival, or particles detected near Earth, is caution.
  */
 
+import { fromColumns } from '../../lib/columns.js';
+
 /** @typedef {import('./conditions-model.js').Reason} Reason */
 /**
  * @typedef {'CME-MARS' | 'SEP' | 'FLR' | 'IPS'} SpaceEventType
- * @typedef {{ type: SpaceEventType, time: string, detail: string, observedAt: string, link: string, isGlancingBlow: boolean }} SpaceEvent
- * @typedef {{ coverageStart: string, coverageEnd: string, unavailable: string[], events: SpaceEvent[], isLive: boolean }} SpaceWeather
+ * @typedef {{ type: SpaceEventType, time: string, detail: string, observedAt: string, isGlancingBlow: boolean }} SpaceEvent
+ * @typedef {{ coverageStart: string, coverageEnd: string, unavailable: string[], events: SpaceEvent[] }} SpaceWeather
  */
 
 /** Plain names for each event type, shown in the panel. */
@@ -44,8 +47,14 @@ const BASIS = 'NASA DONKI. Our rule: direct hit = no-go; glancing hit or particl
  * @throws {Error} When the file is damaged.
  */
 export function parseSpaceWeather(data) {
-  const { coverage, events, unavailable } = data ?? {};
-  if (typeof coverage?.start !== 'string' || typeof coverage?.end !== 'string' || !Array.isArray(events)) {
+  const { coverage, unavailable } = data ?? {};
+  let events;
+  try {
+    events = fromColumns(data?.events);
+  } catch {
+    events = null;
+  }
+  if (typeof coverage?.start !== 'string' || typeof coverage?.end !== 'string' || events === null) {
     throw new Error('The space weather file is empty or damaged.');
   }
   return {
@@ -57,10 +66,8 @@ export function parseSpaceWeather(data) {
       time: event.time,
       detail: String(event.detail ?? ''),
       observedAt: String(event.observedAt ?? ''),
-      link: String(event.link ?? ''),
       isGlancingBlow: Boolean(event.isGlancingBlow),
     })),
-    isLive: false,
   };
 }
 

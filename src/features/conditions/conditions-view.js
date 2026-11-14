@@ -77,20 +77,16 @@ export function renderConditions(container, sol, record, comparison) {
 /**
  * List the space weather events on the chosen date, by type, with where each was seen.
  * @param {HTMLElement} container
- * @param {SpaceWeather | Error | null} weather Null while the live reading is loading.
+ * @param {SpaceWeather | Error} weather The bundled record, or why it could not be loaded.
  * @param {string | null} date Earth date of the chosen sol.
  */
 export function renderSpaceWeather(container, weather, date) {
-  if (weather === null) {
-    container.replaceChildren(el('p', { className: 'chart-state', text: "Checking today's space weather…" }));
-    return;
-  }
   if (weather instanceof Error) {
     container.replaceChildren(el('p', { className: 'chart-state', text: `Space weather unavailable. ${weather.message}` }));
     return;
   }
   const events = date ? eventsOnDate(weather, date) : [];
-  const heading = el('h4', { text: `Space weather, ${date ?? 'this date'}${weather.isLive ? ' (live)' : ''}` });
+  const heading = el('h4', { text: `Space weather, ${date ?? 'this date'}` });
   const missing = weather.unavailable.length > 0
     ? [el('p', { className: 'basis', text: `Missing from NASA's data: ${weather.unavailable.join(', ')}.` })]
     : [];

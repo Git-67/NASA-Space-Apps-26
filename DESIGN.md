@@ -731,7 +731,7 @@ Three light chart colours (`light-chart-3`, `light-chart-4`, `light-chart-5`) ar
 - **Inter** (body and UI): all running text, buttons, labels, chart text. Weights 400, 500, 600. Fallbacks: `"Inter", system-ui, -apple-system, "Segoe UI", sans-serif`.
 - **JetBrains Mono** (telemetry): coordinates, timestamps, dataset IDs, units readouts, eyebrow labels. Weights 400 and 500. Fallbacks: `"JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace`.
 
-All three are open-licensed and available from Google Fonts. Load only the weights listed, with `font-display: swap`.
+All three are open-licensed. They are bundled with the site (Latin subset, `public/fonts/`, from `scripts/vendor_fonts.py`) because it must work offline. Load only the weights listed, with `font-display: swap`.
 
 ### Hierarchy
 
@@ -1191,6 +1191,6 @@ Added with the first build of the briefing page. They are compositions of existi
 - The logo was checked by web search on 13 Nov 2026: no product or brand named "Sol Stroll" was found, and no identical mark. This was a text search, not an image search or a trademark search, and other "Sol" brands do use a sun in place of the "o".
 - The project name and headline copy are not chosen yet.
 - The map uses Leaflet and one basemap, the MRO HiRISE mosaic from NASA Mars Trek. HiRISE images are public domain and the team asks for the credit "NASA/JPL/University of Arizona". Other layer names in this file are examples.
-- Icon set: Google's Material Symbols, Outlined style (Apache License 2.0), loaded from Google Fonts with only the icons the page uses. So far used in the layer panel, the stop list, the Present button and map callouts; the theme toggle still uses text symbols.
+- Icon set: Google's Material Symbols, Outlined style (Apache License 2.0), bundled with the site (`public/fonts/`, about 3 KB) with only the icons the page uses; add new icons to `scripts/vendor_fonts.py`. So far used in the layer panel, the stop list, the Present button and map callouts; the theme toggle still uses text symbols.
 - The diverging ramp's two warm steps were matched to the cool steps by lightness but have not been tested in a rendered map.
 - No texture or pattern fills are defined for print or forced-colours mode.

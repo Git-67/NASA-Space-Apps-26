@@ -3,7 +3,8 @@
  * Contour lines, traced in the browser from NASA's elevation tiles as the map loads.
  *
  * Dataset: Mars Trek layer `Gale_DEM_SMG_1m`, an MRO HiRISE elevation model of
- *          Gale Crater, fetched tile by tile from trek.nasa.gov (CORS allowed).
+ *          Gale Crater; the walk area's tiles are stored with the site
+ *          (offline-tiles.js) and traced as the map shows them.
  * Units:   Trek serves the model as 8-bit grey tiles, with no published scale.
  *          scripts/calibrate_dem.py fitted the scale against Curiosity's
  *          recorded elevations (about 18.6 m per grey step). Each contour is
@@ -15,14 +16,11 @@
  *          model's deepest zoom the lines are traced on the deepest tile and
  *          scaled up, so they stay sharp but gain no detail.
  */
-import * as L from '../../../public/vendor/leaflet/leaflet-src.esm.js';
+import L from '../../lib/leaflet.js';
 import { chainSegments, smoothLine, traceStepContours } from './contour-model.js';
+import { OFFLINE_TILES } from './offline-tiles.js';
 
 const TILE_PX = 256;
-/** Deepest zoom Mars Trek publishes this elevation model at. */
-const DEM_MAX_ZOOM = 14;
-/** Extent of the elevation model, from its Mars Trek capabilities file. */
-const DEM_BOUNDS = L.latLngBounds([-4.9254743, 137.1224711], [-4.2489631, 137.7298129]);
 /** Dark casing under each line and the line itself, in pixels. */
 const CASING_WIDTH_PX = 3;
 const LINE_WIDTH_PX = 1;
@@ -75,10 +73,10 @@ function loadGreyLevels(url) {
 
 /**
  * Create the contour layer.
- * @param {string} tileUrlTemplate Mars Trek tile URL with {z}, {y} (row) and {x} (column).
  * @returns {L.GridLayer} A Leaflet layer; listen to its "loading", "load" and "tileerror" events for status.
  */
-export function createContourLayer(tileUrlTemplate) {
+export function createContourLayer() {
+  const dem = OFFLINE_TILES.dem;
   /** @type {Map<string, Promise<number[][]>>} */
   const contoursByTile = new Map();
 
@@ -87,7 +85,7 @@ export function createContourLayer(tileUrlTemplate) {
     const key = `${z}/${row}/${column}`;
     let contours = contoursByTile.get(key);
     if (!contours) {
-      const url = tileUrlTemplate.replace('{z}', String(z)).replace('{y}', String(row)).replace('{x}', String(column));
+      const url = dem.url.replace('{z}', String(z)).replace('{y}', String(row)).replace('{x}', String(column));
       contours = loadGreyLevels(url).then((levels) => traceStepContours(levels, TILE_PX, TILE_PX)
         .flatMap(({ segments }) => chainSegments(segments).map((line) => smoothLine(line, SMOOTHING_PASSES))));
       contours.catch(() => contoursByTile.delete(key)); // let a later view try again
@@ -105,7 +103,7 @@ export function createContourLayer(tileUrlTemplate) {
       const tile = document.createElement('canvas');
       tile.width = TILE_PX;
       tile.height = TILE_PX;
-      const demZoom = Math.min(coords.z, DEM_MAX_ZOOM);
+      const demZoom = Math.min(coords.z, dem.maxZoom);
       const scale = 2 ** (coords.z - demZoom);
       const offsetX = (coords.x % scale) * (TILE_PX / scale);
       const offsetY = (coords.y % scale) * (TILE_PX / scale);
@@ -133,5 +131,5 @@ export function createContourLayer(tileUrlTemplate) {
   });
 
   // zIndex above the imagery layers (Leaflet's default is 1), so lines sit on top of the colour view too.
-  return new ContourLayer({ bounds: DEM_BOUNDS, minZoom: CONTOUR_MIN_ZOOM, zIndex: CONTOUR_Z_INDEX, opacity: LAYER_OPACITY, className: 'map-contour-layer' });
+  return new ContourLayer({ bounds: dem.bounds, minZoom: CONTOUR_MIN_ZOOM, zIndex: CONTOUR_Z_INDEX, opacity: LAYER_OPACITY, className: 'map-contour-layer' });
 }

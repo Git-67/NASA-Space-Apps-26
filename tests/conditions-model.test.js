@@ -2,8 +2,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { compareWithSeason, decideVerdict, seasonDistance, usableDaylightMinutes } from '../src/features/conditions/conditions-model.js';
+import { fromColumns } from '../src/lib/columns.js';
 import { assessSpaceWeather, parseSpaceWeather } from '../src/features/conditions/space-weather-model.js';
-import { eventsFromDonki } from '../src/features/conditions/space-weather-live.js';
 
 /** Build a made-up weather record. Test data only. */
 const record = (sol, ls, airMaxC, sunriseMin = 360, sunsetMin = 1080) => ({
@@ -70,11 +70,11 @@ test('a sol with no record gives no verdict', () => {
 });
 
 const weatherRecord = {
-  coverageStart: '2012-08-06', coverageEnd: '2026-11-14', unavailable: [], isLive: false,
+  coverageStart: '2012-08-06', coverageEnd: '2026-11-14', unavailable: [],
   events: [
-    { type: 'CME-MARS', time: '2017-09-13T22:00Z', isGlancingBlow: true, detail: '', observedAt: '', link: '' },
-    { type: 'CME-MARS', time: '2018-01-02T03:00Z', isGlancingBlow: false, detail: '', observedAt: '', link: '' },
-    { type: 'SEP', time: '2017-09-10T16:25Z', isGlancingBlow: false, detail: '', observedAt: 'GOES13', link: '' },
+    { type: 'CME-MARS', time: '2017-09-13T22:00Z', isGlancingBlow: true, detail: '', observedAt: '' },
+    { type: 'CME-MARS', time: '2018-01-02T03:00Z', isGlancingBlow: false, detail: '', observedAt: '' },
+    { type: 'SEP', time: '2017-09-10T16:25Z', isGlancingBlow: false, detail: '', observedAt: 'GOES13' },
   ],
 };
 
@@ -92,16 +92,14 @@ test('assessSpaceWeather says it does not know outside the record or on a load f
 });
 
 test('parseSpaceWeather drops unknown event types and rejects a damaged file', () => {
-  const parsed = parseSpaceWeather({ coverage: { start: 'a', end: 'b' }, events: [{ type: 'GST', time: 'x' }, { type: 'SEP', time: '2017' }] });
+  const parsed = parseSpaceWeather({ coverage: { start: 'a', end: 'b' }, events: { columns: ['type', 'time'], rows: [['GST', 'x'], ['SEP', '2017']] } });
   assert.equal(parsed.events.length, 1);
   assert.throws(() => parseSpaceWeather({ events: [] }));
 });
 
-test('eventsFromDonki keeps only Mars arrivals and prefers a direct reading over a glancing one', () => {
-  const runs = [
-    { link: 'a', impactList: [{ location: 'Mars', arrivalTime: 'T1', isGlancingBlow: true }, { location: 'Earth', arrivalTime: 'T2' }] },
-    { link: 'b', impactList: [{ location: 'Mars', arrivalTime: 'T1', isGlancingBlow: false }] },
-  ];
-  const events = eventsFromDonki(runs, [{ eventTime: 'T0', instruments: [{ displayName: 'GOES' }] }]);
-  assert.deepEqual(events.map((event) => [event.type, event.time, event.isGlancingBlow]), [['SEP', 'T0', false], ['CME-MARS', 'T1', false]]);
+
+test('fromColumns rebuilds records and rejects ragged rows', () => {
+  assert.deepEqual(fromColumns({ columns: ['sol', 'ls'], rows: [[1, 150], [2, null]] }), [{ sol: 1, ls: 150 }, { sol: 2, ls: null }]);
+  assert.throws(() => fromColumns({ columns: ['sol'], rows: [[1, 2]] }));
+  assert.throws(() => fromColumns(undefined));
 });

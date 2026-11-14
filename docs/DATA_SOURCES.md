@@ -23,6 +23,21 @@ Three figures differ and each is correct for what it measures: the path from the
 
 The product does not yet use the raw image service or any radiation data.
 
+### Offline bundle (decided 14 Nov 2026)
+The site makes no network requests outside itself. `scripts/build_offline_tiles.py` downloads and stores:
+
+| Layer | Source | Area | Zooms | Stored as | Size |
+|---|---|---|---|---|---|
+| HiRISE grayscale | Mars Trek `curiosity_hirise_mosaic` | Walk area (every safe path and stop plus about 350 m) | 12 to 16 | JPEG, quality 70 | 0.8 MB |
+| CTX grayscale | Mars Trek `curiosity_ctx_mosaic` | Whole crater | 8 to 10 | JPEG, quality 70 | 2.7 MB |
+| HiRISE elevation | Mars Trek `Gale_DEM_SMG_1m` | Walk area | 12 to 14 | PNG, unchanged (the grey levels are the data) | 0.06 MB |
+| HiRISE colour | Curiosity map `MSL_Gale_HiRISE-LRGB_78quads` | Walk area plus one tile | Mercator 14 to 16 | JPEG, quality 70 | 0.6 MB |
+
+JPEG re-encoding changes no position and no data value; it softens fine texture slightly. Outside the walk area, zoomed past 10, the map shows enlarged CTX. Fonts and icons are bundled by `scripts/vendor_fonts.py` (103 KB). The weather and space weather files are stored as columns (`to_columns` in `scripts/mars_data.py`), which keeps every value at about a third of the size.
+
+### Safest paths (Derived; decided 14 Nov 2026)
+`scripts/prepare_safe_paths.py` (method in `scripts/safe_paths.py`) builds a network from all 263 Curiosity drives that touch the boxwork area (traverse file), resampled every 2 m. **Assumptions, ours:** tracks within 3 m of each other connect (a walker can step between them); a metre of moderate ground (rover tilt 10° to 20°) counts as 3 m, hard ground (20° or more) as 10 m. Dijkstra's algorithm finds the lowest-cost path for every pair of stops; the browser only reads the result (`data/processed/safe_paths.json`, 26 KB) and tries every visiting order (24) to recommend the safest. Paths never leave rover-driven ground. Limits: tilt is recorded at the end of each drive, so a drive takes one difficulty along its length; sand is not in the cost (no data places it along the tracks); joining tracks 3 m apart can cross a ridge edge a rover never drove over.
+
 ### Space weather (NASA DONKI)
 - **Provider:** NASA Community Coordinated Modeling Center, through https://api.nasa.gov/DONKI/. Fetched 14 Nov 2026 for 6 Aug 2012 to 14 Nov 2026, in 60-day windows (the API's limit). Needs a free NASA API key in `NASA_API_KEY`; NASA's shared `DEMO_KEY` allows only a few requests an hour.
 - **Types used, and what each can say about Mars:**
@@ -32,7 +47,7 @@ The product does not yet use the raw image service or any radiation data.
   - **Solar flares** (`FLR`): class M and X wanted, but the `DONKI/FLR` endpoint answered 404 from NASA's side on 14 Nov 2026. The output records it as unavailable and the page says so; rerunning the script fills it in when NASA restores the endpoint.
   - Not used: `CME` (the model runs already give arrivals at Mars), and `GST`, `HSS`, `RBE`, `MPC`, which describe effects at Earth.
 - **Verdict rule (ours):** a direct arrival forecast at Mars on the sol's UTC date is no-go (6.8% of sols in the weather record); a glancing arrival, or particles detected near Earth that day, is caution (about 5% and 3.2% more). This replaces the earlier "what if" checkbox. It extends the science brief's "no walk during a solar particle event", and the science lead should confirm it.
-- **The present day** is read live in the browser with `DEMO_KEY` (two requests). Curiosity's weather feed ends on 25 Aug 2026, so for today only space weather is judged. The present sol is counted from the date (derived).
+- **The present day** uses the newest day in the bundled file (the site is offline; on Mars a crew would receive an updated file from Earth). The page states that date. Curiosity's weather feed ends on 25 Aug 2026, so for today only space weather is judged. The present sol is counted from the date (derived).
 - **Usage terms:** NASA open data through api.nasa.gov; credit "NASA DONKI / CCMC".
 
 **How the contour lines are made, and how far to trust them (Derived).** Mars Trek serves the Gale elevation model only as 8-bit grey picture tiles, with no published scale; the full model is a 5.8 GB download, too large for a web page, and no Trek service returning elevation values was found. `scripts/calibrate_dem.py` reads the grey level under each of Curiosity's 1,389 waypoints (zoom 12 tiles) and fits a straight line to the rover's recorded elevation: **elevation = −4600.1 m + 18.6 m × grey level, RMS error 5.9 m, worst 17.1 m.** The RMS error is about what rounding to whole grey levels alone would cause (18.6 / √12 ≈ 5.4 m), so the tiles look like a plain linear stretch of the model. Consequences:
