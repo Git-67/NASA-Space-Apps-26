@@ -12,9 +12,11 @@
   <link rel="stylesheet" href="src/styles/base.css">
   <link rel="stylesheet" href="src/styles/components.css">
   <link rel="stylesheet" href="src/styles/map.css">
+  <link rel="stylesheet" href="src/styles/tabs.css">
   <!-- Leaflet 1.9.4, minified, as a classic script so it runs before the modules below (src/lib/leaflet.js). -->
   <script src="public/vendor/leaflet/leaflet.js"></script>
   <script type="module" src="src/pages/home.js"></script>
+  <script type="module" src="src/pages/weather.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#panel">Skip to the briefing</a>
@@ -45,6 +47,13 @@
           <h1>The boxwork Marswalk</h1>
           <p class="lede">Walk the safest way over Curiosity's tracks to find out how long water lasted here. Pick your stops and a day; we tell you if it's safe to go.</p>
         </header>
+
+        <div class="tabs" role="tablist" aria-label="Sidebar sections">
+          <button class="tab" type="button" role="tab" id="tab-btn-briefing" aria-controls="tab-briefing" aria-selected="true">Briefing</button>
+          <button class="tab" type="button" role="tab" id="tab-btn-weather" aria-controls="tab-weather" aria-selected="false" tabindex="-1">Weather</button>
+        </div>
+
+        <div id="tab-briefing" class="tabpanel" role="tabpanel" aria-labelledby="tab-btn-briefing">
 
         <section class="card verdict-card" aria-labelledby="verdict-title">
           <h2 id="verdict-title" class="card-title">Verdict</h2>
@@ -96,6 +105,9 @@
           <div id="kit"></div>
           <p class="basis">Our suggestion, not a NASA list.</p>
         </section>
+
+        </div>
+        <div id="tab-weather" class="tabpanel" role="tabpanel" aria-labelledby="tab-btn-weather" hidden></div>
 
         <footer class="panel-footer">
           <p>Made for the NASA Space Apps Challenge 2026. Not affiliated with or endorsed by NASA.</p>

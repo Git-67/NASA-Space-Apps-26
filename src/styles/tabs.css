@@ -1,0 +1,48 @@
+/* Tabs for the sidebar. Colours are inherited so they follow your light/dark theme.
+   Swap in your real tokens from tokens.css if you want exact brand colours. */
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  margin-block: 0.75rem;
+}
+.tab {
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: inherit;
+  font: inherit;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+  opacity: 0.7;
+}
+.tab[aria-selected="true"] { border-bottom-color: currentColor; font-weight: 600; opacity: 1; }
+.tab:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.tabpanel[hidden] { display: none; }
+
+/* Weather tab */
+.wx-list { display: grid; grid-template-columns: 1fr auto; gap: 0.35rem 1rem; margin: 0.5rem 0; }
+.wx-list dt { opacity: 0.8; }
+.wx-list dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Chart controls inside the Weather tab */
+.subtabs, .wx-range { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; margin-block: 0.5rem; }
+.wx-range-label { opacity: 0.8; margin-right: 0.25rem; }
+.subtab {
+  background: none;
+  border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+  border-radius: 999px;
+  color: inherit;
+  font: inherit;
+  padding: 0.3rem 0.8rem;
+  cursor: pointer;
+}
+.subtab[aria-selected="true"], .subtab[aria-pressed="true"] {
+  border-color: currentColor;
+  border-width: 2px;
+  padding: calc(0.3rem - 1px) calc(0.8rem - 1px);
+  font-weight: 600;
+  background: color-mix(in srgb, currentColor 15%, transparent);
+}
+.subtab:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.wx-chart svg { width: 100%; height: auto; display: block; }
