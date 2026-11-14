@@ -1,0 +1,142 @@
+/*
+ * Base styles: page reset, text styles and layout.
+ * Colours, type, spacing and radius come from tokens.css (generated from DESIGN.md).
+ * The few fixed sizes that DESIGN.md states in prose are named once here.
+ */
+:root {
+  --size-touch: 44px;            /* Minimum touch target (DESIGN.md, Touch targets). */
+  --size-nav: 64px;              /* Top nav height. */
+  --size-panel: 400px;           /* Side panel beside the map on desktop. */
+  --size-logo: 28px;             /* Logo height in the nav. */
+  --size-focus: 2px;             /* Focus outline width and offset. */
+  --map-min-height: 360px;       /* Smallest map height on mobile. */
+  --shadow-floating-dark: rgba(0, 0, 0, 0.5) 0px 8px 24px -4px;
+  --shadow-raised-light: rgba(20, 22, 28, 0.06) 0px 2px 8px 0px;
+  --shadow-floating-light: rgba(20, 22, 28, 0.14) 0px 12px 32px -4px;
+  --shadow-raised: none;
+  --shadow-floating: var(--shadow-floating-dark);
+  --transition-fast: 150ms ease;
+}
+:root[data-theme="light"] {
+  --shadow-raised: var(--shadow-raised-light);
+  --shadow-floating: var(--shadow-floating-light);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font: var(--type-body-md);
+}
+
+h1, h2, h3, h4, p, ul, ol, dl, dd, figure { margin: 0; }
+ul, ol { padding: 0; list-style: none; }
+
+h1 { font: var(--type-heading-3); }
+h3 { font: var(--type-heading-4); }
+h4 { font: var(--type-body-sm-medium); color: var(--color-text-secondary); margin-top: var(--space-md); }
+
+a { color: var(--color-link); }
+
+:focus-visible {
+  outline: var(--size-focus) solid var(--color-link);
+  outline-offset: var(--size-focus);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--space-md);
+  top: calc(-1 * var(--size-nav));
+  z-index: 2000;
+  padding: var(--space-xs) var(--space-md);
+  background: var(--color-surface-raised);
+  border-radius: var(--radius-md);
+}
+.skip-link:focus { top: var(--space-xs); }
+
+/* Text styles named in DESIGN.md. */
+.eyebrow {
+  font: var(--type-eyebrow);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+.telemetry { font: var(--type-telemetry); color: var(--color-text-secondary); }
+.lede { font: var(--type-body-sm); color: var(--color-text-secondary); }
+.basis, .data-source-caption { font: var(--type-caption); color: var(--color-text-muted); }
+.data-source-caption { padding-top: var(--space-xs); }
+.numeric { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Top navigation. */
+.top-nav {
+  position: sticky;
+  top: 0;
+  z-index: 1500;
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  height: var(--size-nav);
+  padding: 0 var(--space-md);
+  background: var(--color-canvas);
+  border-bottom: 1px solid var(--color-hairline);
+}
+.brand { display: flex; align-items: center; min-height: var(--size-touch); }
+.logo { height: var(--size-logo); width: auto; display: block; }
+.logo-on-light { display: none; }
+:root[data-theme="light"] .logo-on-dark { display: none; }
+:root[data-theme="light"] .logo-on-light { display: block; }
+.tagline { font: var(--type-body-sm); color: var(--color-text-secondary); margin-right: auto; }
+
+/* Page layout: map above the briefing on small screens, side by side on desktop. */
+.briefing { display: grid; grid-template-columns: minmax(0, 1fr); }
+.map-area { position: relative; }
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  min-width: 0;
+}
+.panel-intro { display: flex; flex-direction: column; gap: var(--space-xs); }
+.panel-footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  font: var(--type-caption);
+  color: var(--color-text-muted);
+  padding: var(--space-md) 0;
+  border-top: 1px solid var(--color-hairline);
+}
+
+@media (min-width: 1024px) {
+  .top-nav { padding: 0 var(--space-xxl); }
+  .briefing {
+    grid-template-columns: minmax(0, 1fr) var(--size-panel);
+    height: calc(100vh - var(--size-nav));
+  }
+  .map-area { height: 100%; }
+  .panel { overflow-y: auto; padding: var(--space-xl); border-left: 1px solid var(--color-hairline); }
+}
+
+@media (max-width: 479px) {
+  .tagline { display: none; }
+  .top-nav { justify-content: space-between; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}

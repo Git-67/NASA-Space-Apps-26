@@ -2,6 +2,19 @@
 
 Researched 13 Nov 2026, the day before the hackathon. **Status: the team agreed a wider version of the proposed angle on 13 Nov 2026. The agreed scope is in `CLAUDE.md` section 1; the single-angle proposal below is kept as the reasoning behind it.**
 
+## Update, 14 Nov 2026: where the built product stands against the field
+
+The first build added things the team asked for on the day: walking time, difficulty per section, hazards and a packing list. **Those four are also what most of the entries below already have**, usually in more depth. They make the product more complete; they do not make it different.
+
+What still sets it apart, as built:
+- The verdict depends on the sol. The same walk is Go on a normal sol and Caution in the 2018 dust storm, using measured data. None of the entries we read does this.
+- Every number shows its basis, and the page separates what NASA measured from what we derived or assumed.
+- It uses the path a rover really drove, not a computed one.
+
+What the field has that we do not: route finding, 3D views, helmet displays, suit consumable models, more than one site. We chose not to build these.
+
+The pitch should lead with the first list and not dwell on the planner features.
+
 ## How far to trust this
 
 - It covers 12 public GitHub repos found by web search. Seven were read in detail. Hundreds of teams worldwide will enter this challenge, and most have no public repo, so this is a sample, not the field.

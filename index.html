@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sol Stroll: know before you go</title>
+  <meta name="description" content="A go / no-go briefing for one real Marswalk in the boxwork region of Mount Sharp, built from NASA mission data.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap">
+  <link rel="stylesheet" href="public/vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="src/styles/tokens.css">
+  <link rel="stylesheet" href="src/styles/base.css">
+  <link rel="stylesheet" href="src/styles/components.css">
+  <link rel="stylesheet" href="src/styles/map.css">
+  <script type="module" src="src/pages/home.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#panel">Skip to the briefing</a>
+
+  <header class="top-nav">
+    <a class="brand" href="./" aria-label="Sol Stroll home">
+      <img class="logo logo-on-dark" src="public/brand/logo-on-dark.svg" alt="Sol Stroll" height="28">
+      <img class="logo logo-on-light" src="public/brand/logo-on-light.svg" alt="Sol Stroll" height="28">
+    </a>
+    <p class="tagline">Know before you go.</p>
+    <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch theme"></button>
+  </header>
+
+  <main>
+    <div id="load-status" class="chart-state load-status" aria-live="polite">
+      <p>Loading the briefing…</p>
+    </div>
+
+    <div id="briefing" class="briefing" hidden>
+      <section class="map-area" aria-label="Map of the Marswalk">
+        <div id="map" class="map-container"></div>
+        <p class="map-attribution">Imagery: MRO HiRISE, NASA/JPL/University of Arizona, via NASA Mars Trek. Route: Curiosity waypoints, NASA/JPL-Caltech. Coordinates as given by the sources.</p>
+      </section>
+
+      <aside id="panel" class="panel" aria-label="Marswalk briefing">
+        <header class="panel-intro">
+          <p class="eyebrow">Mount Sharp · Gale Crater · Mars</p>
+          <h1>The boxwork Marswalk</h1>
+          <p class="lede">A walk along Curiosity's own path to ask how long groundwater lasted here as Mars dried out. Choose the stops and the sol; the briefing tells you whether to go.</p>
+        </header>
+
+        <section class="card verdict-card" aria-labelledby="verdict-title">
+          <h2 id="verdict-title" class="card-title">Verdict</h2>
+          <div id="verdict" class="verdict" aria-live="polite"></div>
+        </section>
+
+        <section class="card" aria-labelledby="when-title">
+          <h2 id="when-title" class="card-title">When</h2>
+          <div class="field-row">
+            <div class="field">
+              <label for="sol-input">Sol (Curiosity mission day)</label>
+              <input id="sol-input" class="text-input" type="number" step="1" inputmode="numeric">
+            </div>
+          </div>
+          <label class="visually-hidden" for="sol-slider">Sol, as a slider</label>
+          <input id="sol-slider" class="slider" type="range" step="1">
+          <div class="preset-row" role="group" aria-label="Jump to a sol">
+            <button class="pill-tab" type="button" data-sol="4711">In the boxwork</button>
+            <button class="pill-tab" type="button" data-sol="2100">2018 dust storm</button>
+            <button class="pill-tab" type="button" data-sol="2060">Before the storm</button>
+          </div>
+          <div id="conditions"></div>
+          <div class="check-row">
+            <input id="storm-input" type="checkbox">
+            <label for="storm-input">What if: a solar storm alert is in effect</label>
+          </div>
+          <p class="data-source-caption">Source: <a class="button-link" href="https://mars.nasa.gov/rss/api/?feed=weather&amp;category=msl&amp;feedtype=json" rel="noopener">Curiosity REMS daily weather</a>, Centro de Astrobiología via NASA. The provider labels this feed “for outreach purposes only”. It is what Curiosity measured at its position on that sol, not a forecast.</p>
+        </section>
+
+        <section class="card" aria-labelledby="where-title">
+          <h2 id="where-title" class="card-title">Where</h2>
+          <div id="stop-list"></div>
+          <div id="totals" class="stat-grid"></div>
+          <div id="sections"></div>
+          <div class="field-row">
+            <div class="field">
+              <label for="speed-input">Walking speed (km/h)</label>
+              <input id="speed-input" class="text-input" type="number" step="0.5" inputmode="decimal">
+            </div>
+          </div>
+          <p class="basis">Times are estimates. The 2 km/h default is the pace NASA plans lunar walks at (EVA-EXP-0042, section 4.2.1.3.1); NASA has set no figure for Mars, so here it is our assumption. Difficulty comes from how far Curiosity was tilted on each section: under 10° easier, 10° to 20° moderate, 20° or more hard. The 20° mark is the slope NASA's lunar suit is planned to walk on. Rover tilt hints at slope and is not a slope measurement.</p>
+          <div id="profile"></div>
+        </section>
+
+        <section class="card" aria-labelledby="stop-title">
+          <h2 id="stop-title" class="card-title">Why go</h2>
+          <div id="stop-details" class="stop-details"></div>
+        </section>
+
+        <section class="card" aria-labelledby="danger-title">
+          <h2 id="danger-title" class="card-title">Dangers on this route</h2>
+          <div id="dangers"></div>
+        </section>
+
+        <section class="card" aria-labelledby="kit-title">
+          <h2 id="kit-title" class="card-title">What to pack</h2>
+          <div id="kit"></div>
+          <p class="basis">Our own suggestion, based on the task at each stop. Not a NASA equipment list.</p>
+        </section>
+
+        <footer class="panel-footer">
+          <p>Sol Stroll was created for the NASA Space Apps Challenge 2026. It is not affiliated with or endorsed by NASA.</p>
+          <p><a class="button-link" href="docs/DATA_SOURCES.md">Data sources</a></p>
+        </footer>
+      </aside>
+    </div>
+  </main>
+</body>
+</html>

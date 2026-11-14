@@ -1,0 +1,70 @@
+{
+  "about": "The five stops of the boxwork Marswalk, in the order Curiosity reached them. Written by hand from docs/SCIENCE_BRIEF.md. 'rmc' names the Curiosity waypoint used as the stop's position: the rover's recorded position on that sol, not the exact position of the rock. Fields ending in 'Ours' are the team's own reasoning or assumptions, not NASA statements.",
+  "stops": [
+    {
+      "id": "altadena",
+      "name": "Altadena",
+      "summary": "Edge of the boxwork",
+      "rmc": "116_1944",
+      "terrain": "transition",
+      "found": "Curiosity's first drill sample of the boxwork campaign, taken on 8 June 2025 from the ground just before the ridges. The bedrock here is laced with white calcium sulfate veins.",
+      "taskOurs": "Photograph and sample several veins along the outcrop, choosing the freshest exposures by eye.",
+      "kitOurs": ["Rock hammer", "Sample bags"],
+      "workMinutesOurs": 30,
+      "sourceLabel": "NASA/JPL-Caltech release 2025-080",
+      "sourceUrl": "https://www.jpl.nasa.gov/news/nasas-curiosity-mars-rover-starts-unpacking-boxwork-formations/"
+    },
+    {
+      "id": "nodules",
+      "name": "Nodule site",
+      "summary": "Unexplained mineral nodules",
+      "rmc": "118_1752",
+      "terrain": "ridge",
+      "found": "Pea-sized mineral nodules, imaged on 21 August 2025. They sit on ridge walls and in hollows rather than near the central fractures, which the mission cannot yet explain.",
+      "taskOurs": "Collect many small nodule samples from a ridge wall, a surface the rover's drill could not address.",
+      "kitOurs": ["Hand lens", "Small sample vials"],
+      "workMinutesOurs": 30,
+      "sourceLabel": "NASA/JPL-Caltech release 2026-013",
+      "sourceUrl": "https://www.jpl.nasa.gov/news/nasas-curiosity-rover-sees-martian-spiderwebs-up-close/"
+    },
+    {
+      "id": "panorama",
+      "name": "Panorama viewpoint",
+      "summary": "The wide view of the boxwork",
+      "rmc": "119_486",
+      "terrain": "ridge",
+      "found": "Where Curiosity's mast camera took its panorama of the boxwork on 26 September 2025: low ridges with sandy hollows between them.",
+      "taskOurs": "Survey the ridge network from above and choose which fracture to follow to the next stop.",
+      "kitOurs": ["Camera"],
+      "workMinutesOurs": 15,
+      "sourceLabel": "NASA/JPL-Caltech release 2026-013",
+      "sourceUrl": "https://www.jpl.nasa.gov/news/nasas-curiosity-rover-sees-martian-spiderwebs-up-close/"
+    },
+    {
+      "id": "monte-grande",
+      "name": "Monte Grande hollow",
+      "summary": "Drill site Valle de la Luna",
+      "rmc": "119_1722",
+      "terrain": "hollow",
+      "found": "Curiosity drilled the block Valle de la Luna in this large hollow in October 2025. NASA reports carbonate minerals in the sample from a hollow.",
+      "taskOurs": "Dig into the sand of the hollow and sample the bedrock beneath it.",
+      "kitOurs": ["Scoop", "Core sample tubes"],
+      "workMinutesOurs": 45,
+      "sourceLabel": "NASA Curiosity mission blog, sols 4709 to 4715",
+      "sourceUrl": "https://science.nasa.gov/blog/curiosity-blog-sols-4709-4715-drilling-high-and-low-in-the-boxwork-unit"
+    },
+    {
+      "id": "nevado-sajama",
+      "name": "Nevado Sajama ridge",
+      "summary": "Drill site on the ridge beside the hollow",
+      "rmc": "120_82",
+      "terrain": "ridge",
+      "found": "The ridge about 10 m from the hollow drill site and 2 m higher. NASA reports clay minerals in the sample from a ridgetop.",
+      "taskOurs": "Sample across the contact between ridge and hollow in one visit. The rover needed separate drill campaigns weeks apart.",
+      "kitOurs": ["Rock hammer", "Core sample tubes"],
+      "workMinutesOurs": 45,
+      "sourceLabel": "NASA Curiosity mission blog, sols 4709 to 4715",
+      "sourceUrl": "https://science.nasa.gov/blog/curiosity-blog-sols-4709-4715-drilling-high-and-low-in-the-boxwork-unit"
+    }
+  ]
+}
