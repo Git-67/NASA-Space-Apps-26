@@ -2,8 +2,9 @@
 /**
  * Which map layers the visitor last had on, remembered on this device.
  *
- * Every overlay starts switched on. After that the visitor's own choices are
- * kept across reloads and resets of the page, in the browser's local storage.
+ * The map starts with a default set of overlays switched on. After that the
+ * visitor's own choices are kept across reloads and resets of the page, in the
+ * browser's local storage.
  * Storage can be blocked (private windows), so reading and saving never fail:
  * the map then simply starts from the defaults each time.
  */
@@ -18,15 +19,16 @@ const STORAGE_KEY = 'sol-stroll-map-layers';
 
 /**
  * Turn stored text into preferences, falling back to the defaults for anything missing or invalid.
- * An overlay the stored text does not mention (one added since the visitor's last visit) starts on.
+ * An overlay the stored text does not mention (one added since the visitor's last visit) takes its default.
  * @param {string | null} storedText What was saved, or null when nothing was.
  * @param {string[]} imageryIds Every basemap, the default first.
  * @param {string[]} overlayIds Every overlay.
+ * @param {string[]} defaultOverlayIds The overlays that are on until the visitor chooses otherwise.
  * @returns {LayerPreferences}
  */
-export function parseLayerPreferences(storedText, imageryIds, overlayIds) {
+export function parseLayerPreferences(storedText, imageryIds, overlayIds, defaultOverlayIds) {
   /** @type {LayerPreferences} */
-  const defaults = { imageryId: imageryIds[0], overlayIds: [...overlayIds] };
+  const defaults = { imageryId: imageryIds[0], overlayIds: overlayIds.filter((id) => defaultOverlayIds.includes(id)) };
   if (storedText === null) return defaults;
   let stored;
   try {
@@ -38,7 +40,7 @@ export function parseLayerPreferences(storedText, imageryIds, overlayIds) {
   const overlays = typeof stored.overlays === 'object' && stored.overlays !== null ? stored.overlays : {};
   return {
     imageryId: imageryIds.includes(stored.imagery) ? stored.imagery : defaults.imageryId,
-    overlayIds: overlayIds.filter((id) => overlays[id] !== false),
+    overlayIds: overlayIds.filter((id) => (typeof overlays[id] === 'boolean' ? overlays[id] : defaultOverlayIds.includes(id))),
   };
 }
 
@@ -60,16 +62,17 @@ export function serialiseLayerPreferences(preferences, overlayIds) {
  * Read the remembered layers.
  * @param {string[]} imageryIds Every basemap, the default first.
  * @param {string[]} overlayIds Every overlay.
+ * @param {string[]} defaultOverlayIds The overlays that are on until the visitor chooses otherwise.
  * @returns {LayerPreferences}
  */
-export function readLayerPreferences(imageryIds, overlayIds) {
+export function readLayerPreferences(imageryIds, overlayIds, defaultOverlayIds) {
   let storedText = null;
   try {
     storedText = localStorage.getItem(STORAGE_KEY);
   } catch {
     // Storage is blocked: start from the defaults.
   }
-  return parseLayerPreferences(storedText, imageryIds, overlayIds);
+  return parseLayerPreferences(storedText, imageryIds, overlayIds, defaultOverlayIds);
 }
 
 /**

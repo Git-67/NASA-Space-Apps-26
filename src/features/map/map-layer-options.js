@@ -26,6 +26,11 @@ const GRID = 'grid';
 /** Every basemap, the default first, and every overlay: the choices that are remembered. */
 const IMAGERY_IDS = [GRAYSCALE, COLOUR];
 const OVERLAY_IDS = [CONTOURS, NAMES, GRID];
+/**
+ * Overlays that are on at the first visit. Place names start off: their labels sit on top of the
+ * route's hazard callouts (steep ground, sand), which a walker needs to see first.
+ */
+const DEFAULT_OVERLAY_IDS = [CONTOURS, GRID];
 
 /**
  * Report a tiled layer's progress and failures in the panel.
@@ -58,8 +63,8 @@ export function addLayerOptions(map, { stopLabels, places, calibration, tiles })
   const placeLabelLayer = places instanceof Error ? null
     : createPlaceLabelLayer(places.map((place) => ({ ...place, hasMarker: true })));
   const gridLayer = createGraticuleLayer();
-  // Every overlay starts on; after that the visitor's last choices are used (layer-preferences.js).
-  const remembered = readLayerPreferences(IMAGERY_IDS, OVERLAY_IDS);
+  // Contours and the grid start on; after that the visitor's last choices are used (layer-preferences.js).
+  const remembered = readLayerPreferences(IMAGERY_IDS, OVERLAY_IDS, DEFAULT_OVERLAY_IDS);
   const shown = new Set(remembered.overlayIds);
   let isColour = remembered.imageryId === COLOUR;
   const remember = () => saveLayerPreferences(

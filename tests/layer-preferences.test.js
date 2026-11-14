@@ -5,29 +5,32 @@ import { parseLayerPreferences, serialiseLayerPreferences } from '../src/feature
 
 const IMAGERY = ['grayscale', 'colour'];
 const OVERLAYS = ['contours', 'names', 'grid'];
+/** As in the product: place names start off. */
+const DEFAULT_ON = ['contours', 'grid'];
+const DEFAULTS = { imageryId: 'grayscale', overlayIds: DEFAULT_ON };
 
-test('with nothing stored, the first basemap is chosen and every overlay is on', () => {
-  assert.deepEqual(parseLayerPreferences(null, IMAGERY, OVERLAYS), { imageryId: 'grayscale', overlayIds: OVERLAYS });
+test('with nothing stored, the first basemap is chosen and the default overlays are on', () => {
+  assert.deepEqual(parseLayerPreferences(null, IMAGERY, OVERLAYS, DEFAULT_ON), DEFAULTS);
 });
 
-test('saved choices come back as they were saved', () => {
-  const saved = serialiseLayerPreferences({ imageryId: 'colour', overlayIds: ['grid'] }, OVERLAYS);
-  assert.deepEqual(parseLayerPreferences(saved, IMAGERY, OVERLAYS), { imageryId: 'colour', overlayIds: ['grid'] });
+test('saved choices come back as they were saved, including an overlay that is off by default', () => {
+  const saved = serialiseLayerPreferences({ imageryId: 'colour', overlayIds: ['names'] }, OVERLAYS);
+  assert.deepEqual(parseLayerPreferences(saved, IMAGERY, OVERLAYS, DEFAULT_ON), { imageryId: 'colour', overlayIds: ['names'] });
 });
 
 test('every overlay switched off stays off', () => {
   const saved = serialiseLayerPreferences({ imageryId: 'grayscale', overlayIds: [] }, OVERLAYS);
-  assert.deepEqual(parseLayerPreferences(saved, IMAGERY, OVERLAYS).overlayIds, []);
+  assert.deepEqual(parseLayerPreferences(saved, IMAGERY, OVERLAYS, DEFAULT_ON).overlayIds, []);
 });
 
-test('an overlay added since the last visit starts on', () => {
-  const saved = serialiseLayerPreferences({ imageryId: 'grayscale', overlayIds: ['names'] }, ['contours', 'names']);
-  assert.deepEqual(parseLayerPreferences(saved, IMAGERY, OVERLAYS).overlayIds, ['names', 'grid']);
+test('an overlay added since the last visit takes its default', () => {
+  const saved = serialiseLayerPreferences({ imageryId: 'grayscale', overlayIds: [] }, ['contours']);
+  // "names" and "grid" were not in the saved text: names is off by default, grid is on.
+  assert.deepEqual(parseLayerPreferences(saved, IMAGERY, OVERLAYS, DEFAULT_ON).overlayIds, ['grid']);
 });
 
 test('damaged or unexpected stored text falls back to the defaults', () => {
-  const defaults = { imageryId: 'grayscale', overlayIds: OVERLAYS };
-  assert.deepEqual(parseLayerPreferences('not json', IMAGERY, OVERLAYS), defaults);
-  assert.deepEqual(parseLayerPreferences('null', IMAGERY, OVERLAYS), defaults);
-  assert.deepEqual(parseLayerPreferences('{"imagery":"satellite","overlays":"all"}', IMAGERY, OVERLAYS), defaults);
+  assert.deepEqual(parseLayerPreferences('not json', IMAGERY, OVERLAYS, DEFAULT_ON), DEFAULTS);
+  assert.deepEqual(parseLayerPreferences('null', IMAGERY, OVERLAYS, DEFAULT_ON), DEFAULTS);
+  assert.deepEqual(parseLayerPreferences('{"imagery":"satellite","overlays":"all"}', IMAGERY, OVERLAYS, DEFAULT_ON), DEFAULTS);
 });

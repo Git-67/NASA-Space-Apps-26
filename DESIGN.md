@@ -983,7 +983,7 @@ The categorical palette was validated against `{colors.surface}`: all eight slot
 
 **`map-layer-panel`**: turn data layers on and off.
 - Top-left panel. A checkbox or radio per layer with its name, and an optional opacity slider. Show at most one sequential layer at a time; two colour ramps on one map cannot be read.
-- **Defaults and memory:** the grayscale basemap is selected, and every overlay (contour lines, place names, the grid) starts switched on. The visitor's choices are then remembered on their device and restored on the next visit or reload. An overlay whose data failed to load starts off and says why.
+- **Defaults and memory:** the grayscale basemap is selected, and contour lines and the grid start switched on. Place names start off, because their labels cover the route's hazard callouts where the two sit close together. The visitor's choices are then remembered on their device and restored on the next visit or reload. An overlay whose data failed to load starts off and says why.
 
 **`map-marker`**: a point of interest, such as a science stop or a landing site.
 - 14px circle in `{colors.map-ink}` with a 2px `{colors.route-casing}` ring; hit target 44px. The selected marker grows to 18px with a `{colors.route}` ring.
@@ -1287,7 +1287,7 @@ The panel's second tab. It is built only from components already in this file; i
 
 - Rendered and checked on 14 Nov 2026: the briefing in both themes at 1440px, the briefing at tablet size (1024px) in dark, and the journey and visor views at 1440px in dark. Not checked: the light theme at tablet or phone size, the Weather tab in the light theme, keyboard-only use, a screen reader.
 - The Weather tab is now specified under **Weather tab** and styled from tokens. Its cut-offs for "usual" and "unusual" are still its own, and its chart's sol labels can overlap along the bottom axis at the panel's width.
-- With every map overlay on by default, place-name labels can cover the route's hazard callouts where they sit close together.
+- When place names are switched on, their labels can cover the route's hazard callouts where the two sit close together. Place names start off for that reason; the overlap itself is not solved.
 - The `map-layer-panel` is a single collapsible panel at every width, not the bottom sheet described under Collapsing strategy. There is no `map-legend`, `map-popup` or `map-timeline` yet.
 - The colour imagery option keeps the route, stops and contours (team decision, 14 Nov 2026).
 - The muted, dotted legs have no casing, so on bright dust they are fainter than DESIGN's casing rule intends. Accepted for now because they are deliberately secondary.

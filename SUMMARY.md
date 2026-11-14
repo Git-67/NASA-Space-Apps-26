@@ -63,7 +63,7 @@ These were found by reading `main` on 14 Nov. None was changed, because this pas
 - **The live space weather uses NASA's shared demonstration key** in the page. NASA limits it to a few requests an hour per visitor address. It worked in testing, and the page falls back to the stored copy, but a busy judging network could exhaust it. See `docs/API_NOTES.md`.
 - **The Weather tab's code is still outside the code rules:** one file of about 800 lines in `src/pages/`, with its own cut-offs for "usual" and "unusual". Its styling was brought into the design spec on 14 Nov.
 - **The Weather tab has a non-NASA fallback source.** If NASA's feed does not answer, it tries a community mirror (`api.maas2.apollorion.com`) before the stored copy. See `docs/DATA_SOURCES.md`.
-- **With every map layer on by default, labels can cover the route's hazard callouts.**
+- **Place-name labels can cover the route's hazard callouts** when that layer is switched on. It starts off for that reason.
 - **Three other files are over the 250-line rule:** `journey-mode.js`, `visor-view.js`, `plan-model.js`.
 - **No automated lint or type check** exists, so `// @ts-check` is unenforced.
 - **The competitive position is weaker than planned.** The product now has a route search and a helmet view, as most rival entries do. `docs/COMPETITIVE_ANALYSIS.md` says how to pitch around that.
