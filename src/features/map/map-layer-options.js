@@ -11,6 +11,7 @@ import { createColourImageryLayer } from './colour-imagery-layer.js';
 import { createContourLayer } from './contour-layer.js';
 import { createGraticuleLayer } from './graticule-layer.js';
 import { createLayerPanel } from './layer-panel.js';
+import { readLayerPreferences, saveLayerPreferences } from './layer-preferences.js';
 import { createPlaceLabelLayer } from './place-label-layer.js';
 
 /** @typedef {import('./map-layer-data.js').Place} Place */
@@ -22,6 +23,14 @@ const COLOUR = 'colour';
 const CONTOURS = 'contours';
 const NAMES = 'names';
 const GRID = 'grid';
+/** Every basemap, the default first, and every overlay: the choices that are remembered. */
+const IMAGERY_IDS = [GRAYSCALE, COLOUR];
+const OVERLAY_IDS = [CONTOURS, NAMES, GRID];
+/**
+ * Overlays that are on at the first visit. Place names start off: their labels sit on top of the
+ * route's hazard callouts (steep ground, sand), which a walker needs to see first.
+ */
+const DEFAULT_OVERLAY_IDS = [CONTOURS, GRID];
 
 /**
  * Report a tiled layer's progress and failures in the panel.
@@ -54,8 +63,13 @@ export function addLayerOptions(map, { stopLabels, places, calibration, tiles })
   const placeLabelLayer = places instanceof Error ? null
     : createPlaceLabelLayer(places.map((place) => ({ ...place, hasMarker: true })));
   const gridLayer = createGraticuleLayer();
-  const shown = new Set();
-  let isColour = false;
+  // Contours and the grid start on; after that the visitor's last choices are used (layer-preferences.js).
+  const remembered = readLayerPreferences(IMAGERY_IDS, OVERLAY_IDS, DEFAULT_OVERLAY_IDS);
+  const shown = new Set(remembered.overlayIds);
+  let isColour = remembered.imageryId === COLOUR;
+  const remember = () => saveLayerPreferences(
+    { imageryId: isColour ? COLOUR : GRAYSCALE, overlayIds: [...shown] }, OVERLAY_IDS,
+  );
 
   /** Put every layer in the state the choices ask for. */
   const apply = () => {
@@ -88,8 +102,10 @@ export function addLayerOptions(map, { stopLabels, places, calibration, tiles })
       { id: NAMES, label: 'Place names', icon: 'label', note: "Stops, plus places Curiosity explored (NASA). Those are north: zoom out to see them.", unavailableReason: places instanceof Error ? places.message : undefined },
       { id: GRID, label: 'Latitude and longitude grid', icon: 'grid_on', note: 'Degrees as NASA gives them. Convention not yet confirmed.' },
     ],
-    onImageryChange: (id) => { isColour = id === COLOUR; apply(); },
-    onOverlayChange: (id, isShown) => { if (isShown) shown.add(id); else shown.delete(id); apply(); },
+    selectedImageryId: isColour ? COLOUR : GRAYSCALE,
+    shownOverlayIds: [...shown],
+    onImageryChange: (id) => { isColour = id === COLOUR; apply(); remember(); },
+    onOverlayChange: (id, isShown) => { if (isShown) shown.add(id); else shown.delete(id); apply(); remember(); },
   });
   panel.control.addTo(map);
 

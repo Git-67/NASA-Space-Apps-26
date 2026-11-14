@@ -139,8 +139,47 @@
 .verdict[data-level="caution"] .verdict-symbol, [data-level="caution"] > .reason-symbol { background: var(--color-tint-amber); color: var(--color-semantic-warning); }
 .verdict[data-level="no-go"] .verdict-symbol, [data-level="no-go"] > .reason-symbol { background: var(--color-tint-red); color: var(--color-semantic-error-text); }
 .verdict[data-level="unknown"] .verdict-symbol, [data-level="unknown"] > .reason-symbol { background: var(--color-surface-raised); color: var(--color-text-secondary); }
-/* One line under the verdict: what passed, or what needs care. */
-.verdict-summary { font: var(--type-body-md); color: var(--color-text-secondary); margin-top: var(--space-xs); }
+/*
+ * Under the verdict: what passed, or what needs care. It always takes three lines of room and
+ * never more, so the verdict card keeps one height whatever it says. Longer text is cut with an
+ * ellipsis here and shown in full in the "Why" card below.
+ */
+.verdict-summary {
+  font: var(--type-body-sm);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-xs);
+  height: 3lh;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+/*
+ * verdict (DESIGN.md): beside the map, the verdict card stays at the top of the panel while the
+ * rest of the briefing scrolls under it. The strip above it hides the cards passing behind the gap.
+ */
+@media (min-width: 1024px) {
+  .verdict-card {
+    position: sticky;
+    top: calc(var(--size-nav) + var(--space-md));
+    z-index: 5;
+    /* Tighter than other cards: it is always on screen, so it should take as little of it as it can. */
+    padding: var(--space-md);
+    box-shadow: var(--shadow-floating);
+  }
+  .verdict-card .verdict-action { padding-top: var(--space-xs); }
+  .verdict-card::before {
+    content: "";
+    position: absolute;
+    left: calc(-1 * var(--space-xs));
+    right: calc(-1 * var(--space-xs));
+    bottom: 100%;
+    height: calc(var(--space-md) + 1px);
+    background: var(--color-canvas);
+  }
+}
 .reason-list { display: flex; flex-direction: column; gap: var(--space-sm); margin-top: var(--space-xs); }
 .reason-list li { display: flex; gap: var(--space-sm); font: var(--type-body-sm); }
 

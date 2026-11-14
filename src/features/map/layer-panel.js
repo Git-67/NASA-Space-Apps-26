@@ -49,22 +49,25 @@ function choiceRow(type, choice, isChecked, onChange) {
 /**
  * Build the layer panel.
  * @param {object} options
- * @param {LayerChoice[]} options.imagery Basemap choices; the first starts selected.
- * @param {LayerChoice[]} options.overlays Overlays; all start switched off.
+ * @param {LayerChoice[]} options.imagery Basemap choices.
+ * @param {LayerChoice[]} options.overlays Overlays.
+ * @param {string} options.selectedImageryId The basemap that starts selected.
+ * @param {string[]} options.shownOverlayIds The overlays that start switched on. One that is unavailable starts off.
  * @param {(id: string) => void} options.onImageryChange Called with the chosen imagery's ID.
  * @param {(id: string, isShown: boolean) => void} options.onOverlayChange Called when an overlay is switched.
  * @returns {LayerPanel}
  */
-export function createLayerPanel({ imagery, overlays, onImageryChange, onOverlayChange }) {
+export function createLayerPanel({ imagery, overlays, selectedImageryId, shownOverlayIds, onImageryChange, onOverlayChange }) {
   /** @type {Map<string, { input: HTMLInputElement, status: HTMLElement }>} */
   const rows = new Map();
-  const imageryRows = imagery.map((choice, index) => {
-    const built = choiceRow('radio', choice, index === 0, (isChecked) => { if (isChecked) onImageryChange(choice.id); });
+  const imageryRows = imagery.map((choice) => {
+    const built = choiceRow('radio', choice, choice.id === selectedImageryId, (isChecked) => { if (isChecked) onImageryChange(choice.id); });
     rows.set(choice.id, built);
     return built.row;
   });
   const overlayRows = overlays.map((choice) => {
-    const built = choiceRow('checkbox', choice, false, (isChecked) => onOverlayChange(choice.id, isChecked));
+    const isShown = shownOverlayIds.includes(choice.id) && !choice.unavailableReason;
+    const built = choiceRow('checkbox', choice, isShown, (isChecked) => onOverlayChange(choice.id, isChecked));
     rows.set(choice.id, built);
     return built.row;
   });
