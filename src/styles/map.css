@@ -1,0 +1,79 @@
+/*
+ * Map components from DESIGN.md. The map viewport looks the same in both
+ * themes; only the floating controls follow the theme. Leaflet's own default
+ * styles are overridden here so its controls match the spec.
+ */
+
+/* map-container */
+.map-container {
+  width: 100%;
+  height: 60vh;
+  min-height: var(--map-min-height);
+  background: var(--color-void);
+}
+@media (min-width: 1024px) {
+  .map-container { height: 100%; }
+}
+.leaflet-container { background: var(--color-void); font: var(--type-chart-label); }
+
+/* map-route: bright line over a dark casing */
+.map-route-casing { stroke: var(--color-route-casing); stroke-width: 8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.map-route { stroke: var(--color-route); stroke-width: 4; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+/* map-waypoint: a 24px badge centred in a 44px hit area */
+.map-waypoint-hit { display: flex; align-items: center; justify-content: center; background: transparent; border: 0; }
+.map-waypoint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-xl);
+  height: var(--space-xl);
+  background: var(--color-route-casing);
+  color: var(--color-map-ink);
+  border: 2px solid var(--color-route);
+  border-radius: var(--radius-full);
+  font: var(--type-caption-bold);
+}
+.map-waypoint.is-selected { background: var(--color-map-ink); color: var(--color-route-casing); }
+/* A stop left out of the plan: dashed ring as well as dimmer, so it is not colour alone. */
+.map-waypoint.is-skipped { border-style: dashed; opacity: 0.6; }
+
+/* map-control: 44px zoom buttons */
+.leaflet-bar { border: 0; box-shadow: var(--shadow-floating); border-radius: var(--radius-md); }
+.leaflet-bar a, .leaflet-touch .leaflet-bar a {
+  width: var(--size-touch);
+  height: var(--size-touch);
+  line-height: var(--size-touch);
+  background: var(--color-surface-raised);
+  color: var(--color-ink);
+  border: 1px solid var(--color-hairline-strong);
+  font: var(--type-heading-4);
+  line-height: var(--size-touch);
+}
+.leaflet-bar a:first-child { border-radius: var(--radius-md) var(--radius-md) 0 0; }
+.leaflet-bar a:last-child { border-radius: 0 0 var(--radius-md) var(--radius-md); }
+.leaflet-bar a:hover { background: var(--color-surface); color: var(--color-ink); }
+.leaflet-bar a.leaflet-disabled { background: var(--color-surface-raised); color: var(--color-text-disabled); }
+
+/* map-scale */
+.leaflet-control-scale-line {
+  background: var(--color-surface-raised);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-hairline-strong);
+  border-top: 0;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  padding: 2px var(--space-xs);
+  font: var(--type-telemetry);
+  text-shadow: none;
+}
+
+/* map-attribution */
+.map-attribution {
+  padding: var(--space-xxs) var(--space-md);
+  background: var(--color-void);
+  color: var(--color-text-muted);
+  font: var(--type-chart-label);
+}
+@media (min-width: 1024px) {
+  .map-attribution { position: absolute; right: 0; bottom: 0; z-index: 500; max-width: 70%; opacity: 0.9; }
+}
