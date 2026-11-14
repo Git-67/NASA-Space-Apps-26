@@ -46,7 +46,11 @@ export function createJourneyHud(handlers) {
   speedButton.addEventListener('click', handlers.onSpeed);
   const drillButton = el('button', { className: SECONDARY, attrs: { type: 'button' } }, [icon('flare'), 'Simulate alert']);
   drillButton.addEventListener('click', handlers.onDrill);
-  const visorButton = el('button', { className: SECONDARY, attrs: { type: 'button' } }, [icon('visibility'), 'Visor view']);
+  // A small toggle on the right edge, for showing the simulated visor in a demo.
+  const visorButton = el('button', {
+    className: 'journey-visor-toggle',
+    attrs: { type: 'button', 'aria-pressed': 'false', 'aria-label': 'Visor view (simulated)', title: 'Visor view (simulated)' },
+  }, [icon('visibility')]);
   visorButton.addEventListener('click', handlers.onVisor);
   const recentreButton = el('button', { className: SECONDARY, attrs: { type: 'button' } }, [icon('my_location'), 'Re-centre']);
   recentreButton.addEventListener('click', handlers.onRecentre);
@@ -60,10 +64,11 @@ export function createJourneyHud(handlers) {
     el('p', { className: 'journey-sim', text: 'Simulation · not a real position' }),
     next,
     facing,
-    el('div', { className: 'journey-controls' }, [playButton, speedButton, drillButton, visorButton, recentreButton]),
+    el('div', { className: 'journey-controls' }, [playButton, speedButton, drillButton, recentreButton]),
   ]);
   const root = el('div', { className: 'journey-hud' }, [top, bottom]);
-  const visor = createVisorView(root, { onTogglePlay: handlers.onTogglePlay, onDrill: handlers.onDrill, onMapView: handlers.onVisor });
+  const visor = createVisorView(root, { onTogglePlay: handlers.onTogglePlay, onDrill: handlers.onDrill });
+  root.append(visorButton);
   // The pop-ups come last, so they sit above the visor as well as the panels.
   root.append(dialogs.element);
   root.hidden = true;
@@ -72,11 +77,11 @@ export function createJourneyHud(handlers) {
   return {
     dialogs,
     visor,
-    /** @param {boolean} isVisor Show the visor view in place of the panels. */
+    /** @param {boolean} isVisor Draw the visor over the map, in place of the panels. */
     setVisor(isVisor) {
       document.body.classList.toggle('is-visor', isVisor);
       visor.setShown(isVisor);
-      if (!isVisor) visorButton.focus();
+      visorButton.setAttribute('aria-pressed', String(isVisor));
     },
     /** @param {boolean} isShown */
     setShown(isShown) {
@@ -130,8 +135,11 @@ export function createJourneyHud(handlers) {
      * @returns {{ top: number, bottom: number }} Pixels from the top and bottom edges.
      */
     insets() {
-      // The visor has no panels over the map: the walker sits at the screen's centre.
-      if (visor.isShown()) return { top: 0, bottom: 0 };
+      // With the visor on, the walker sits low in it: the clear area is centred on that point.
+      if (visor.isShown()) {
+        const walkerY = visor.walkerY();
+        return { top: Math.max(0, 2 * walkerY - window.innerHeight), bottom: Math.max(0, window.innerHeight - 2 * walkerY) };
+      }
       return { top: top.getBoundingClientRect().bottom, bottom: window.innerHeight - bottom.getBoundingClientRect().top };
     },
   };

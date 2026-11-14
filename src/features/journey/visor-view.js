@@ -1,9 +1,10 @@
 // @ts-check
 /**
- * Visor view: "Begin journey" seen through a curved helmet visor that shows
- * only the critical information. A browser SIMULATION of what a helmet
- * display could show; there is no helmet or headset, and the map behind the
- * visor stands in for the ground the wearer would see.
+ * Visor view: a curved helmet visor drawn over the journey map, showing only
+ * the critical information. A browser SIMULATION of what a helmet display
+ * could show, toggled for demonstration; there is no helmet or headset. The
+ * map stays visible all round: the visor is a rim and its readouts, and the
+ * walker sits low in it so most of the visor shows the ground ahead.
  *
  * Shape: a wide visor, rounder on top and flatter at the chin, like the
  * curved polycarbonate visors of NASA's suits (NASA TechPort project 94571
@@ -14,10 +15,11 @@
  * - top: a compass tape with the heading, and a diamond where the next stop lies;
  * - left: the next stop, its distance and walking time;
  * - right: the space weather level, its source, and a drill's countdown;
- * - bottom: two gauges against NASA's limits (time out of 8 h, distance from
- *   base of 2 km; both lunar figures), and a "simulation" label;
+ * - chin: two gauges along the bottom of the visor against NASA's limits (time
+ *   out of 8 h, distance from base of 2 km; both lunar figures), and a
+ *   "simulation" label;
  * - the visor's rim glows amber for caution and pink for no-go.
- * Drawn in a fixed 1200 × 750 box, scaled to fit the screen; the rest is the helmet.
+ * Drawn in a fixed 1200 × 750 box, scaled to fit the screen.
  */
 import { el } from '../../lib/dom.js';
 import { icon } from '../../components/ui/icon.js';
@@ -57,12 +59,14 @@ const TAPE_HALF_SPAN_DEG = 45;
 const TAPE_HALF_ARC_DEG = 25;
 const TAPE_STEP_DEG = 5;
 const TAPE_TICK_COUNT = (2 * TAPE_HALF_SPAN_DEG) / TAPE_STEP_DEG + 1;
-/** Gauges and the bottom label: arcs of a circle centred above the chin. */
-const CHIN_CENTRE_Y = 250;
-const GAUGE_RADIUS = 380;
-const LABEL_RADIUS = 345;
-/** Space between text and the visor's edge, in box units. */
-const EDGE_MARGIN = 56;
+/** Gauges, their labels and the bottom label follow the chin: ellipses inside it, as [rx, ry]. */
+const GAUGE_ELLIPSE = [VISOR_RX - 40, VISOR_CHIN_RY - 34];
+const LABEL_ELLIPSE = [VISOR_RX - 78, VISOR_CHIN_RY - 70];
+const SIM_LABEL_ELLIPSE = [VISOR_RX - 120, VISOR_CHIN_RY - 72];
+/** Space between text and the visor's edge, in box units: room for the side toggle on the right. */
+const EDGE_MARGIN = 110;
+/** Where the walker sits in the box: low in the visor, so most of it shows the ground ahead. */
+const WALKER_Y = 470;
 
 /**
  * @param {string} tag
@@ -86,6 +90,21 @@ function svg(tag, attrs = {}, children = []) {
 function onCircle(centreY, radius, angleDeg) {
   const radians = (angleDeg * Math.PI) / 180;
   return { x: CENTRE_X + radius * Math.cos(radians), y: centreY + radius * Math.sin(radians) };
+}
+
+/**
+ * An arc of an ellipse centred on the visor's middle, drawn in the direction from one angle to the other.
+ * @param {number[]} radii [rx, ry]
+ * @param {number} fromDeg Angle clockwise from the +x axis (90 is the bottom).
+ * @param {number} toDeg
+ * @returns {string} SVG path data.
+ */
+function chinArc([rx, ry], fromDeg, toDeg) {
+  const point = (/** @type {number} */ angleDeg) => {
+    const radians = (angleDeg * Math.PI) / 180;
+    return `${(CENTRE_X + rx * Math.cos(radians)).toFixed(1)} ${(VISOR_MID_Y + ry * Math.sin(radians)).toFixed(1)}`;
+  };
+  return `M ${point(fromDeg)} A ${rx} ${ry} 0 0 ${toDeg > fromDeg ? 1 : 0} ${point(toDeg)}`;
 }
 
 /**
@@ -134,13 +153,13 @@ function edgeText(side, y, className) {
 function chinGauge(id, fromDeg, toDeg) {
   // Gauges fill left to right whichever side they are on, so the arc is drawn left to right.
   const [left, right] = fromDeg > toDeg ? [fromDeg, toDeg] : [toDeg, fromDeg];
-  const track = arc(CHIN_CENTRE_Y, GAUGE_RADIUS, left, right);
+  const track = chinArc(GAUGE_ELLIPSE, left, right);
   const fill = svg('path', { d: track, class: 'visor-gauge-fill', pathLength: 1 });
   const textPath = svg('textPath', { href: `#${id}`, startOffset: '50%', 'text-anchor': 'middle' });
   const group = svg('g', { class: 'visor-gauge' }, [
     svg('path', { d: track, class: 'visor-gauge-track' }),
     fill,
-    svg('path', { id, d: arc(CHIN_CENTRE_Y, LABEL_RADIUS, left, right), class: 'visor-guide' }),
+    svg('path', { id, d: chinArc(LABEL_ELLIPSE, left, right), class: 'visor-guide' }),
     svg('text', { class: 'visor-gauge-label' }, [textPath]),
   ]);
   return { group, fill, textPath };
@@ -149,7 +168,7 @@ function chinGauge(id, fromDeg, toDeg) {
 /**
  * Build the visor (hidden until shown) inside a container.
  * @param {HTMLElement} container
- * @param {{ onTogglePlay: () => void, onDrill: () => void, onMapView: () => void }} handlers
+ * @param {{ onTogglePlay: () => void, onDrill: () => void }} handlers
  */
 export function createVisorView(container, handlers) {
   // Compass tape: a pool of ticks, moved every frame rather than rebuilt.
@@ -162,21 +181,21 @@ export function createVisorView(container, handlers) {
   const nextMarker = svg('path', { d: `M ${CENTRE_X} ${TAPE_CENTRE_Y - TAPE_RADIUS - 14} l 12 14 l -12 14 l -12 -14 Z`, class: 'visor-next-marker' });
   const headingText = svg('text', { x: CENTRE_X, y: 210, class: 'visor-heading', 'text-anchor': 'middle' });
 
-  const nextLabel = edgeText('left', 300, 'visor-label');
+  const nextLabel = edgeText('left', 280, 'visor-label');
   nextLabel.textContent = 'NEXT STOP';
-  const nextName = edgeText('left', 342, 'visor-value-sm');
-  const nextDistance = edgeText('left', 400, 'visor-value');
-  const nextTime = edgeText('left', 440, 'visor-value-sm');
+  const nextName = edgeText('left', 322, 'visor-value-sm');
+  const nextDistance = edgeText('left', 378, 'visor-value');
+  const nextTime = edgeText('left', 416, 'visor-value-sm');
 
-  const weatherLabel = edgeText('right', 300, 'visor-label');
-  const weatherLevel = edgeText('right', 352, 'visor-value');
-  const weatherText = edgeText('right', 392, 'visor-text');
-  const weatherTime = edgeText('right', 426, 'visor-text');
+  const weatherLabel = edgeText('right', 280, 'visor-label');
+  const weatherLevel = edgeText('right', 332, 'visor-value');
+  const weatherText = edgeText('right', 372, 'visor-text');
+  const weatherTime = edgeText('right', 406, 'visor-text');
 
   const alertText = svg('text', { x: CENTRE_X, y: 290, class: 'visor-alert-text', 'text-anchor': 'middle' });
-  const outGauge = chinGauge('visor-out-guide', 155, 110);
-  const baseGauge = chinGauge('visor-base-guide', 25, 70);
-  const simulationPath = svg('path', { id: 'visor-sim-guide', d: arc(CHIN_CENTRE_Y, LABEL_RADIUS - 40, 110, 70), class: 'visor-guide' });
+  const outGauge = chinGauge('visor-out-guide', 162, 112);
+  const baseGauge = chinGauge('visor-base-guide', 18, 68);
+  const simulationPath = svg('path', { id: 'visor-sim-guide', d: chinArc(SIM_LABEL_ELLIPSE, 108, 72), class: 'visor-guide' });
   const simulationText = svg('textPath', { href: '#visor-sim-guide', startOffset: '50%', 'text-anchor': 'middle' }, ['SIMULATED VISOR']);
 
   const rim = svg('path', { d: VISOR_PATH, class: 'visor-rim' });
@@ -189,8 +208,6 @@ export function createVisorView(container, handlers) {
         svg('stop', { offset: '1', class: 'visor-shade-edge' }),
       ]),
     ]),
-    // The helmet around the visor: a huge frame with the visor cut out of it.
-    svg('path', { d: `M -4000 -4000 H ${WIDTH + 4000} V ${HEIGHT + 4000} H -4000 Z ${VISOR_PATH}`, class: 'visor-frame', 'fill-rule': 'evenodd' }),
     svg('path', { d: VISOR_PATH, fill: 'url(#visor-shade)' }),
     svg('path', { d: arc(VISOR_MID_Y + 100, 450, 205, 232), class: 'visor-glare' }),
     rim,
@@ -210,15 +227,13 @@ export function createVisorView(container, handlers) {
   playButton.addEventListener('click', handlers.onTogglePlay);
   const drillButton = el('button', { className: 'button-secondary button-large', attrs: { type: 'button' } }, [icon('flare'), 'Simulate alert']);
   drillButton.addEventListener('click', handlers.onDrill);
-  const mapButton = el('button', { className: 'button-secondary button-large', attrs: { type: 'button' } }, [icon('layers'), 'Map view']);
-  mapButton.addEventListener('click', handlers.onMapView);
   // Screen readers get the same facts in words, announced only when the stop or the level changes.
   const summary = el('p', { className: 'visually-hidden', attrs: { 'aria-live': 'polite' } });
   const root = el('section', { className: 'visor', attrs: { 'aria-label': 'Visor view (simulated)' } }, [
     drawing,
     summary,
     el('div', { className: 'visor-controls is-left' }, [playButton]),
-    el('div', { className: 'visor-controls is-right' }, [drillButton, mapButton]),
+    el('div', { className: 'visor-controls is-right' }, [drillButton]),
   ]);
   root.hidden = true;
   container.append(root);
@@ -228,9 +243,16 @@ export function createVisorView(container, handlers) {
     /** @param {boolean} isShown */
     setShown(isShown) {
       root.hidden = !isShown;
-      if (isShown) mapButton.focus();
     },
     isShown: () => !root.hidden,
+    /**
+     * Where the walker should sit on screen: low in the visor, wherever the scaled box lands.
+     * @returns {number} Pixels from the top of the window.
+     */
+    walkerY() {
+      const scale = Math.min(window.innerWidth / WIDTH, window.innerHeight / HEIGHT);
+      return (window.innerHeight - HEIGHT * scale) / 2 + WALKER_Y * scale;
+    },
     /** @param {boolean} isPlaying */
     setPlaying(isPlaying) {
       playButton.replaceChildren(icon(isPlaying ? 'pause' : 'play_arrow'), isPlaying ? 'Pause' : 'Walk');
