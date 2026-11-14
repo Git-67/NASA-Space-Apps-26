@@ -861,7 +861,7 @@ All buttons have a minimum touch height of 44px.
 
 **`pill-tab`** and **`pill-tab-active`**: top-level switching (for example between datasets). Inactive: text `{colors.text-secondary}`, border `{colors.hairline-strong}`. Active: background `{colors.ink}`, text `{colors.void}`.
 
-**`segmented-tab`** and **`segmented-tab-active`**: underline tabs inside a section. Active: text `{colors.ink}` with a 2px `{colors.accent}` underline.
+**`segmented-tab`** and **`segmented-tab-active`**: underline tabs inside a section. Inactive: text `{colors.text-muted}` in `{typography.body-sm-medium}`. Active: text `{colors.ink}` with a 2px `{colors.accent}` underline. At least 44px tall. The panel's Briefing and Weather tabs use these.
 
 ### Badges
 
@@ -983,6 +983,7 @@ The categorical palette was validated against `{colors.surface}`: all eight slot
 
 **`map-layer-panel`**: turn data layers on and off.
 - Top-left panel. A checkbox or radio per layer with its name, and an optional opacity slider. Show at most one sequential layer at a time; two colour ramps on one map cannot be read.
+- **Defaults and memory:** the grayscale basemap is selected, and every overlay (contour lines, place names, the grid) starts switched on. The visitor's choices are then remembered on their device and restored on the next visit or reload. An overlay whose data failed to load starts off and says why.
 
 **`map-marker`**: a point of interest, such as a science stop or a landing site.
 - 14px circle in `{colors.map-ink}` with a 2px `{colors.route-casing}` ring; hit target 44px. The selected marker grows to 18px with a `{colors.route}` ring.
@@ -1134,10 +1135,14 @@ Added with the first build of the briefing page. They are compositions of existi
 
 **`verdict`**: the page's main message: Go, Caution, No-go or No verdict.
 - The level is set in `{typography.stat-value}` beside a round symbol (a tick, an exclamation mark, a cross or a question mark). The symbol uses the matching badge colours: `badge-success` for go, `badge-warning` for caution, `badge-error` for no-go, and `{colors.surface-raised}` with `{colors.text-secondary}` for no verdict.
-- Read at a glance: the level, then one line in `{typography.body-md}` and `{colors.text-secondary}`: "All 5 checks pass." or the sentences of the checks that do not. Then "Begin journey" (`button-primary`, `button-large`, full width) and "Simulated walk of your plan."
-- The reasons sit in a `disclosure`, "Why (5 checks)", under the button: each with its own symbol, a sentence in `{typography.body-sm}`, and its basis in `{typography.body-sm}` and `{colors.text-muted}`. The card's "Verdict" heading is for screen readers only.
+- Read at a glance: the level, then a summary in `{typography.body-sm}` and `{colors.text-secondary}`: "All 5 checks pass." or the sentences of the checks that do not. Then "Begin journey" (`button-primary`, `button-large`, full width) and "Simulated walk of your plan."
+- **One height, always.** The summary takes exactly three lines of room: shorter text leaves the rest empty, and longer text is cut with an ellipsis. So the card is the same height whatever the verdict says, and nothing below it jumps when the sol changes. The full sentences are always in the "Why" card.
+- **It stays in view.** Beside the map (1024px and wider), the verdict card sticks to the top of the panel, `{spacing.md}` below the top nav, while the rest of the briefing scrolls under it. It uses `{spacing.md}` padding there instead of a card's usual `{spacing.xl}`, and the floating shadow, because it sits above other cards. Below 1024px, where the panel is under the map, it scrolls with the page.
+- The reasons sit in their own card directly below, in a `disclosure`, "Why (5 checks)": each with its own symbol, a sentence in `{typography.body-sm}`, and its basis in `{typography.body-sm}` and `{colors.text-muted}`. They are outside the verdict card so that opening them cannot change its height. The verdict card's "Verdict" heading is for screen readers only.
 - The level is always given in words and by symbol, never by colour alone. The region is announced to screen readers when it changes.
 - The overall level is the worst of its reasons.
+
+**Card spacing in the panel:** every card in a tab is `{spacing.xl}` (24px) from the next, as the Whitespace rule requires.
 
 **`sol-slider`**: a range input for choosing a sol, always paired with a labelled number input showing the same value, and a "Today" button (`button-secondary`) beside the number.
 - A 32px round thumb in `{colors.accent}` with a 2px `{colors.void}` ring on an 8px `{colors.hairline-strong}` track, 44px tall hit area: big enough for a glove.
@@ -1171,6 +1176,38 @@ Added with the first build of the briefing page. They are compositions of existi
 **Basis lines**: any derived or assumed number is followed by a line starting "Basis:" or "Our own", in `{typography.body-sm}` and `{colors.text-muted}` (14px: the smallest supporting text on a tablet held at arm's length).
 
 **Briefing order (tablet):** the panel answers "can we go?" first and keeps everything else a tap away. Title (no lede), tabs, then the verdict card with "Begin journey" on the first screen; When (Today, sol, slider, daylight and air temperature, space weather, one sources line; more readings and data gaps fold away); Where (stops, three totals in one row: time, round trip, climb; the height profile; legs table and safety rules fold away); Tasks (one row per stop); Dangers; What to pack (folded).
+
+### Weather tab
+
+The panel's second tab. It is built only from components already in this file; it adds no colours, type sizes or radii of its own. Styles are in `src/styles/tabs.css`.
+
+| Part of the tab | Component used |
+|---|---|
+| Briefing / Weather switch | `segmented-tab` |
+| Each block ("At a glance", "Weather at Gale Crater", "Dust watch") | `card-base`, with an icon before the title |
+| Headline ("Check before you go") | `weather-banner`, below |
+| Rows of readings | `reading-list`, with an icon before the label and a badge after the value |
+| "Usual", "Unusual", "Quiet", "None" | `badge-success` for normal, `badge-warning` for something to watch, `badge-blue` for information. Always an icon and a word |
+| "How to read this" | `disclosure` |
+| Which reading to chart | `select-input` |
+| Chart or table switch, retry | `button-secondary` |
+| 3, 7, 14 or 30 sols | `pill-tab` and `pill-tab-active` |
+| Latest high and low | `stat-tile` |
+| The chart, its legend and tooltip | The **Charts** rules, `chart-legend-item`, `chart-tooltip` |
+| The table view | `data-table` |
+| While loading | `chart-state` |
+
+**`weather-banner`**: the tab's one-line answer.
+- Background `{colors.surface-raised}`, border `1px solid {colors.hairline-strong}`, rounded `{rounded.md}`, padding `{spacing.sm} {spacing.md}`.
+- A 32px icon on the left: `{colors.semantic-success}` when nothing needs watching, `{colors.semantic-warning}` when something does, `{colors.text-secondary}` when it only informs. The icon's shape differs too, so the state is not shown by colour alone.
+- Headline in `{typography.heading-4}`, one supporting line in `{typography.body-sm}` and `{colors.text-secondary}`, then the sol and date the readings are from in `{typography.caption}` and `{colors.text-muted}`.
+
+**Weather chart**
+- Series colours are `chart-1` to `chart-3`, in order. The daily high is a solid line with filled points; the daily low is a dashed line with hollow points, so the two differ by more than colour.
+- "Usual for the season" is a dotted line in `{colors.text-muted}`.
+- Every chart has the table view, and states which sol the latest reading is from.
+
+**Wording:** "usual" and "unusual" compare a reading with past sols at the same season. They are the team's own cut-offs, not NASA limits, and "How to read this" says so. The dust watch is the team's inference and is labelled as such.
 
 ### Navigation
 
@@ -1249,7 +1286,8 @@ Added with the first build of the briefing page. They are compositions of existi
 ## Known Gaps
 
 - Rendered and checked on 14 Nov 2026: the briefing in both themes at 1440px, the briefing at tablet size (1024px) in dark, and the journey and visor views at 1440px in dark. Not checked: the light theme at tablet or phone size, the Weather tab in the light theme, keyboard-only use, a screen reader.
-- **The Weather tab is not specified in this file.** It was built with its own stylesheet (`src/styles/tabs.css`) and its own cut-offs for "usual" and "unusual". Its components should be added here, or the tab restyled from existing ones.
+- The Weather tab is now specified under **Weather tab** and styled from tokens. Its cut-offs for "usual" and "unusual" are still its own, and its chart's sol labels can overlap along the bottom axis at the panel's width.
+- With every map overlay on by default, place-name labels can cover the route's hazard callouts where they sit close together.
 - The `map-layer-panel` is a single collapsible panel at every width, not the bottom sheet described under Collapsing strategy. There is no `map-legend`, `map-popup` or `map-timeline` yet.
 - The colour imagery option keeps the route, stops and contours (team decision, 14 Nov 2026).
 - The muted, dotted legs have no casing, so on bright dust they are fainter than DESIGN's casing rule intends. Accepted for now because they are deliberately secondary.

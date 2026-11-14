@@ -25,6 +25,8 @@ The product does not use the raw image service or any measured radiation data. H
 
 **The Weather tab** (`src/pages/weather.js`) reads the same REMS feed and DONKI, live when online and from the stored files when offline. Its "usual / unusual" labels and its "dust watch" dates are **ours**: the dust watch is inferred from how narrow the daily temperature range was at each time of year across the Mars years in the feed. No dust measurement is used, because the feed's dust field is unusable.
 
+**A non-NASA source in the Weather tab.** When NASA's REMS feed does not answer, the tab next tries `https://api.maas2.apollorion.com/`, a community-run mirror of the same REMS data (latest sol only), before falling back to the stored copy. It is not a NASA service, its terms were not checked, and on 14 Nov 2026 it refused requests from a test browser. The science and data lead should decide whether to keep it: the stored copy already covers the case where NASA is unreachable.
+
 ### Online and offline (decided 14 Nov 2026)
 At start the page loads one 7 KB Mars Trek tile to see whether NASA is reachable (3 s limit). **Online**, map tiles come from Mars Trek and Curiosity's location map, space weather is extended live from DONKI, and the Weather tab reads the REMS feed live. **Offline** (no link, or chosen with the button in the top bar), everything comes from the copy stored with the site, and the button says how recent it is. The REMS feed answers browsers with CORS allowed, but returns 403 to headless test browsers, so automated tests must use a normal browser user agent. The Weather tab's second live source, MAAS2, is a community mirror (not NASA) and sends no CORS header, so browsers always reject it.
 
