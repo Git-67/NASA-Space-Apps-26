@@ -12,6 +12,14 @@
  * developed such a visor that darkens itself; that project is about tint,
  * not about a display).
  *
+ * Three levels of emphasis, so the eye goes to what to act on first:
+ * 1. the distance and time to the next stop (and TAKE SHELTER in a no-go);
+ * 2. the stop's name, the weather level, the heading and the gauges;
+ * 3. faint labels (NEXT, SPACE WEATHER, tick numbers, SIMULATED).
+ * Anything that repeats what is already shown is left out: a clear sky shows
+ * only "Clear", and the walking time shares a line with the distance.
+ * Small type: the visor sits right in front of the eyes.
+ *
  * On the visor, following its curve:
  * - top: a compass tape with the heading, and a diamond where the next stop lies;
  * - left: the next stop, its distance and walking time, and the minimap;
@@ -64,7 +72,7 @@ const TAPE_TICK_COUNT = (2 * TAPE_HALF_SPAN_DEG) / TAPE_STEP_DEG + 1;
 /** Gauges, their labels and the bottom label follow the chin: ellipses inside it, as [rx, ry]. */
 const GAUGE_ELLIPSE = [VISOR_RX - 40, VISOR_CHIN_RY - 34];
 const LABEL_ELLIPSE = [VISOR_RX - 78, VISOR_CHIN_RY - 70];
-const SIM_LABEL_ELLIPSE = [VISOR_RX - 120, VISOR_CHIN_RY - 72];
+const SIM_LABEL_ELLIPSE = [VISOR_RX - 120, VISOR_CHIN_RY - 60];
 /** Space between text and the visor's edge, in box units: room for the side toggle on the right. */
 const EDGE_MARGIN = 110;
 /** The minimap: a circle on the visor's left, under the next stop and clear of the time gauge. */
@@ -72,7 +80,7 @@ const MINIMAP_X = 300;
 const MINIMAP_Y = 430;
 const MINIMAP_RADIUS = 78;
 /** Gauge labels add these words, so a level is never told by the fill alone. */
-const GAUGE_WORDS = { ok: '', near: ' · NEAR LIMIT', over: ' · AT LIMIT' };
+const GAUGE_WORDS = { ok: '', near: ' · near limit', over: ' · at limit' };
 
 /**
  * @param {string} tag
@@ -180,29 +188,28 @@ export function createVisorView(container, handlers) {
   // Compass tape: a pool of ticks, moved every frame rather than rebuilt.
   const ticks = Array.from({ length: TAPE_TICK_COUNT }, () => {
     const line = svg('line', { x1: CENTRE_X, x2: CENTRE_X, class: 'visor-tick' });
-    const label = svg('text', { x: CENTRE_X, y: TAPE_CENTRE_Y - TAPE_RADIUS + 52, class: 'visor-tick-label', 'text-anchor': 'middle' });
+    const label = svg('text', { x: CENTRE_X, y: TAPE_CENTRE_Y - TAPE_RADIUS + 36, class: 'visor-tick-label', 'text-anchor': 'middle' });
     const group = svg('g', {}, [line, label]);
     return { group, line, label };
   });
-  const nextMarker = svg('path', { d: `M ${CENTRE_X} ${TAPE_CENTRE_Y - TAPE_RADIUS - 14} l 12 14 l -12 14 l -12 -14 Z`, class: 'visor-next-marker' });
-  const headingText = svg('text', { x: CENTRE_X, y: 210, class: 'visor-heading', 'text-anchor': 'middle' });
+  const nextMarker = svg('path', { d: `M ${CENTRE_X} ${TAPE_CENTRE_Y - TAPE_RADIUS - 9} l 8 9 l -8 9 l -8 -9 Z`, class: 'visor-next-marker' });
+  const headingText = svg('text', { x: CENTRE_X, y: 166, class: 'visor-heading', 'text-anchor': 'middle' });
 
-  const nextLabel = edgeText('left', 225, 'visor-label');
-  nextLabel.textContent = 'NEXT STOP';
-  const nextName = edgeText('left', 262, 'visor-value-sm');
-  const nextDistance = edgeText('left', 310, 'visor-value');
-  const nextTime = edgeText('left', 344, 'visor-value-sm');
+  const nextLabel = edgeText('left', 262, 'visor-label');
+  nextLabel.textContent = 'NEXT';
+  const nextName = edgeText('left', 286, 'visor-value');
+  const nextDistance = edgeText('left', 316, 'visor-primary');
 
-  const weatherLabel = edgeText('right', 280, 'visor-label');
-  const weatherLevel = edgeText('right', 332, 'visor-value');
-  const weatherText = edgeText('right', 372, 'visor-text');
-  const weatherTime = edgeText('right', 406, 'visor-text');
+  const weatherLabel = edgeText('right', 262, 'visor-label');
+  const weatherLevel = edgeText('right', 286, 'visor-value');
+  const weatherText = edgeText('right', 308, 'visor-detail');
+  const weatherTime = edgeText('right', 328, 'visor-detail');
 
   const alertText = svg('text', { x: CENTRE_X, y: 490, class: 'visor-alert-text', 'text-anchor': 'middle' });
   const outGauge = chinGauge('visor-out-guide', 150, 112);
   const baseGauge = chinGauge('visor-base-guide', 18, 68);
   const simulationPath = svg('path', { id: 'visor-sim-guide', d: chinArc(SIM_LABEL_ELLIPSE, 108, 72), class: 'visor-guide' });
-  const simulationText = svg('textPath', { href: '#visor-sim-guide', startOffset: '50%', 'text-anchor': 'middle' }, ['SIMULATED VISOR']);
+  const simulationText = svg('textPath', { href: '#visor-sim-guide', startOffset: '50%', 'text-anchor': 'middle' }, ['SIMULATED']);
 
   const rim = svg('path', { d: VISOR_PATH, class: 'visor-rim' });
   const drawing = svg('svg', {
@@ -219,10 +226,10 @@ export function createVisorView(container, handlers) {
     rim,
     svg('path', { d: arc(TAPE_CENTRE_Y, TAPE_RADIUS, -90 - TAPE_HALF_ARC_DEG, -90 + TAPE_HALF_ARC_DEG), class: 'visor-tape' }),
     ...ticks.map((tick) => tick.group),
-    svg('path', { d: `M ${CENTRE_X - 12} ${TAPE_CENTRE_Y - TAPE_RADIUS - 30} h 24 l -12 16 Z`, class: 'visor-caret' }),
+    svg('path', { d: `M ${CENTRE_X - 7} ${TAPE_CENTRE_Y - TAPE_RADIUS - 20} h 14 l -7 10 Z`, class: 'visor-caret' }),
     nextMarker,
     headingText,
-    nextLabel, nextName, nextDistance, nextTime,
+    nextLabel, nextName, nextDistance,
     weatherLabel, weatherLevel, weatherText, weatherTime,
     alertText,
     outGauge.group, baseGauge.group,
@@ -284,7 +291,7 @@ export function createVisorView(container, handlers) {
         const isMajor = data.label !== null;
         tick.group.setAttribute('transform', `rotate(${(data.offsetDeg * arcPerDeg).toFixed(2)} ${CENTRE_X} ${TAPE_CENTRE_Y})`);
         tick.line.setAttribute('y1', String(TAPE_CENTRE_Y - TAPE_RADIUS));
-        tick.line.setAttribute('y2', String(TAPE_CENTRE_Y - TAPE_RADIUS + (isMajor ? 22 : 12)));
+        tick.line.setAttribute('y2', String(TAPE_CENTRE_Y - TAPE_RADIUS + (isMajor ? 14 : 7)));
         tick.label.textContent = data.label ?? '';
       });
       headingText.textContent = `${String(Math.round(headingDeg) % 360).padStart(3, '0')}°`;
@@ -299,28 +306,26 @@ export function createVisorView(container, handlers) {
     /** @param {VisorStatus} status */
     setStatus(status) {
       nextName.textContent = status.nextName ?? 'Walk complete';
-      nextDistance.textContent = status.nextName === null ? '' : `${Math.round(status.metresToGo)} m`;
-      nextTime.textContent = status.nextName === null ? '' : `${Math.ceil(status.minutesToGo)} min walk`;
+      nextDistance.textContent = status.nextName === null ? '' : `${Math.round(status.metresToGo)} m · ${Math.ceil(status.minutesToGo)} min`;
 
       const { weather } = status;
       const source = { live: 'LIVE', stored: 'STORED', drill: 'DRILL' }[weather.source];
       weatherLabel.textContent = `SPACE WEATHER · ${source}`;
-      weatherLevel.textContent = { go: '✓ CLEAR', caution: '! CAUTION', 'no-go': '✕ TAKE SHELTER', unknown: '? UNKNOWN' }[weather.level];
-      weatherLevel.setAttribute('class', `visor-value is-${weather.level}`);
-      // One short line fits on the visor: the first sentence.
-      weatherText.textContent = weather.text.split('. ')[0].replace(/\.$/, '');
-      weatherTime.textContent = weather.source === 'drill' ? weather.asOf.replace(' (simulated time)', '') : '';
+      weatherLevel.textContent = { go: '✓ Clear', caution: '! Caution', 'no-go': '✕ No-go', unknown: '? Unknown' }[weather.level];
+      // A clear sky needs no explanation; otherwise one short line says why.
+      weatherText.textContent = weather.level === 'go' ? '' : weather.text.split('. ')[0].replace(/\.$/, '');
+      weatherTime.textContent = weather.source === 'drill' ? weather.asOf.replace('Drill ends in ', 'Drill · ').replace(' (simulated time)', ' left') : '';
       rim.setAttribute('class', `visor-rim is-${weather.level}`);
       alertText.textContent = weather.level === 'no-go' ? 'TAKE SHELTER' : '';
 
       const out = gauge(status.outMinutes, status.outLimitMinutes);
       outGauge.fill.style.strokeDasharray = `${out.share.toFixed(3)} 1`;
       outGauge.group.setAttribute('class', `visor-gauge is-${out.level}`);
-      outGauge.textPath.textContent = `OUT ${formatDuration(status.outMinutes)} / ${status.outLimitMinutes / 60} h${GAUGE_WORDS[out.level]}`;
+      outGauge.textPath.textContent = `${formatDuration(status.outMinutes)} of ${status.outLimitMinutes / 60} h out${GAUGE_WORDS[out.level]}`;
       const base = gauge(status.baseM, status.baseLimitM);
       baseGauge.fill.style.strokeDasharray = `${base.share.toFixed(3)} 1`;
       baseGauge.group.setAttribute('class', `visor-gauge is-${base.level}`);
-      baseGauge.textPath.textContent = `BASE ${Math.round(status.baseM)} m / ${status.baseLimitM / 1000} km${GAUGE_WORDS[base.level]}`;
+      baseGauge.textPath.textContent = `${Math.round(status.baseM)} m of ${status.baseLimitM / 1000} km from base${GAUGE_WORDS[base.level]}`;
 
       const nextSummary = `${status.nextName ? `Next stop: ${status.nextName}.` : 'Walk complete.'} Space weather: ${weather.level}.`;
       if (nextSummary !== summaryText) { summaryText = nextSummary; summary.textContent = nextSummary; }
