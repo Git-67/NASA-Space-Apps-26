@@ -2,8 +2,8 @@
 
 Dataset: Curiosity traverse and waypoints (data/raw/), and the stops in
          data/processed/route.json (run prepare_route.py first).
-Method:  see safe_paths.py. Paths use only ground Curiosity drove, joined
-         where tracks come within 3 m; cost is length times a tilt penalty.
+Method:  see safe_paths.py. Paths use only ground Curiosity drove, within
+         NASA's 20-degree suit slope limit; the safest path is the shortest.
 Output:  data/processed/safe_paths.json, one entry per pair of stops (the
          browser reverses an entry for the opposite direction). Doing this
          here keeps the work off the low-power computer that shows the page.
@@ -18,7 +18,7 @@ import json
 from typing import Any
 
 from mars_data import PROCESSED_DIR, distance_m, load_raw, write_processed
-from safe_paths import JOIN_M, PENALTY, Network, build_network
+from safe_paths import HARD_TILT_DEG, JOIN_M, Network, build_network
 from traverse import simplify
 
 OUTPUT_FILE = "safe_paths.json"
@@ -33,7 +33,7 @@ def describe(network: Network, path: list[tuple[int, float, str]]) -> dict[str, 
     steps = path[1:]
     runs: list[dict[str, Any]] = []
     along = 0.0
-    ascent = descent = cost = 0.0
+    ascent = descent = 0.0
     profile = [[0.0, round(places[0][2], 1)]]
     next_profile = PROFILE_STEP_M
     steepest = (places[0], 0.0)
@@ -41,7 +41,6 @@ def describe(network: Network, path: list[tuple[int, float, str]]) -> dict[str, 
         a, b = places[index], places[index + 1]
         length = distance_m(a[1], a[0], b[1], b[0])
         along += length
-        cost += length * PENALTY[difficulty]
         change = b[2] - a[2]
         ascent += max(change, 0.0)
         descent += max(-change, 0.0)
@@ -61,7 +60,6 @@ def describe(network: Network, path: list[tuple[int, float, str]]) -> dict[str, 
         "distanceM": round(along, 1),
         "ascentM": round(ascent, 1),
         "descentM": round(descent, 1),
-        "costM": round(cost, 1),
         "maxTiltDeg": round(steepest[1], 2),
         "steepest": [round(steepest[0][1], COORD_DECIMALS), round(steepest[0][0], COORD_DECIMALS)],
         "middle": [round(middle[1], COORD_DECIMALS), round(middle[0], COORD_DECIMALS)],
@@ -83,7 +81,8 @@ def main() -> None:
             pairs[f"{first['id']}|{second['id']}"] = describe(network, network.safest(nodes[first["id"]], nodes[second["id"]]))
     path = write_processed(OUTPUT_FILE, {
         "about": "Safest walking path between each pair of stops, over ground Curiosity drove. Built by scripts/prepare_safe_paths.py. "
-                 f"Tracks within {JOIN_M:g} m are joined; cost per metre: {PENALTY} (our assumptions). Entries run from the first id to the second.",
+                 f"Tracks within {JOIN_M:g} m (the rover's width) are joined; ground steeper than NASA's {HARD_TILT_DEG:g} degree suit limit is excluded; "
+                 "the shortest remaining path is used. Entries run from the first id to the second.",
         "pairs": pairs,
     })
     print(f"Wrote {path}: {len(pairs)} pairs, network of {len(network.places)} places")

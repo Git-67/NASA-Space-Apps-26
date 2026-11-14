@@ -12,8 +12,8 @@ Mars maps show where to walk. Sol Stroll tells a crew whether to go. It follows 
 - A plan built from stops you search for and add, in the order you choose (or the recommended shortest order). Map numbers and arrows follow that order. For each leg: each section's distance, climb, walking time and difficulty on hover or tap, the route coloured by difficulty, and callouts at steep ground, sand and the biggest climb.
 - A verdict (go, caution, no-go) for any sol in Curiosity's weather record, or for today, including NASA's space weather for that date. Every reason shows its basis.
 - A task list for each stop with why it matters, hazards on the route, and a packing list.
-- **Works fully offline:** every tile, font, icon and dataset ships with the site (first load about 1.2 MB), because a crew on Mars cannot call Earth's servers.
-- The **safest path** between stops, found over ground Curiosity actually drove (263 rover drives joined into a network), weighted by how steep the rover found it.
+- **Live, with an offline mode:** online it reads live NASA data; with no link (as on Mars), or at the press of a button, it uses the copy stored with the site and says how recent it is (first load about 1.2 MB).
+- The **safest path** between stops under **NASA's rules**: only ground Curiosity actually drove (263 rover drives joined into a network), never steeper than NASA's 20° suit limit, and the shortest within it. The verdict also applies NASA's 8-hour and 2 km walk limits.
 - Map options: contour lines from NASA's Gale elevation model, colour HiRISE imagery, names of places Curiosity explored, and a latitude/longitude grid.
 - Dark and light themes.
 
@@ -40,7 +40,7 @@ Full details, limits and usage terms are in [`docs/DATA_SOURCES.md`](docs/DATA_S
 - **Measured by NASA missions:** imagery, rover positions and elevations, daily temperatures, sunrise and sunset.
 - **Derived by us:** distances along the path, climb, how unusual a sol is for its season, and the elevation scale behind the contour lines.
 - **Taken from NASA's lunar planning, because none exists for Mars:** the 2 km/h walking pace and the 20° slope mark (NASA EVA-EXP-0042).
-- **Assumed by us, and labelled in the page:** time spent at each stop, the daylight safety margin, the 10° "moderate" mark, the packing list, the tasks at each stop, and the safest-path rules (rover tracks within 3 m connect; moderate ground counts 3×, hard 10×).
+- **Assumed by us, and labelled in the page:** time spent at each stop, the daylight safety margin, the packing list, and the tasks at each stop. The slope (17°, 20°), walk length (8 h), distance (2 km) and pace (2 km/h) are NASA's lunar planning figures (EVA-EXP-0042).
 
 NASA's own planning document says walking ranges for Mars are still "forward work", and no Mars surface suit limits are public. So the verdict uses no temperature, ultraviolet or radiation dose thresholds.
 

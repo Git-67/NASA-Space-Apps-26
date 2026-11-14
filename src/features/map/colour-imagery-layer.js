@@ -4,8 +4,8 @@
  *
  * Dataset: "MSL_Gale_HiRISE-LRGB_78quads", a colour MRO HiRISE mosaic of the
  *          area around Curiosity's drive, from NASA's Curiosity location map
- *          (credit NASA/JPL/University of Arizona). The walk area is stored
- *          with the site (offline-tiles.js), re-encoded as JPEG.
+ *          (credit NASA/JPL/University of Arizona). Read live when online;
+ *          offline, the walk area stored with the site (tile-sources.js).
  * Grid:    the source is cut in Web Mercator tiles numbered from the bottom
  *          (TMS). The map uses Mars Trek's plain latitude/longitude tiles, so
  *          each map tile is assembled from the Mercator rows that cover it;
@@ -13,10 +13,9 @@
  */
 import L from '../../lib/leaflet.js';
 import { mercatorRowsForBand, toTmsRow } from './mercator-tiles.js';
-import { OFFLINE_TILES } from './offline-tiles.js';
 
 const TILE_PX = 256;
-const COLOUR = OFFLINE_TILES.colour;
+/** @typedef {import('./tile-sources.js').TileSet} TileSet */
 
 /**
  * @param {string} url
@@ -33,9 +32,10 @@ function loadImage(url) {
 
 /**
  * Create the colour imagery layer.
+ * @param {TileSet} colour Where to read the colour tiles.
  * @returns {L.GridLayer} A Leaflet layer; listen to its "tileerror" event for failures.
  */
-export function createColourImageryLayer() {
+export function createColourImageryLayer(colour) {
   const ColourLayer = L.GridLayer.extend({
     /**
      * @param {{ x: number, y: number, z: number }} coords Tile column, row and zoom on the map's grid.
@@ -50,7 +50,7 @@ export function createColourImageryLayer() {
       const north = 90 - coords.y * tileDeg;
       const mercatorZoom = coords.z + 1;
       const rows = mercatorRowsForBand(north, north - tileDeg, mercatorZoom, TILE_PX);
-      Promise.all(rows.map(({ row }) => loadImage(COLOUR.url.replace('{z}', String(mercatorZoom)).replace('{x}', String(coords.x)).replace('{y}', String(toTmsRow(row, mercatorZoom))))))
+      Promise.all(rows.map(({ row }) => loadImage(colour.url.replace('{z}', String(mercatorZoom)).replace('{x}', String(coords.x)).replace('{y}', String(toTmsRow(row, mercatorZoom))))))
         .then((images) => {
           const context = tile.getContext('2d');
           if (!context || images.every((image) => image === null)) {
@@ -66,5 +66,5 @@ export function createColourImageryLayer() {
     },
   });
 
-  return new ColourLayer({ bounds: COLOUR.bounds, minZoom: COLOUR.minZoom, maxNativeZoom: COLOUR.maxZoom, className: 'map-colour-layer' });
+  return new ColourLayer({ bounds: colour.bounds, minZoom: colour.minZoom, maxNativeZoom: colour.maxZoom, className: 'map-colour-layer' });
 }

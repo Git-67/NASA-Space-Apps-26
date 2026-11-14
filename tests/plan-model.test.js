@@ -9,9 +9,9 @@ const stop = (id, pointIndex, terrain, kit) => ({
   id, name: id, summary: '', terrain, found: '', tasksOurs: [], kitOurs: kit, workMinutesOurs: 30, sourceLabel: '', sourceUrl: '', pointIndex,
 });
 /** A straight safe path with one difficulty. Test data only. */
-const path = (distanceM, ascentM, descentM, maxTiltDeg, costM, startM = 100) => ({
-  distanceM, ascentM, descentM, costM, maxTiltDeg, steepest: [0, 1], middle: [0, 0.5],
-  runs: [{ difficulty: maxTiltDeg >= 20 ? 'hard' : maxTiltDeg >= 10 ? 'moderate' : 'easier', points: [[0, 0], [0, 1]] }],
+const path = (distanceM, ascentM, descentM, maxTiltDeg, startM = 100) => ({
+  distanceM, ascentM, descentM, maxTiltDeg, steepest: [0, 1], middle: [0, 0.5],
+  runs: [{ difficulty: maxTiltDeg >= 20 ? 'hard' : maxTiltDeg >= 17 ? 'moderate' : 'easier', points: [[0, 0], [0, 1]] }],
   profile: [[0, startM], [distanceM, startM + ascentM - descentM]],
 });
 const route = {
@@ -22,15 +22,15 @@ const route = {
   ],
   stops: [stop('a', 0, 'transition', ['Hammer']), stop('b', 1, 'hollow', ['Hammer', 'Scoop']), stop('c', 2, 'ridge', [])],
   safePaths: {
-    'a|b': path(500, 10, 0, 12, 1500),
-    'a|c': path(800, 6, 0, 21, 8000),
-    'b|c': path(500, 0, 4, 21, 5000, 110),
+    'a|b': path(500, 10, 0, 12),
+    'a|c': path(800, 6, 0, 21),
+    'b|c': path(500, 0, 4, 21, 110),
   },
 };
 
-test('rateDifficulty uses the 10 and 20 degree boundaries', () => {
-  assert.equal(rateDifficulty(9.9), 'easier');
-  assert.equal(rateDifficulty(10), 'moderate');
+test('rateDifficulty uses NASA\'s 17 and 20 degree marks', () => {
+  assert.equal(rateDifficulty(16.9), 'easier');
+  assert.equal(rateDifficulty(17), 'moderate');
   assert.equal(rateDifficulty(20), 'hard');
 });
 
@@ -98,10 +98,16 @@ test('walkProfile joins the legs in visiting order, reading reversed paths backw
   assert.deepEqual(marks.map((mark) => [mark.walkedM, mark.number]), [[0, 1], [800, 2], [1300, 3]]);
 });
 
-test('recommendedOrder picks the order with the lowest total risk', () => {
-  // a>b>c>a costs 1500 + 5000 + 8000; a>c>b>a costs 8000 + 5000 + 1500. Equal, so the first order found is kept.
+test('recommendedOrder picks the order with the shortest total walk', () => {
+  // a>b>c>a is 500 + 500 + 800; a>c>b>a is 800 + 500 + 500. Equal, so the first order found is kept.
   assert.deepEqual(recommendedOrder(route), ['b', 'c']);
-  const cheaperBack = { ...route, safePaths: { ...route.safePaths, 'a|c': path(800, 6, 0, 5, 800) } };
-  assert.equal(planRisk(cheaperBack, ['b', 'c']), 1500 + 5000 + 800);
-  for (const order of [['c', 'b']]) assert.ok(planRisk(cheaperBack, recommendedOrder(cheaperBack)) <= planRisk(cheaperBack, order));
+  const longWayRound = { ...route, safePaths: { ...route.safePaths, 'b|c': path(2000, 0, 4, 5, 110) } };
+  assert.equal(planRisk(longWayRound, ['b', 'c']), 500 + 2000 + 800);
+  assert.ok(planRisk(longWayRound, recommendedOrder(longWayRound)) <= planRisk(longWayRound, ['c', 'b']));
+});
+
+test('buildPlan reports how far the walk goes from its start', () => {
+  // Test paths end at longitude 1 degree from the start at 0, 0: about 59 km on Mars.
+  const plan = buildPlan(route, ['b'], 2);
+  assert.ok(Math.abs(plan.furthestM - 59157) < 50);
 });

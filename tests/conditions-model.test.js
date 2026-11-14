@@ -3,7 +3,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { compareWithSeason, decideVerdict, seasonDistance, usableDaylightMinutes } from '../src/features/conditions/conditions-model.js';
 import { fromColumns } from '../src/lib/columns.js';
-import { assessSpaceWeather, parseSpaceWeather } from '../src/features/conditions/space-weather-model.js';
+import { assessNasaLimits } from '../src/features/conditions/nasa-limits.js';
+import { eventsFromDonki } from '../src/features/conditions/space-weather-live.js';
+import { assessSpaceWeather, mergeSpaceWeather, parseSpaceWeather } from '../src/features/conditions/space-weather-model.js';
 
 /** Build a made-up weather record. Test data only. */
 const record = (sol, ls, airMaxC, sunriseMin = 360, sunsetMin = 1080) => ({
@@ -42,30 +44,30 @@ test('usableDaylightMinutes converts Mars-clock time and removes both margins', 
 
 test('a short plan on a normal sol is a go', () => {
   const sol = record(999, 100, 0);
-  const verdict = decideVerdict({ planMinutes: 120, record: sol, comparison: compareWithSeason(sol, season), spaceWeather: CLEAR });
+  const verdict = decideVerdict({ furthestM: 500, planMinutes: 120, record: sol, comparison: compareWithSeason(sol, season), spaceWeather: CLEAR });
   assert.equal(verdict.level, 'go');
 });
 
 test('an unusually cold sol is a caution', () => {
   const sol = record(999, 100, -30);
-  const verdict = decideVerdict({ planMinutes: 120, record: sol, comparison: compareWithSeason(sol, season), spaceWeather: CLEAR });
+  const verdict = decideVerdict({ furthestM: 500, planMinutes: 120, record: sol, comparison: compareWithSeason(sol, season), spaceWeather: CLEAR });
   assert.equal(verdict.level, 'caution');
 });
 
 test('a plan longer than usable daylight is a no-go', () => {
   const sol = record(999, 100, 0);
-  const verdict = decideVerdict({ planMinutes: 700, record: sol, comparison: compareWithSeason(sol, season), spaceWeather: CLEAR });
+  const verdict = decideVerdict({ furthestM: 500, planMinutes: 700, record: sol, comparison: compareWithSeason(sol, season), spaceWeather: CLEAR });
   assert.equal(verdict.level, 'no-go');
 });
 
 test('a solar storm alert is a no-go whatever the weather', () => {
   const sol = record(999, 100, 0);
-  const verdict = decideVerdict({ planMinutes: 60, record: sol, comparison: compareWithSeason(sol, season), spaceWeather: STORM });
+  const verdict = decideVerdict({ furthestM: 500, planMinutes: 60, record: sol, comparison: compareWithSeason(sol, season), spaceWeather: STORM });
   assert.equal(verdict.level, 'no-go');
 });
 
 test('a sol with no record gives no verdict', () => {
-  const verdict = decideVerdict({ planMinutes: 60, record: undefined, comparison: null, spaceWeather: CLEAR });
+  const verdict = decideVerdict({ furthestM: 500, planMinutes: 60, record: undefined, comparison: null, spaceWeather: CLEAR });
   assert.equal(verdict.level, 'unknown');
 });
 
@@ -102,4 +104,33 @@ test('fromColumns rebuilds records and rejects ragged rows', () => {
   assert.deepEqual(fromColumns({ columns: ['sol', 'ls'], rows: [[1, 150], [2, null]] }), [{ sol: 1, ls: 150 }, { sol: 2, ls: null }]);
   assert.throws(() => fromColumns({ columns: ['sol'], rows: [[1, 2]] }));
   assert.throws(() => fromColumns(undefined));
+});
+
+test('assessNasaLimits applies NASA\'s 8 h and 2 km walk limits', () => {
+  assert.deepEqual(assessNasaLimits({ planMinutes: 300, furthestM: 900 }).map((reason) => reason.level), ['go', 'go']);
+  assert.deepEqual(assessNasaLimits({ planMinutes: 481, furthestM: 2001 }).map((reason) => reason.level), ['no-go', 'no-go']);
+});
+
+test('a walk over 8 hours is a no-go whatever the weather', () => {
+  const sol = record(999, 100, 0);
+  const verdict = decideVerdict({ furthestM: 500, planMinutes: 500, record: sol, comparison: compareWithSeason(sol, season), spaceWeather: CLEAR });
+  assert.equal(verdict.level, 'no-go');
+});
+
+test('eventsFromDonki keeps Mars arrivals (direct over glancing), particles and shocks', () => {
+  const runs = [
+    { impactList: [{ location: 'Mars', arrivalTime: 'T1', isGlancingBlow: true }, { location: 'Earth', arrivalTime: 'T2' }] },
+    { impactList: [{ location: 'Mars', arrivalTime: 'T1', isGlancingBlow: false }] },
+  ];
+  const events = eventsFromDonki(runs, [{ eventTime: 'T0', instruments: [{ displayName: 'GOES' }] }], [{ eventTime: 'T3', location: 'Earth' }]);
+  assert.deepEqual(events.map((event) => [event.type, event.time, event.isGlancingBlow]), [['SEP', 'T0', false], ['CME-MARS', 'T1', false], ['IPS', 'T3', false]]);
+});
+
+test('mergeSpaceWeather extends the record and reports any gap', () => {
+  const fresh = [{ type: 'SEP', time: '2026-11-20T01:00Z', isGlancingBlow: false, detail: '', observedAt: '' }];
+  const joined = mergeSpaceWeather(weatherRecord, fresh, '2026-11-15', '2026-11-21');
+  assert.equal(joined.coverageEnd, '2026-11-21');
+  assert.equal(joined.events.length, weatherRecord.events.length + 1);
+  assert.deepEqual(joined.gaps, []);
+  assert.deepEqual(mergeSpaceWeather(weatherRecord, [], '2027-01-01', '2027-02-01').gaps, ['2026-11-15 to 2027-01-01']);
 });

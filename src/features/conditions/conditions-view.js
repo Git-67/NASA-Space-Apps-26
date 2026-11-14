@@ -87,9 +87,10 @@ export function renderSpaceWeather(container, weather, date) {
   }
   const events = date ? eventsOnDate(weather, date) : [];
   const heading = el('h4', { text: `Space weather, ${date ?? 'this date'}` });
-  const missing = weather.unavailable.length > 0
-    ? [el('p', { className: 'basis', text: `Missing from NASA's data: ${weather.unavailable.join(', ')}.` })]
-    : [];
+  const missing = [
+    ...(weather.unavailable.length > 0 ? [el('p', { className: 'basis', text: `Missing from NASA's data: ${weather.unavailable.join(', ')}.` })] : []),
+    ...((weather.gaps ?? []).length > 0 ? [el('p', { className: 'basis', text: `No data for ${(weather.gaps ?? []).join(', ')}.` })] : []),
+  ];
   if (events.length === 0) {
     container.replaceChildren(heading, el('p', { className: 'chart-state', text: 'Quiet: no storms or particle events.' }), ...missing);
     return;

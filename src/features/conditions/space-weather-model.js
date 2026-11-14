@@ -3,8 +3,9 @@
  * Pure logic for the verdict's solar storm check, from NASA DONKI.
  *
  * Dataset: data/processed/space_weather.json (scripts/prepare_space_weather.py),
- *          bundled with the site: on Mars there is no live feed, so a crew
- *          would receive an updated file from Earth.
+ *          bundled with the site, extended to today from NASA DONKI when
+ *          online (space-weather-live.js). Offline, as on Mars, the bundle
+ *          alone is used and the page says how recent it is.
  * Times:   UTC. A sol is matched to the UTC Earth date it falls on.
  *
  * Event types, and what each can and cannot say about Mars:
@@ -26,7 +27,8 @@ import { fromColumns } from '../../lib/columns.js';
 /**
  * @typedef {'CME-MARS' | 'SEP' | 'FLR' | 'IPS'} SpaceEventType
  * @typedef {{ type: SpaceEventType, time: string, detail: string, observedAt: string, isGlancingBlow: boolean }} SpaceEvent
- * @typedef {{ coverageStart: string, coverageEnd: string, unavailable: string[], events: SpaceEvent[] }} SpaceWeather
+ * @typedef {{ coverageStart: string, coverageEnd: string, unavailable: string[], events: SpaceEvent[], gaps?: string[] }} SpaceWeather
+ *   `gaps`: date ranges with no data, when a live update could not reach back to the bundled record's end.
  */
 
 /** Plain names for each event type, shown in the panel. */
@@ -108,4 +110,24 @@ export function assessSpaceWeather(weather, date) {
     return { level: 'caution', text: 'Solar particles seen near Earth. They may or may not reach Mars.', basis: BASIS };
   }
   return { level: 'go', text: 'No solar storm forecast for Mars.', basis: BASIS };
+}
+
+/**
+ * Join newer events onto a record.
+ * @param {SpaceWeather} record The record so far.
+ * @param {SpaceEvent[]} fresh Events read for `start` to `end`.
+ * @param {string} start First date the fresh events cover, "YYYY-MM-DD".
+ * @param {string} end Last date they cover.
+ * @returns {SpaceWeather} The record covering up to `end`. If `start` leaves a gap after the old
+ *   record, the gap is reported in `gaps` so the page can say so.
+ */
+export function mergeSpaceWeather(record, fresh, start, end) {
+  const nextDay = new Date(Date.parse(`${record.coverageEnd}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
+  const gap = start > nextDay ? [`${nextDay} to ${start}`] : [];
+  return {
+    ...record,
+    coverageEnd: end,
+    events: [...record.events.filter((event) => event.time.slice(0, 10) < start), ...fresh],
+    gaps: [...(record.gaps ?? []), ...gap],
+  };
 }

@@ -27,6 +27,9 @@
       <img class="logo logo-on-light" src="public/brand/logo-on-light.svg" alt="Sol Stroll" height="28">
     </a>
     <p class="tagline">Know before you go.</p>
+    <button id="connection-toggle" class="connection-toggle" type="button" aria-pressed="false" disabled>
+      <span id="connection-status" class="badge-live">CHECKING LINK…</span><span class="connection-action"></span>
+    </button>
     <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch theme"></button>
   </header>
 
@@ -85,7 +88,7 @@
           <p class="basis">Tap a stop to see its leg on the map. Hover or tap a leg for details.</p>
           <div id="totals" class="stat-grid"></div>
           <div id="sections"></div>
-          <p class="basis">Times assume 2 km/h, NASA's lunar walking pace (none set for Mars). Difficulty is from Curiosity's tilt: under 10° easier, 10° to 20° moderate, 20°+ hard.</p>
+          <p class="basis">NASA's rules (lunar; none set for Mars yet): 2 km/h, up to 8 h out, up to 2 km from base, slopes up to 20°. Paths use only ground Curiosity drove and skip anything steeper than 20°. Slope is from the rover's tilt: under 17° easier (Apollo 15 walked 17°), 17° to 20° harder.</p>
           <div id="profile"></div>
         </section>
 

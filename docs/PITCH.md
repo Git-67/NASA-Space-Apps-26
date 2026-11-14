@@ -72,6 +72,7 @@ A 30-second video cannot carry the evidence slide. **The slides are the safer ch
 | The safest full walk is about 1.8 km round trip | Derived: safest paths over rover-driven ground, all five stops in the safest order (1,757 m). Say "under two kilometres". Earlier figures (929 m, 1,113 m one way) followed the rover's single path; do not use them |
 | Never more than 537 m from the start | Derived. Say "about 500 metres" |
 | The full walk with all five stops takes about 3 h 40 min | Estimate from the product: 53 minutes of walking (1.8 km) at 2 km/h plus 2 h 45 min of work at the stops. **The work time is our assumption** |
+| Every limit in the plan is NASA's | Slope 20° (Apollo 15: 17°), 8-hour walks, 2 km from base, 2 km/h: EVA-EXP-0042, lunar. Say "NASA's own lunar walking rules, because none exist for Mars yet" |
 | 2 km/h walking pace | Read from NASA EVA-EXP-0042, section 4.2.1.3.1. **It is NASA's lunar planning figure.** Always say "the pace NASA plans lunar walks at" |
 | Slopes up to 20° | Read from the same document, section 4.2.1.3. Lunar |
 | Spacewalks of up to 8 hours | Read from the same document, section 4.1.4 |

@@ -3,8 +3,9 @@
  * Contour lines, traced in the browser from NASA's elevation tiles as the map loads.
  *
  * Dataset: Mars Trek layer `Gale_DEM_SMG_1m`, an MRO HiRISE elevation model of
- *          Gale Crater; the walk area's tiles are stored with the site
- *          (offline-tiles.js) and traced as the map shows them.
+ *          Gale Crater, read live from Mars Trek when online (CORS allowed)
+ *          or from the copy stored with the site when offline
+ *          (tile-sources.js), and traced as the map shows them.
  * Units:   Trek serves the model as 8-bit grey tiles, with no published scale.
  *          scripts/calibrate_dem.py fitted the scale against Curiosity's
  *          recorded elevations (about 18.6 m per grey step). Each contour is
@@ -18,7 +19,6 @@
  */
 import L from '../../lib/leaflet.js';
 import { chainSegments, smoothLine, traceStepContours } from './contour-model.js';
-import { OFFLINE_TILES } from './offline-tiles.js';
 
 const TILE_PX = 256;
 /** Dark casing under each line and the line itself, in pixels. */
@@ -71,12 +71,14 @@ function loadGreyLevels(url) {
   });
 }
 
+/** @typedef {import('./tile-sources.js').TileSet} TileSet */
+
 /**
  * Create the contour layer.
+ * @param {TileSet} dem Where to read the elevation tiles.
  * @returns {L.GridLayer} A Leaflet layer; listen to its "loading", "load" and "tileerror" events for status.
  */
-export function createContourLayer() {
-  const dem = OFFLINE_TILES.dem;
+export function createContourLayer(dem) {
   /** @type {Map<string, Promise<number[][]>>} */
   const contoursByTile = new Map();
 

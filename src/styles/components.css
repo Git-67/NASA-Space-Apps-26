@@ -337,3 +337,37 @@
 .task-list { display: flex; flex-direction: column; gap: var(--space-xxs); font: var(--type-body-sm); }
 .task-list li { display: flex; gap: var(--space-xs); align-items: flex-start; }
 .task-list .icon { color: var(--color-text-muted); }
+
+/* badge-live: connection status in the top bar. Says LIVE only when the data really is live. */
+.badge-live {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-xxs) 10px;
+  background: var(--color-tint-orange);
+  color: var(--color-on-tint-orange);
+  border-radius: var(--radius-full);
+  font: var(--type-eyebrow);
+  letter-spacing: var(--tracking-eyebrow);
+  white-space: nowrap;
+}
+:root[data-connection="offline"] .badge-live { background: var(--color-surface-raised); color: var(--color-text-secondary); }
+
+/* The connection button: the badge plus the action, one 44px control. */
+.connection-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-height: var(--size-touch);
+  padding: 0 var(--space-xs);
+  background: transparent;
+  color: var(--color-text-secondary);
+  border: 0;
+  border-radius: var(--radius-sm);
+  font: var(--type-button-md);
+  cursor: pointer;
+}
+.connection-toggle:hover { background: var(--color-surface-raised); color: var(--color-ink); }
+.connection-toggle:disabled { cursor: default; }
+@media (max-width: 767px) {
+  .connection-detail, .connection-action { display: none; }
+}

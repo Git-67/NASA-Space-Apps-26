@@ -8,14 +8,19 @@ open, undriven ground is never used.
 
 Network:  every Curiosity drive that touches the study area (traverse file),
           resampled to points about 2 m apart. Points of different drives
-          closer than JOIN_M are treated as one place, so tracks that cross or
-          run side by side connect. JOIN_M is OUR ASSUMPTION: a walker can
-          step between rover tracks that close.
-Cost:     length in metres times a penalty for the drive's difficulty, from
-          the rover tilt recorded at the waypoint the drive ended on (the same
-          10 and 20 degree marks as the briefing). The penalties are OUR
-          ASSUMPTION: a metre of moderate ground counts as 3, hard as 10.
-Search:   Dijkstra's shortest path on that cost.
+          closer than JOIN_M are treated as one place: JOIN_M is the rover's
+          width (2.8 m, NASA/JPL MSL press kit), so two tracks that close
+          overlap the ground the rover's own body covered.
+Rules:    NASA's, from the Exploration EVA System Concept of Operations
+          (EVA-EXP-0042 Rev B, section 4.2.1.3): the suit is planned to walk
+          slopes of up to 20 degrees, and Apollo 15 crews crossed about 17.
+          A drive is rated by the rover tilt at the waypoint it ended on:
+          under 17 easier, 17 to 20 harder, 20 or more beyond the suit limit.
+          Ground beyond the limit is NOT USED. These are lunar figures; NASA
+          has set none for Mars.
+Search:   Dijkstra's shortest path by distance over the usable ground. NASA
+          publishes no weighting between the two usable classes, so none is
+          invented: the safest path is the shortest one within NASA's limits.
 
 Units: metres and degrees. Coordinates as the sources give them.
 """
@@ -28,14 +33,17 @@ from typing import Any
 from mars_data import distance_m
 from traverse import drive_points
 
-# Distance at which two rover tracks count as connected, in metres. Our assumption.
-JOIN_M = 3.0
+# Curiosity's width in metres (NASA/JPL MSL landing press kit: 9 ft 1 in, 2.8 m).
+# Tracks closer than this lie within the rover's own footprint, so they connect.
+JOIN_M = 2.8
 # Spacing of network points along each drive, in metres.
 STEP_M = 2.0
-# Difficulty marks (rover tilt, degrees) and cost per metre. Marks match plan-model.js; penalties are ours.
-MODERATE_TILT_DEG = 10.0
+# NASA EVA-EXP-0042 Rev B, section 4.2.1.3 (lunar): Apollo 15 crossed slopes of about 17 degrees;
+# the suit is planned for slopes up to 20. Must match plan-model.js.
+MODERATE_TILT_DEG = 17.0
 HARD_TILT_DEG = 20.0
-PENALTY = {"easier": 1.0, "moderate": 3.0, "hard": 10.0}
+# Classes a walker may use. Ground beyond NASA's suit limit is left out of the network.
+USABLE = {"easier", "moderate"}
 # Only drives with a point inside this box (south, west, north, east) join the network.
 AREA = (-4.83, 137.36, -4.78, 137.41)
 
@@ -92,6 +100,8 @@ class Network:
         """Add one drive, every segment carrying the drive's tilt."""
         nodes = [self.place_at(p) for p in resample(points, STEP_M)]
         difficulty = rate(tilt_deg)
+        if difficulty not in USABLE:
+            return
         for a, b in zip(nodes, nodes[1:]):
             if a == b:
                 continue
@@ -105,7 +115,7 @@ class Network:
         return min(range(len(self.places)), key=lambda i: distance_m(self.places[i][1], self.places[i][0], lat, lon))
 
     def safest(self, start: int, goal: int) -> list[tuple[int, float, str]]:
-        """Lowest-cost path as (place, tilt of the step into it, class), start first.
+        """Shortest path as (place, tilt of the step into it, class), start first.
 
         Raises:
             ValueError: when the two places are not connected.
@@ -120,7 +130,7 @@ class Network:
             if cost > best[node]:
                 continue
             for other, length, tilt, difficulty in self.edges[node]:
-                new = cost + length * PENALTY[difficulty]
+                new = cost + length
                 if new < best.get(other, math.inf):
                     best[other] = new
                     came[other] = (node, tilt, difficulty)

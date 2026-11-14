@@ -1013,6 +1013,8 @@ The categorical palette was validated against `{colors.surface}`: all eight slot
 
 **`map-arrow`**: a 20px `{colors.route-casing}` disc with a `{colors.map-ink}` arrow, halfway along each shown leg, pointing the way it is walked. Decorative for assistive technology: the stop list gives the order in words.
 
+**`connection-toggle`**: the top bar's live / offline control. A `badge-live` ("LIVE · NASA", or "OFFLINE · DATA TO 14 NOV 2026" on `{colors.surface-raised}` with `{colors.text-secondary}`) followed by the action ("Go offline" / "Go online") in `{typography.button-md}`, one 44px button. Below 768px only the badge's first word shows; the accessible name always carries the full state and the action. Never say LIVE unless the data is live.
+
 **`map-notice`**: a one-line status on the map, for example "Enlarged 4× past the imagery's own resolution". A `map-label`-style panel above the scale bar, in `{typography.caption}`. Shown only while it is true.
 
 **`map-attribution`**: required on every map.
@@ -1043,7 +1045,7 @@ These apply on top of the map components above. They exist because Mars is an or
 
 **`map-route`**: the planned walk.
 - A 4px line with a 2px `{colors.route-casing}` casing on each side. The casing is what keeps the route readable on both pale dust and dark basalt.
-- **Coloured by difficulty, drive by drive:** `{colors.route}` for easier, `{colors.route-moderate}` for moderate, `{colors.route-hard}` for hard (the classes and their sources are in the briefing). These three are map overlay colours, the same in both themes. Colour alone never marks a hazard: every section has a popup that names its difficulty, and `map-callout` labels mark the steep and sandy places.
+- **Coloured by difficulty, drive by drive, using NASA's figures:** `{colors.route}` under 17° (within what Apollo 15 crews walked), `{colors.route-moderate}` for 17° to 20° (within the suit limit), `{colors.route-hard}` over 20° (beyond NASA's suit limit; the safest path never uses it). These three are map overlay colours, the same in both themes. Colour alone never marks a hazard: every section has a popup that names its difficulty, and `map-callout` labels mark the steep and sandy places.
 - **One leg at a time:** when a stop is chosen, the section leaving it is drawn solid with its casing; every other section is drawn 3px, dotted (1px dash, 7px gap), at 55 percent opacity and without casing. With no stop chosen, the whole walk is solid. The return leg retraces the way out, so it is drawn only when it is the chosen leg.
 - Each section has an invisible 24px-wide hit line: hover shows its `map-popup` as a tooltip, tap or click opens it.
 - A draft route (being drawn) is the same line at 60 percent opacity.

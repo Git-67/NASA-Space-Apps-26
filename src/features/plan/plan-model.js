@@ -18,26 +18,28 @@
  *   pointIndex: number }} Stop
  * @typedef {'easier' | 'moderate' | 'hard'} Difficulty
  * @typedef {{ difficulty: Difficulty, points: number[][] }} PathRun A stretch of one difficulty, as [lat, lon] pairs.
- * @typedef {{ distanceM: number, ascentM: number, descentM: number, costM: number, maxTiltDeg: number,
+ * @typedef {{ distanceM: number, ascentM: number, descentM: number, maxTiltDeg: number,
  *   steepest: number[], middle: number[], runs: PathRun[], profile: number[][] }} SafePath
- *   One safest path, in walking direction. `profile` is [metres walked, elevation m] pairs; `costM` is
- *   length weighted by difficulty (scripts/safe_paths.py).
+ *   One safest path, in walking direction: the shortest over rover-driven ground within NASA's
+ *   20-degree suit slope limit (scripts/safe_paths.py). `profile` is [metres walked, elevation m] pairs.
  * @typedef {{ points: RoutePoint[], stops: Stop[], safePaths: Record<string, SafePath> }} Route
  *   `safePaths` is keyed "fromId|toId", stored for one direction of each pair.
  * @typedef {{ fromId: string, toId: string, fromName: string, toName: string, path: SafePath,
  *   distanceM: number, ascentM: number, descentM: number, maxRoverTiltDeg: number, difficulty: Difficulty,
  *   walkMinutes: number, isReturn: boolean }} Section
  * @typedef {{ stops: Stop[], sections: Section[], walkMinutes: number, workMinutes: number, totalMinutes: number,
- *   distanceM: number, ascentM: number }} Plan
+ *   distanceM: number, ascentM: number, furthestM: number }} Plan
+ *   `furthestM`: the farthest the walk goes from its start, in a straight line, in metres.
  */
+import { greatCircleM } from '../../lib/mars.js';
 
 /**
  * Default suited walking speed in km/h.
  * Basis: NASA's Exploration EVA System Concept of Operations (EVA-EXP-0042
  * Rev B, section 4.2.1.3.1) plans lunar traverses at "an ~2 km/hr walking
  * pace over relatively level regolith". That is a LUNAR planning figure:
- * the same document says Mars walk-back ranges are "forward work". So for
- * Mars it is an assumption the visitor can change, not a NASA limit.
+ * the same document says Mars walk-back ranges are "forward work". It is the
+ * closest NASA figure, so the plan uses it for every walk.
  */
 export const DEFAULT_WALKING_SPEED_KMH = 2;
 
@@ -49,8 +51,13 @@ export const DEFAULT_WALKING_SPEED_KMH = 2;
  */
 export const HARD_TILT_DEG = 20;
 
-/** Rover tilt, in degrees, at which a section is called "moderate". Our own choice: half the hard limit. */
-export const MODERATE_TILT_DEG = 10;
+/**
+ * Rover tilt, in degrees, at which a section is called "moderate" (harder).
+ * Basis: the same NASA document notes that Apollo 15 crews crossed slopes of
+ * about 17 degrees; steeper ground is within the suit's limit but beyond what
+ * people have walked. Lunar, and applied to rover tilt.
+ */
+export const MODERATE_TILT_DEG = 17;
 
 /**
  * Rate a section from the steepest attitude the rover recorded on it.
@@ -140,7 +147,24 @@ export function buildPlan(route, visitOrder, walkingSpeedKmh) {
     totalMinutes: walkMinutes + workMinutes,
     distanceM: sections.reduce((sum, item) => sum + item.distanceM, 0),
     ascentM: sections.reduce((sum, item) => sum + item.ascentM, 0),
+    furthestM: furthestFrom(route.points[start.pointIndex], sections),
   };
+}
+
+/**
+ * The farthest any point of the walk lies from its start, in a straight line.
+ * @param {{ lat: number, lon: number }} start
+ * @param {Section[]} sections
+ * @returns {number} Metres, great-circle on Mars' mean radius.
+ */
+function furthestFrom(start, sections) {
+  let furthest = 0;
+  for (const section of sections) {
+    for (const run of section.path.runs) {
+      for (const [lat, lon] of run.points) furthest = Math.max(furthest, greatCircleM(start.lat, start.lon, lat, lon));
+    }
+  }
+  return furthest;
 }
 
 /**
@@ -155,19 +179,20 @@ function permutations(items) {
 }
 
 /**
- * Total risk of visiting stops in an order and returning to the start: the sum
- * of each leg's difficulty-weighted length (`costM`).
+ * Total walking distance for visiting stops in an order and returning to the
+ * start. NASA gives no weighting between slopes within its limit, so the
+ * safest order is the one that keeps the crew on the surface for the fewest metres.
  * @param {Route} route
  * @param {string[]} order Stop ids after the start.
  * @returns {number}
  */
 export function planRisk(route, order) {
   const ids = [route.stops[0].id, ...order, route.stops[0].id];
-  return ids.slice(1).reduce((sum, id, index) => sum + orientedPath(route, ids[index], id).costM, 0);
+  return ids.slice(1).reduce((sum, id, index) => sum + orientedPath(route, ids[index], id).distanceM, 0);
 }
 
 /**
- * The recommended plan: every stop, in the order with the lowest total risk.
+ * The recommended plan: every stop, in the order with the shortest total walk.
  * Tries every order; with four stops after the start that is 24 orders, which
  * is instant even on a slow computer. Beyond about 8 stops this grows too fast
  * and a smarter search would be needed.

@@ -44,10 +44,12 @@ function reportProgress(layer, setStatus, loadingMessage, failureMessage) {
  * @param {LabelledPlace[]} options.stopLabels Names of the walk's stops, at their positions.
  * @param {Place[] | Error} options.places Places Curiosity explored, or why they could not be loaded.
  * @param {DemCalibration | Error} options.calibration Scale of the elevation tiles, or why it could not be loaded.
+ * @param {import('./tile-sources.js').TileSets} options.tiles Where to read imagery and elevation at start.
+ * @returns {{ setTiles: (tiles: import('./tile-sources.js').TileSets) => void }} Switch every tiled layer to other tiles (online or offline).
  */
-export function addLayerOptions(map, { stopLabels, places, calibration }) {
-  const colourLayer = createColourImageryLayer();
-  const contourLayer = calibration instanceof Error ? null : createContourLayer();
+export function addLayerOptions(map, { stopLabels, places, calibration, tiles }) {
+  let colourLayer = createColourImageryLayer(tiles.colour);
+  let contourLayer = calibration instanceof Error ? null : createContourLayer(tiles.dem);
   const stopLabelLayer = createPlaceLabelLayer(stopLabels);
   const placeLabelLayer = places instanceof Error ? null
     : createPlaceLabelLayer(places.map((place) => ({ ...place, hasMarker: true })));
@@ -91,11 +93,25 @@ export function addLayerOptions(map, { stopLabels, places, calibration }) {
   });
   panel.control.addTo(map);
 
-  if (contourLayer) {
-    reportProgress(contourLayer, (message) => panel.setStatus(CONTOURS, message),
-      'Drawing contours…', 'Some elevation tiles are missing. Lines may be missing.');
-  }
-  reportProgress(colourLayer, (message) => panel.setStatus(COLOUR, message),
-    'Loading colour imagery…', 'Some colour tiles are missing.');
+  /** Report progress and failures of the current tiled layers in the panel. */
+  const watch = () => {
+    if (contourLayer) {
+      reportProgress(contourLayer, (message) => panel.setStatus(CONTOURS, message),
+        'Drawing contours…', 'Some elevation tiles are missing. Lines may be missing.');
+    }
+    reportProgress(colourLayer, (message) => panel.setStatus(COLOUR, message),
+      'Loading colour imagery…', 'Some colour tiles are missing.');
+  };
+  watch();
   apply();
+
+  return {
+    setTiles(next) {
+      for (const layer of [colourLayer, contourLayer]) if (layer && map.hasLayer(layer)) layer.remove();
+      colourLayer = createColourImageryLayer(next.colour);
+      contourLayer = calibration instanceof Error ? null : createContourLayer(next.dem);
+      watch();
+      apply();
+    },
+  };
 }

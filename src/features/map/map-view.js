@@ -2,8 +2,8 @@
 /**
  * The map: Mars imagery, Curiosity's path and the numbered stops.
  *
- * Imagery:  MRO HiRISE (walk area) and MRO CTX (whole crater) from NASA Mars
- *           Trek, stored with the site so it works offline (offline-tiles.js).
+ * Imagery:  MRO HiRISE and MRO CTX from NASA Mars Trek: live when online, the
+ *           copy stored with the site when offline (tile-sources.js).
  * Route:    the safest paths between stops (data/processed/safe_paths.json).
  * Coordinates are plotted exactly as the sources give them, in degrees. The
  * tiles use a plain latitude/longitude grid, so the map uses the same grid
@@ -17,7 +17,7 @@ import { MARS_RADIUS_M } from '../../lib/mars.js';
 import { el } from '../../lib/dom.js';
 import { addLayerOptions } from './map-layer-options.js';
 import { createRouteLayer } from './route-layer.js';
-import { OFFLINE_TILES } from './offline-tiles.js';
+import { TILE_SOURCES } from './tile-sources.js';
 
 /** @typedef {import('../plan/plan-model.js').Route} Route */
 /** @typedef {import('../plan/plan-model.js').Plan} Plan */
@@ -45,7 +45,7 @@ function addOverZoomNotice(map) {
   const Notice = L.Control.extend({ onAdd: () => notice });
   new Notice({ position: 'bottomleft' }).addTo(map);
   const update = () => {
-    const stored = OFFLINE_TILES.hirise.maxZoom;
+    const stored = TILE_SOURCES.offline.hirise.maxZoom; // the same in both modes
     const isPast = map.getZoom() > stored;
     notice.hidden = !isPast;
     notice.textContent = isPast ? `Enlarged ${2 ** (map.getZoom() - stored)}× past the imagery's own resolution` : '';
@@ -63,23 +63,32 @@ const MARS_CRS = L.extend({}, L.CRS.EPSG4326, { R: MARS_RADIUS_M });
  * @param {Route} route The prepared route.
  * @param {{ places: Place[] | Error, calibration: DemCalibration | Error }} extras Data for the optional layers,
  *   or why each could not be loaded; a missing one only disables its own layer.
+ * @param {import('./tile-sources.js').ConnectionMode} mode Read tiles from NASA ('online') or from the site ('offline').
  * @param {(stopId: string) => void} onStopChosen Called when a visitor activates a stop marker.
- * @returns {{ showPlan: (plan: Plan, activeStopId: string | null) => void, highlightStop: (stopId: string | null) => void }}
+ * @returns {{ showPlan: (plan: Plan, activeStopId: string | null) => void, highlightStop: (stopId: string | null) => void,
+ *   setMode: (mode: import('./tile-sources.js').ConnectionMode) => void }}
  */
-export function createMapView(container, route, extras, onStopChosen) {
+export function createMapView(container, route, extras, mode, onStopChosen) {
   const map = L.map(container, {
     crs: MARS_CRS,
     minZoom: MIN_ZOOM,
     maxZoom: MAX_ZOOM,
-    maxBounds: OFFLINE_TILES.ctx.bounds,
+    maxBounds: TILE_SOURCES.offline.ctx.bounds,
     zoomControl: false,
     attributionControl: false,
   });
 
-  // CTX covers the crater at every zoom (enlarged past zoom 10); HiRISE covers the walk area from zoom 12.
-  for (const tiles of [OFFLINE_TILES.ctx, OFFLINE_TILES.hirise]) {
-    L.tileLayer(tiles.url, { bounds: tiles.bounds, minZoom: tiles.minZoom, maxNativeZoom: tiles.maxZoom, maxZoom: MAX_ZOOM }).addTo(map);
-  }
+  // CTX covers the crater at every zoom (enlarged past zoom 10); HiRISE covers its area on top.
+  /** @type {import('../../lib/leaflet.js').MapLayer[]} */
+  let basemaps = [];
+  /** @param {import('./tile-sources.js').TileSets} tiles */
+  const showBasemaps = (tiles) => {
+    for (const layer of basemaps) layer.remove();
+    basemaps = [tiles.ctx, tiles.hirise].map((set) => L.tileLayer(set.url, {
+      bounds: set.bounds, minZoom: set.minZoom, maxNativeZoom: set.maxZoom, maxZoom: MAX_ZOOM, zIndex: 1,
+    }).addTo(map));
+  };
+  showBasemaps(TILE_SOURCES[mode]);
 
   L.control.zoom({ position: 'topright', zoomInTitle: 'Zoom in', zoomOutTitle: 'Zoom out' }).addTo(map);
   // Metric only: SI units throughout (DESIGN.md, Mars conventions).
@@ -129,7 +138,8 @@ export function createMapView(container, route, extras, onStopChosen) {
 
   map.fitBounds(L.latLngBounds(path), { padding: [ROUTE_PADDING_PX, ROUTE_PADDING_PX] });
 
-  addLayerOptions(map, {
+  const layerOptions = addLayerOptions(map, {
+    tiles: TILE_SOURCES[mode],
     stopLabels: route.stops.map((stop, index) => {
       const point = route.points[stop.pointIndex];
       return { name: stop.name, lat: point.lat, lon: point.lon, hasMarker: false };
@@ -151,6 +161,11 @@ export function createMapView(container, route, extras, onStopChosen) {
         badge.classList.toggle('is-skipped', position < 0);
         badge.textContent = position < 0 ? '–' : String(position + 1);
       }
+    },
+    /** Switch every tiled layer between NASA's live tiles and the copy stored with the site. */
+    setMode(next) {
+      showBasemaps(TILE_SOURCES[next]);
+      layerOptions.setTiles(TILE_SOURCES[next]);
     },
     /** Mark one stop as the one whose details are shown. */
     highlightStop(stopId) {

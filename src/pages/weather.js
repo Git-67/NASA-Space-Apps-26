@@ -1,4 +1,16 @@
-// Sol Stroll: Weather tab. Live fetch of the REMS feed. No key, no data file in the repo.
+// Sol Stroll: Weather tab. Live fetch of the REMS feed; offline, the copy stored with the site
+// (data/processed/weather.json, the same feed prepared by scripts/prepare_weather.py).
+import { fromColumns } from "../lib/columns.js";
+import { formatMarsClock } from "../lib/mars.js";
+
+/** Rename the prepared weather records to the feed's field names, which the charts below read. */
+const fromBundle = (j) => fromColumns(j?.records).map((r) => ({
+  sol: r.sol, terrestrial_date: r.earthDate, ls: r.ls,
+  min_temp: r.airMinC, max_temp: r.airMaxC, min_gts_temp: r.groundMinC, max_gts_temp: r.groundMaxC,
+  pressure: r.pressurePa, local_uv_irradiance_index: r.uv,
+  sunrise: r.sunriseMin === null ? null : formatMarsClock(r.sunriseMin),
+  sunset: r.sunsetMin === null ? null : formatMarsClock(r.sunsetMin),
+}));
 // UNVERIFIED: field names (sol, terrestrial_date, ls, min_temp, max_temp, min_gts_temp,
 // max_gts_temp, pressure, abs_humidity, wind_speed, atmo_opacity, season, sunrise, sunset)
 // and CORS were written from memory and could not be tested against the live feed.
@@ -12,6 +24,12 @@ const SOURCES = [
     name: "MAAS2 (community mirror of REMS, latest sol only)",
     url: "https://api.maas2.apollorion.com/",
     pick: (j) => (j && j.sol !== undefined ? [j] : []),
+  },
+  {
+    name: "Copy stored with the site (offline)",
+    url: "data/processed/weather.json",
+    pick: fromBundle,
+    isLocal: true,
   },
 ];
 
@@ -42,7 +60,9 @@ const fmtDate = (ms) =>
 
 async function fetchData() {
   const errors = [];
-  for (const s of SOURCES) {
+  // Offline (no link, or chosen in the top bar; see src/lib/connection.js): skip the live sources.
+  const isOffline = document.documentElement.dataset.connection === "offline";
+  for (const s of SOURCES.filter((source) => source.isLocal || !isOffline)) {
     try {
       const res = await fetch(s.url, { cache: "no-store" });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
