@@ -27,6 +27,9 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+/* `hidden` always wins, even over components that set their own display (a button hidden this way stayed visible). */
+[hidden] { display: none !important; }
+
 /* The nav is sticky, so anchor jumps and scrollIntoView stop below it rather than under it. */
 html { -webkit-text-size-adjust: 100%; scroll-padding-top: var(--size-nav); }
 

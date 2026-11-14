@@ -17,6 +17,7 @@
  */
 import L from '../../lib/leaflet.js';
 import { el } from '../../lib/dom.js';
+import { icon } from '../../components/ui/icon.js';
 import { formatDuration } from '../../lib/mars.js';
 import { stackLabels } from './label-stacking.js';
 import { activeSection, midpointHeading } from './route-geometry.js';
@@ -60,7 +61,7 @@ function sectionCard(section) {
  * @returns {L.Marker}
  */
 function callout(position, iconName, text) {
-  const label = el('span', { className: 'map-label map-callout' }, [el('span', { className: 'icon', text: iconName, attrs: { 'aria-hidden': 'true' } }), text]);
+  const label = el('span', { className: 'map-label map-callout' }, [icon(iconName), text]);
   return L.marker(position, {
     icon: L.divIcon({ html: label, className: 'map-label-anchor', iconSize: [0, 0] }),
     interactive: false,
@@ -76,7 +77,7 @@ function callout(position, iconName, text) {
  */
 function directionArrow(path) {
   const { lat, lon, angleDeg } = midpointHeading(path);
-  const arrow = el('span', { className: 'map-arrow', attrs: { 'aria-hidden': 'true' } }, [el('span', { className: 'icon', text: 'arrow_forward' })]);
+  const arrow = el('span', { className: 'map-arrow', attrs: { 'aria-hidden': 'true' } }, [icon('arrow_forward')]);
   arrow.style.rotate = `${angleDeg.toFixed(1)}deg`;
   return L.marker([lat, lon], { icon: L.divIcon({ html: arrow, className: 'map-arrow-anchor', iconSize: [0, 0] }), interactive: false, keyboard: false });
 }

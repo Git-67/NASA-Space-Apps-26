@@ -199,18 +199,12 @@
 .chart-point { fill: var(--color-chart-1); stroke: var(--color-surface); stroke-width: 2; }
 .chart-point-label { font: var(--type-chart-label); fill: var(--color-text-secondary); }
 
-/* Icons: Material Symbols Outlined (DESIGN.md, Icons). Sized to the text they sit beside. */
+/* Icons: Material Symbols Outlined as inline SVG (DESIGN.md, Icons). Sized to the text they sit beside. */
 .icon {
-  font-family: "Material Symbols Outlined";
-  font-weight: normal;
-  font-style: normal;
-  font-size: 1.25em;
-  line-height: 1;
-  letter-spacing: normal;
-  text-transform: none;
-  white-space: nowrap;
-  direction: ltr;
-  -webkit-font-smoothing: antialiased;
+  width: 1.25em;
+  height: 1.25em;
+  flex: none;
+  fill: currentColor;
   vertical-align: middle;
 }
 .button-secondary { display: inline-flex; align-items: center; gap: var(--space-xs); }
