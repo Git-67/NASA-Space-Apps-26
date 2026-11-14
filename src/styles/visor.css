@@ -1,0 +1,69 @@
+/*
+ * journey-visor (DESIGN.md): "Begin journey" seen through a curved helmet
+ * visor (src/features/journey/visor-view.js). A simulation. Drawn in the map
+ * overlay colours, which are the same in both themes, because a visor is
+ * always seen against the ground. Only tokens are used.
+ */
+
+body.is-visor .journey-top,
+body.is-visor .journey-bottom { display: none; }
+
+.visor { position: fixed; inset: 0; pointer-events: none; }
+.visor[hidden] { display: none; }
+.visor-drawing { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+
+/* The helmet, the shading towards the visor's edge, and a faint glare on the glass. */
+.visor-frame { fill: var(--color-route-casing); }
+.visor-shade-clear { stop-color: var(--color-route-casing); stop-opacity: 0; }
+.visor-shade-edge { stop-color: var(--color-route-casing); stop-opacity: 0.55; }
+.visor-glare { fill: none; stroke: var(--color-map-ink); stroke-opacity: 0.08; stroke-width: 14; stroke-linecap: round; }
+.visor-rim { fill: none; stroke: var(--color-map-ink); stroke-opacity: 0.25; stroke-width: 3; }
+.visor-rim.is-caution { stroke: var(--color-route-moderate); stroke-opacity: 1; stroke-width: 10; }
+.visor-rim.is-no-go { stroke: var(--color-route-hard); stroke-opacity: 1; stroke-width: 12; }
+@media (prefers-reduced-motion: no-preference) {
+  .visor-rim.is-no-go { animation: visor-pulse 1.2s ease-in-out infinite alternate; }
+}
+@keyframes visor-pulse { from { stroke-opacity: 1; } to { stroke-opacity: 0.4; } }
+
+/* Every mark has a dark outline, so it reads over bright and dark ground alike. */
+.visor-drawing text {
+  fill: var(--color-map-ink);
+  paint-order: stroke;
+  stroke: var(--color-route-casing);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+.visor-tape { fill: none; stroke: var(--color-route); stroke-width: 2; }
+.visor-tick { stroke: var(--color-route); stroke-width: 2; }
+.visor-tick-label { font: var(--type-heading-4); }
+.visor-caret { fill: var(--color-map-ink); }
+.visor-next-marker { fill: var(--color-route); stroke: var(--color-route-casing); stroke-width: 2; }
+.visor-next-marker.is-off-tape { fill: var(--color-route-moderate); }
+.visor-heading { font: var(--type-heading-1); }
+
+.visor-label { font: var(--type-heading-4); letter-spacing: var(--tracking-eyebrow); }
+.visor-drawing .visor-label { fill: var(--color-route); }
+.visor-value { font: var(--type-heading-2); }
+.visor-value-sm { font: var(--type-heading-3); }
+.visor-text { font: var(--type-subtitle); }
+.visor-drawing .visor-value.is-go { fill: var(--color-route); }
+.visor-drawing .visor-value.is-caution { fill: var(--color-route-moderate); }
+.visor-drawing .visor-value.is-no-go,
+.visor-drawing .visor-alert-text { fill: var(--color-route-hard); }
+.visor-alert-text { font: var(--type-display-lg); letter-spacing: var(--tracking-eyebrow); }
+
+/* Gauges against NASA's limits along the chin: cyan, amber near the limit, pink at it. */
+.visor-guide { fill: none; stroke: none; }
+.visor-gauge-track { fill: none; stroke: var(--color-map-ink); stroke-opacity: 0.25; stroke-width: 10; stroke-linecap: round; }
+.visor-gauge-fill { fill: none; stroke: var(--color-route); stroke-width: 10; stroke-linecap: round; }
+.visor-gauge.is-near .visor-gauge-fill { stroke: var(--color-route-moderate); }
+.visor-gauge.is-over .visor-gauge-fill { stroke: var(--color-route-hard); }
+.visor-gauge-label { font: var(--type-heading-4); }
+.visor-sim { font: var(--type-heading-4); letter-spacing: var(--tracking-eyebrow); }
+.visor-drawing .visor-sim { fill: var(--color-route); }
+
+/* The few controls sit on the helmet, outside the visor, in the bottom corners. */
+.visor-controls { position: absolute; bottom: var(--space-md); display: flex; gap: var(--space-sm); pointer-events: auto; }
+.visor-controls.is-left { left: var(--space-md); }
+.visor-controls.is-right { right: var(--space-md); }
+.visor-controls .button-secondary { background: var(--color-surface-raised); }

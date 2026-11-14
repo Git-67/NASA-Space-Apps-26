@@ -13,14 +13,15 @@
  * - At each stop the walk waits for the stop's tasks to be submitted (two
  *   presses). Ending the walk takes three (journey-dialogs.js).
  * - "Simulate alert" plays a random space weather alert, labelled as a drill.
+ * - "Visor view" swaps the panels for a simulated helmet visor (visor-view.js).
  * The walker faces the way the device's compass points, where it has one,
  * or else the direction of travel.
  *
  * SIMULATION: there is no real astronaut position; the overlay says so.
  */
 import { startCompass } from '../../lib/compass.js';
-import { formatDuration } from '../../lib/mars.js';
-import { buildJourney, headingAhead, positionAt, turnToward, walkOn } from './journey-model.js';
+import { formatDuration, greatCircleM } from '../../lib/mars.js';
+import { bearingDeg, buildJourney, headingAhead, positionAt, turnToward, walkOn } from './journey-model.js';
 import { createJourneyHud } from './journey-hud.js';
 
 /** @typedef {import('../plan/plan-model.js').Plan} Plan */
@@ -52,10 +53,12 @@ const TURN_TIME_MS = 600;
  * @param {number} options.walkingSpeedKmh Real walking pace to simulate.
  * @param {{ current: () => WeatherSummary, refresh: () => Promise<void>, drill: () => Drill }} options.weather
  *   Space weather for now, how to read it again, and how to draw a simulated alert.
+ * @param {{ outMinutes: number, baseM: number }} options.limits NASA's longest walk (minutes) and farthest
+ *   straight-line distance from base (metres), shown on the visor's gauges.
  * @param {() => void} options.onEnd Called after the journey closes, so the page can redraw its own view.
  * @returns {{ begin: (plan: Plan) => Promise<void>, isActive: () => boolean }}
  */
-export function createJourneyMode({ map, walkingSpeedKmh, weather, onEnd }) {
+export function createJourneyMode({ map, walkingSpeedKmh, weather, limits, onEnd }) {
   const metresPerMs = (walkingSpeedKmh * 1000) / 3_600_000;
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   /** @type {ReturnType<typeof buildJourney> | null} */
@@ -87,6 +90,9 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather, onEnd }) {
   let isFollowing = true;
   let lastStatusAt = 0;
   let insets = { top: 0, bottom: 0 };
+  let isVisor = false;
+  /** @type {WeatherSummary | null} The space weather last shown, for the visor. */
+  let shownWeather = null;
 
   const hud = createJourneyHud({
     onEnd: () => askToEnd(),
@@ -94,6 +100,11 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather, onEnd }) {
     onSpeed: () => { speedIndex = (speedIndex + 1) % SPEEDS.length; render(0); },
     onRecentre: () => { isFollowing = true; hud.setFollowing(true); render(0, true); },
     onDrill: () => startDrill(),
+    onVisor: () => {
+      isVisor = !isVisor;
+      hud.setVisor(isVisor);
+      render(0, true);
+    },
   });
   map.onUserPan(() => {
     if (!journey) return;
@@ -132,6 +143,10 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather, onEnd }) {
       hud.setNorth(-mapHeading);
       map.keepCentred(position.lat, position.lon, insets);
     }
+    if (isVisor) {
+      const target = next ? positionAt(journey, next.alongM) : null;
+      hud.visor.setHeading(mapHeading ?? facing, target ? bearingDeg(position.lat, position.lon, target.lat, target.lon) : null);
+    }
     if (!isStatusDue) return;
     lastStatusAt = now;
     const metresToGo = next ? next.alongM - progress.walkedM : 0;
@@ -144,6 +159,20 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather, onEnd }) {
     });
     hud.setControls(isPlaying, SPEEDS[speedIndex]);
     if (drill) showWeather();
+    if (isVisor && shownWeather) {
+      const start = journey.points[0];
+      hud.visor.setPlaying(isPlaying);
+      hud.visor.setStatus({
+        nextName: next ? next.name : null,
+        metresToGo,
+        minutesToGo: metresToGo / metresPerMs / 60_000,
+        weather: shownWeather,
+        outMinutes: simulatedMs / 60_000,
+        outLimitMinutes: limits.outMinutes,
+        baseM: greatCircleM(position.lat, position.lon, start.lat, start.lon),
+        baseLimitM: limits.baseM,
+      });
+    }
   }
 
   /** @param {import('./journey-model.js').Arrival} arrival */
@@ -183,14 +212,22 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather, onEnd }) {
   }
 
   function showWeather() {
-    if (!drill) { hud.setWeather(weather.current()); return; }
-    const minutesLeft = Math.max(0, (drill.endsAtMs - simulatedMs) / 60_000);
-    hud.setWeather({
-      level: drill.drill.level,
-      text: `${drill.drill.title}. ${drill.drill.text}`,
+    shownWeather = drill ? drillSummary(drill) : weather.current();
+    hud.setWeather(shownWeather);
+  }
+
+  /**
+   * @param {{ drill: Drill, endsAtMs: number }} active
+   * @returns {WeatherSummary}
+   */
+  function drillSummary({ drill: current, endsAtMs }) {
+    const minutesLeft = Math.max(0, (endsAtMs - simulatedMs) / 60_000);
+    return {
+      level: current.level,
+      text: `${current.title}. ${current.text}`,
       source: 'drill',
       asOf: `Drill ends in ${formatDuration(Math.ceil(minutesLeft))} (simulated time)`,
-    });
+    };
   }
 
   /** Play a random simulated alert. A no-go alert pauses the walk, as a real one would. */
@@ -232,6 +269,8 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather, onEnd }) {
     mapHeading = null;
     simulatedMs = 0;
     drill = null;
+    isVisor = false;
+    hud.setVisor(false);
     isFollowing = true;
     hud.setFollowing(true);
     document.body.classList.add('is-journey');
@@ -262,6 +301,8 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather, onEnd }) {
     stopCompass = null;
     document.removeEventListener('keydown', onKey);
     window.removeEventListener('resize', onResize);
+    isVisor = false;
+    hud.setVisor(false);
     hud.setShown(false);
     map.hideAstronaut();
     document.body.classList.remove('is-journey');

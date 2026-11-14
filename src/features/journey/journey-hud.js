@@ -9,6 +9,7 @@
 import { el } from '../../lib/dom.js';
 import { icon } from '../../components/ui/icon.js';
 import { createJourneyDialogs } from './journey-dialogs.js';
+import { createVisorView } from './visor-view.js';
 
 /**
  * @typedef {object} WeatherSummary
@@ -27,7 +28,7 @@ const SECONDARY = 'button-secondary button-large';
 
 /**
  * Build the overlay (hidden until a journey starts) and add it to the page.
- * @param {{ onEnd: () => void, onTogglePlay: () => void, onSpeed: () => void, onRecentre: () => void, onDrill: () => void }} handlers
+ * @param {{ onEnd: () => void, onTogglePlay: () => void, onSpeed: () => void, onRecentre: () => void, onDrill: () => void, onVisor: () => void }} handlers
  */
 export function createJourneyHud(handlers) {
   const endButton = el('button', { className: `${SECONDARY} journey-end`, attrs: { type: 'button' } }, [icon('close'), 'End journey']);
@@ -45,6 +46,8 @@ export function createJourneyHud(handlers) {
   speedButton.addEventListener('click', handlers.onSpeed);
   const drillButton = el('button', { className: SECONDARY, attrs: { type: 'button' } }, [icon('flare'), 'Simulate alert']);
   drillButton.addEventListener('click', handlers.onDrill);
+  const visorButton = el('button', { className: SECONDARY, attrs: { type: 'button' } }, [icon('visibility'), 'Visor view']);
+  visorButton.addEventListener('click', handlers.onVisor);
   const recentreButton = el('button', { className: SECONDARY, attrs: { type: 'button' } }, [icon('my_location'), 'Re-centre']);
   recentreButton.addEventListener('click', handlers.onRecentre);
   recentreButton.hidden = true;
@@ -57,14 +60,24 @@ export function createJourneyHud(handlers) {
     el('p', { className: 'journey-sim', text: 'Simulation · not a real position' }),
     next,
     facing,
-    el('div', { className: 'journey-controls' }, [playButton, speedButton, drillButton, recentreButton]),
+    el('div', { className: 'journey-controls' }, [playButton, speedButton, drillButton, visorButton, recentreButton]),
   ]);
-  const root = el('div', { className: 'journey-hud' }, [top, bottom, dialogs.element]);
+  const root = el('div', { className: 'journey-hud' }, [top, bottom]);
+  const visor = createVisorView(root, { onTogglePlay: handlers.onTogglePlay, onDrill: handlers.onDrill, onMapView: handlers.onVisor });
+  // The pop-ups come last, so they sit above the visor as well as the panels.
+  root.append(dialogs.element);
   root.hidden = true;
   document.body.append(root);
 
   return {
     dialogs,
+    visor,
+    /** @param {boolean} isVisor Show the visor view in place of the panels. */
+    setVisor(isVisor) {
+      document.body.classList.toggle('is-visor', isVisor);
+      visor.setShown(isVisor);
+      if (!isVisor) visorButton.focus();
+    },
     /** @param {boolean} isShown */
     setShown(isShown) {
       root.hidden = !isShown;
@@ -117,6 +130,8 @@ export function createJourneyHud(handlers) {
      * @returns {{ top: number, bottom: number }} Pixels from the top and bottom edges.
      */
     insets() {
+      // The visor has no panels over the map: the walker sits at the screen's centre.
+      if (visor.isShown()) return { top: 0, bottom: 0 };
       return { top: top.getBoundingClientRect().bottom, bottom: window.innerHeight - bottom.getBoundingClientRect().top };
     },
   };

@@ -17,6 +17,7 @@ import { renderConditions, renderSpaceWeather, renderVerdict } from '../features
 import { assessSpaceWeather } from '../features/conditions/space-weather-model.js';
 import { refreshSpaceWeather } from '../features/conditions/space-weather-live.js';
 import { drawDrill } from '../features/conditions/space-weather-drill.js';
+import { EVA_MAX_MINUTES, WALK_BACK_MAX_M } from '../features/conditions/nasa-limits.js';
 import { renderConnection } from '../features/connection/connection-view.js';
 import { canReachNasa, detectMode, setPrefersOffline } from '../lib/connection.js';
 import { loadBriefingData } from './load-briefing-data.js';
@@ -180,6 +181,7 @@ function start({ route, records, places, calibration, spaceWeather: bundledSpace
       refresh: goLive,
       drill: () => drawDrill(Math.random),
     },
+    limits: { outMinutes: EVA_MAX_MINUTES, baseM: WALK_BACK_MAX_M },
     onEnd: () => redraw(),
   });
   const beginButton = /** @type {HTMLButtonElement} */ (requireElement('begin-journey'));
