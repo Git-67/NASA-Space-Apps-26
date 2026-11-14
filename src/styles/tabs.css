@@ -46,3 +46,24 @@
 }
 .subtab:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 .wx-chart svg { width: 100%; height: auto; display: block; }
+
+/* At a glance: compact list. Line 1: label and status. Line 2: value, full width. */
+.glance-banner { border: 2px solid currentColor; border-radius: 0.5rem; padding: 0.5rem 0.75rem; margin-block: 0.4rem; }
+.glance-banner[data-status="watch"] { border-style: double; border-width: 5px; }
+.glance-banner[data-status="info"] { border-style: dashed; }
+.glance-head { font-size: 1.1rem; font-weight: 700; margin: 0; }
+.glance-sub, .glance-asof { margin: 0.1rem 0 0; font-size: 0.85rem; }
+.glance-asof { opacity: 0.75; font-size: 0.75rem; }
+.glance-list { list-style: none; margin: 0.4rem 0; padding: 0; }
+.glance-row {
+  display: grid; grid-template-columns: 1fr auto; column-gap: 0.75rem; row-gap: 0.05rem; align-items: baseline;
+  padding: 0.4rem 0.5rem 0.4rem 0.6rem;
+  border-left: 5px solid transparent;            /* reserved so every row lines up */
+  border-bottom: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+}
+.glance-row[data-status="watch"] { border-left-style: double; border-left-color: currentColor; }
+.glance-label { grid-column: 1; grid-row: 1; font-size: 0.75rem; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.8; }
+.glance-badge { grid-column: 2; grid-row: 1; font-size: 0.8rem; font-weight: 600; white-space: nowrap; }
+.glance-value { grid-column: 1 / -1; grid-row: 2; font-size: 0.95rem; font-weight: 600; }
+.glance-more { font-size: 0.8rem; margin-block: 0.4rem; }
+.glance-more summary { cursor: pointer; }
