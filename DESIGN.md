@@ -280,6 +280,10 @@ components:
     typography: "{typography.button-md}"
     rounded: "{rounded.sm}"
     padding: "8px 12px"
+  button-large:
+    typography: "{typography.body-md-medium}"
+    padding: "0 {spacing.xl}"
+    height: 56px
   button-link:
     backgroundColor: "transparent"
     textColor: "{colors.link}"
@@ -828,6 +832,8 @@ The blue glow is used once per page, on the hero data card. It is not a general-
 **`button-ghost`**: low-emphasis actions inside cards and toolbars.
 - Transparent, text `{colors.text-secondary}`, padding `8px 12px`, rounded `{rounded.sm}`.
 
+**`button-large`**: a size, not a style: any `button-primary` or `button-secondary` made 56px tall with `{typography.body-md-medium}`. Only in journey mode, for gloved hands and dusty visors.
+
 **`button-link`**: inline text link.
 - Text `{colors.link}`, underlined on hover and focus.
 
@@ -1015,7 +1021,9 @@ The categorical palette was validated against `{colors.surface}`: all eight slot
 
 **`journey-hud`**: "Begin journey" mode, a full-screen simulated walk of the plan.
 - The top nav, the side panel, the map's zoom buttons and layer panel are hidden: fewer things to press by mistake, and more map to see through a dusty visor. Pinch and scroll still zoom.
-- Controls are at least 56px tall (`--size-touch-large`), `{colors.surface-raised}` panels with a 2px `{colors.border-control}` edge, text in `{typography.body-md-medium}`.
+- Controls are `button-secondary` (End, Pause / Walk, speed, Re-centre) and one `button-primary` ("Continue walk"), all in the `button-large` size, on `{colors.surface-raised}` panels.
+- **Starting it:** "Begin journey" is the page's `button-primary`, directly under the verdict, at its natural width, with a one-line "simulated" note.
+- **Following:** the map pans only when the walker nears the edge of the clear area between the top and bottom panels, without animation. Dragging the map stops following and shows "Re-centre".
 - Top left: "End journey" (Escape also ends it). Top right: the space weather card (a `badge-live` that says LIVE only when read live, the level in words and symbol, one line of text, and when it was read). Bottom centre: an eyebrow "SIMULATION · NOT A REAL POSITION" in `{colors.accent}`, the next stop with distance and walking time in `{typography.heading-4}`, the facing source, and Pause / speed buttons.
 - On arrival at a stop, a modal `<dialog>` lists that stop's tasks as 56px check rows, with one `button-primary` "Continue walk". The walk waits until it is pressed.
 - Under reduced motion, the walker moves in one-second steps and the map does not animate.

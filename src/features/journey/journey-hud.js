@@ -22,18 +22,25 @@ import { icon } from '../../components/ui/icon.js';
 const LEVEL_SYMBOL = { go: '✓', caution: '!', 'no-go': '✕', unknown: '?' };
 const LEVEL_LABEL = { go: 'Clear', caution: 'Caution', 'no-go': 'Take shelter', unknown: 'Unknown' };
 
+/** DESIGN.md buttons, in the large size journey mode uses (`button-large`). */
+const SECONDARY = 'button-secondary button-large';
+const PRIMARY = 'button-primary button-large';
+
 /**
  * Build the overlay (hidden until a journey starts) and add it to the page.
- * @param {{ onEnd: () => void, onTogglePlay: () => void, onSpeed: () => void }} handlers
+ * @param {{ onEnd: () => void, onTogglePlay: () => void, onSpeed: () => void, onRecentre: () => void }} handlers
  */
 export function createJourneyHud(handlers) {
-  const endButton = el('button', { className: 'journey-button journey-end', attrs: { type: 'button' } }, [icon('close'), 'End journey']);
+  const endButton = el('button', { className: `${SECONDARY} journey-end`, attrs: { type: 'button' } }, [icon('close'), 'End journey']);
   endButton.addEventListener('click', handlers.onEnd);
   const weather = el('section', { className: 'journey-weather', attrs: { 'aria-label': 'Space weather', 'aria-live': 'polite' } });
-  const playButton = el('button', { className: 'journey-button', attrs: { type: 'button' } });
+  const playButton = el('button', { className: SECONDARY, attrs: { type: 'button' } });
   playButton.addEventListener('click', handlers.onTogglePlay);
-  const speedButton = el('button', { className: 'journey-button', attrs: { type: 'button' } });
+  const speedButton = el('button', { className: SECONDARY, attrs: { type: 'button' } });
   speedButton.addEventListener('click', handlers.onSpeed);
+  const recentreButton = el('button', { className: SECONDARY, attrs: { type: 'button' } }, [icon('my_location'), 'Re-centre']);
+  recentreButton.addEventListener('click', handlers.onRecentre);
+  recentreButton.hidden = true;
   const next = el('p', { className: 'journey-next', attrs: { 'aria-live': 'polite' } });
   const facing = el('p', { className: 'journey-facing' });
   const dialog = /** @type {HTMLDialogElement} */ (el('dialog', { className: 'journey-dialog', attrs: { 'aria-labelledby': 'journey-dialog-title' } }));
@@ -44,10 +51,12 @@ export function createJourneyHud(handlers) {
       el('p', { className: 'journey-sim', text: 'Simulation · not a real position' }),
       next,
       facing,
-      el('div', { className: 'journey-controls' }, [playButton, speedButton]),
+      el('div', { className: 'journey-controls' }, [playButton, speedButton, recentreButton]),
     ]),
     dialog,
   ]);
+  const top = /** @type {HTMLElement} */ (root.firstElementChild);
+  const bottom = /** @type {HTMLElement} */ (root.children[1]);
   root.hidden = true;
   document.body.append(root);
 
@@ -105,13 +114,25 @@ export function createJourneyHud(handlers) {
           })),
           el('p', { className: 'basis', text: 'Tasks are our suggestions, not NASA\'s.' }),
         ];
-      const goOn = el('button', { className: 'journey-button journey-primary', attrs: { type: 'button' } }, [
+      const goOn = el('button', { className: PRIMARY, attrs: { type: 'button' } }, [
         icon(arrival.isFinish ? 'flag' : 'directions_walk'), arrival.isFinish ? 'End journey' : 'Continue walk',
       ]);
       goOn.addEventListener('click', () => { dialog.close(); onContinue(); });
       dialog.replaceChildren(el('h2', { className: 'card-title', text: title, attrs: { id: 'journey-dialog-title' } }), ...body, goOn);
       dialog.showModal();
       goOn.focus();
+    },
+    /** @param {boolean} isFollowing Whether the map follows the walker; if not, offer "Re-centre". */
+    setFollowing(isFollowing) {
+      recentreButton.hidden = isFollowing;
+    },
+    /**
+     * How much of the screen the panels cover, so the walker is kept in the clear area between them.
+     * @returns {{ top: number, bottom: number }} Pixels from the top and bottom edges.
+     */
+    insets() {
+      const height = window.innerHeight;
+      return { top: top.getBoundingClientRect().bottom, bottom: height - bottom.getBoundingClientRect().top };
     },
     /** @returns {boolean} Whether a task pop-up is open. */
     isDialogOpen() {
