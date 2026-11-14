@@ -731,7 +731,7 @@ Three light chart colours (`light-chart-3`, `light-chart-4`, `light-chart-5`) ar
 - **Inter** (body and UI): all running text, buttons, labels, chart text. Weights 400, 500, 600. Fallbacks: `"Inter", system-ui, -apple-system, "Segoe UI", sans-serif`.
 - **JetBrains Mono** (telemetry): coordinates, timestamps, dataset IDs, units readouts, eyebrow labels. Weights 400 and 500. Fallbacks: `"JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace`.
 
-All three are open-licensed and available from Google Fonts. Load only the weights listed, with `font-display: swap`.
+All three are open-licensed. They are bundled with the site (Latin subset, `public/fonts/`, from `scripts/vendor_fonts.py`) because it must work offline. Load only the weights listed, with `font-display: swap`.
 
 ### Hierarchy
 
@@ -1011,6 +1011,10 @@ The categorical palette was validated against `{colors.surface}`: all eight slot
 **`map-callout`**: a hazard note beside the route ("Steep: rover tilt 17.5°", "Sand: risk of slipping", "Biggest climb: +46 m").
 - A `map-label` panel with a Material Symbols icon in `{colors.text-secondary}` before the text. Stacked downwards when two would overlap. Hidden below zoom 13, where the walk is too small for callouts to sit beside their section.
 
+**`map-arrow`**: a 20px `{colors.route-casing}` disc with a `{colors.map-ink}` arrow, halfway along each shown leg, pointing the way it is walked. Decorative for assistive technology: the stop list gives the order in words.
+
+**`connection-toggle`**: the top bar's live / offline control. A `badge-live` ("LIVE · NASA", or "OFFLINE · DATA TO 14 NOV 2026" on `{colors.surface-raised}` with `{colors.text-secondary}`) followed by the action ("Go offline" / "Go online") in `{typography.button-md}`, one 44px button. Below 768px only the badge's first word shows; the accessible name always carries the full state and the action. Never say LIVE unless the data is live.
+
 **`map-notice`**: a one-line status on the map, for example "Enlarged 4× past the imagery's own resolution". A `map-label`-style panel above the scale bar, in `{typography.caption}`. Shown only while it is true.
 
 **`map-attribution`**: required on every map.
@@ -1021,8 +1025,8 @@ The categorical palette was validated against `{colors.surface}`: all eight slot
 These apply on top of the map components above. They exist because Mars is an orange planet and this is a planning tool.
 
 **Basemap**
-- **Use a grayscale basemap whenever a data layer is shown** (for example shaded relief, or grayscale orbital imagery). Colour imagery is for looking at the place; data layers such as contours are switched off over it. This keeps one rule true everywhere: on the map, colour means data.
-- **Exception, decided by the team on 14 Nov 2026: the route and its stops stay on over colour imagery.** They keep their dark casing and their difficulty colours, which were chosen to stand apart from Mars' tans and browns.
+- **Prefer a grayscale basemap when data is shown** (for example shaded relief, or grayscale orbital imagery), so that colour on the map means data.
+- **Exception, decided by the team on 14 Nov 2026: the route, its stops and the contour lines stay on over colour imagery.** Each keeps its dark casing; the route keeps its difficulty colours, chosen to stand apart from Mars' tans and browns; contours are white over a dark casing. Layers with a colour ramp (none yet) still need the grayscale basemap.
 - The layer panel names each basemap and data layer by **mission and instrument**, not by a nickname: "MGS MOLA elevation", "MRO HiRISE imagery", "MRO CTX mosaic".
 - Never stretch imagery beyond its real resolution without showing the visitor that it is zoomed past its limit.
 
@@ -1041,7 +1045,7 @@ These apply on top of the map components above. They exist because Mars is an or
 
 **`map-route`**: the planned walk.
 - A 4px line with a 2px `{colors.route-casing}` casing on each side. The casing is what keeps the route readable on both pale dust and dark basalt.
-- **Coloured by difficulty, drive by drive:** `{colors.route}` for easier, `{colors.route-moderate}` for moderate, `{colors.route-hard}` for hard (the classes and their sources are in the briefing). These three are map overlay colours, the same in both themes. Colour alone never marks a hazard: every section has a popup that names its difficulty, and `map-callout` labels mark the steep and sandy places.
+- **Coloured by difficulty, drive by drive, using NASA's figures:** `{colors.route}` under 17° (within what Apollo 15 crews walked), `{colors.route-moderate}` for 17° to 20° (within the suit limit), `{colors.route-hard}` over 20° (beyond NASA's suit limit; the safest path never uses it). These three are map overlay colours, the same in both themes. Colour alone never marks a hazard: every section has a popup that names its difficulty, and `map-callout` labels mark the steep and sandy places.
 - **One leg at a time:** when a stop is chosen, the section leaving it is drawn solid with its casing; every other section is drawn 3px, dotted (1px dash, 7px gap), at 55 percent opacity and without casing. With no stop chosen, the whole walk is solid. The return leg retraces the way out, so it is drawn only when it is the chosen leg.
 - Each section has an invisible 24px-wide hit line: hover shows its `map-popup` as a tooltip, tap or click opens it.
 - A draft route (being drawn) is the same line at 60 percent opacity.
@@ -1086,6 +1090,12 @@ Added with the first build of the briefing page. They are compositions of existi
 
 **`card-carousel`**: a row of cards that scrolls sideways and snaps to each card, used for the dangers on the route. Each card is 85 percent of the row's width so the next one peeks in, on `{colors.canvas}` with a `{colors.hairline}` border and `{rounded.md}`. Each card shows "n / total" as an eyebrow, so the count is never carried by the peek alone.
 
+**`combobox`**: a search box with a dropdown, for choosing stops. A `text-input` with a visible label; the dropdown is a `{colors.surface-raised}` panel with the floating shadow, one 44px row per option (icon, name in `{typography.body-sm-medium}`, one-line summary in `{typography.caption}`). The active row has a 2px `{colors.link}` inset outline. A recommended option, when there is one, comes first with a star icon in `{colors.accent}`. Follows the ARIA combobox pattern: arrow keys, Enter, Escape.
+
+**`stop-number`**: a 24px circle holding a stop's place in the visiting order, `{colors.surface-raised}` with a `{colors.hairline-strong}` border and `{typography.caption-bold}`. The chosen stop's circle inverts to `{colors.ink}` on `{colors.void}`. Map badges show the same number, so list and map agree.
+
+**`task-group`**: the tasks at one stop. An eyebrow ("Stop 2 · Ridge · 30 min"), the name in `{typography.heading-4}`, one "Why:" line with a source link, then the tasks as a list with an empty checkbox icon. A 2px `{colors.hairline}` rule on the left, `{colors.link}` for the chosen stop.
+
 **`check-row`**: a checkbox with its label, at least 44px tall. The checkbox is filled with `{colors.primary}` when ticked.
 
 **`stop-list`**: the checklist of stops. Each row has a checkbox, the stop's number and name in `{typography.body-sm-medium}`, a one-line summary in `{typography.caption}`, and a `button-link` to its details. Rows are divided by `{colors.hairline}`. The starting stop is ticked and cannot be unticked.
@@ -1129,7 +1139,7 @@ Added with the first build of the briefing page. They are compositions of existi
 - Don't use hairline tokens for input or button borders.
 - Don't add new colours or fonts without updating this file first, and don't add a colour without its twin in the other theme.
 - Don't put orange, red or brown markers, routes or labels on Mars imagery.
-- Don't show a data layer over colour imagery; switch to the grayscale basemap.
+- Don't show a colour-ramp data layer over colour imagery; switch to the grayscale basemap. The route and contour lines are the exceptions (see Mars map rules).
 - Don't present an estimate (walking time, dose, consumables) as a measurement.
 - Don't place text over photographs or imagery without a solid `surface-raised` panel behind it.
 - Don't use pill-shaped buttons; pills are for tabs and the live badge.
@@ -1171,7 +1181,7 @@ Added with the first build of the briefing page. They are compositions of existi
 
 - The first build has been rendered in both themes at 1440px and at 390px in the dark theme. The light theme has not been checked on mobile.
 - The `map-layer-panel` is a single collapsible panel at every width, not the bottom sheet described under Collapsing strategy. There is no `map-legend`, `map-popup` or `map-timeline` yet.
-- The colour imagery option keeps the route and stops (team decision, 14 Nov 2026) and switches contours off.
+- The colour imagery option keeps the route, stops and contours (team decision, 14 Nov 2026).
 - The muted, dotted legs have no casing, so on bright dust they are fainter than DESIGN's casing rule intends. Accepted for now because they are deliberately secondary.
 - When two stops are closer than 30 m their map badges are nudged 14px apart so both stay visible; the stops' coordinates are unchanged.
 
@@ -1183,6 +1193,6 @@ Added with the first build of the briefing page. They are compositions of existi
 - The logo was checked by web search on 13 Nov 2026: no product or brand named "Sol Stroll" was found, and no identical mark. This was a text search, not an image search or a trademark search, and other "Sol" brands do use a sun in place of the "o".
 - The project name and headline copy are not chosen yet.
 - The map uses Leaflet and one basemap, the MRO HiRISE mosaic from NASA Mars Trek. HiRISE images are public domain and the team asks for the credit "NASA/JPL/University of Arizona". Other layer names in this file are examples.
-- Icon set: Google's Material Symbols, Outlined style (Apache License 2.0), loaded from Google Fonts with only the icons the page uses. So far used in the layer panel, the stop list, the Present button and map callouts; the theme toggle still uses text symbols.
+- Icon set: Google's Material Symbols, Outlined style (Apache License 2.0), bundled with the site (`public/fonts/`, about 3 KB) with only the icons the page uses; add new icons to `scripts/vendor_fonts.py`. So far used in the layer panel, the stop list, the Present button and map callouts; the theme toggle still uses text symbols.
 - The diverging ramp's two warm steps were matched to the cool steps by lightness but have not been tested in a rendered map.
 - No texture or pattern fills are defined for print or forced-colours mode.

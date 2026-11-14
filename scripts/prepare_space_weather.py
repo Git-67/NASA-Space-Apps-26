@@ -17,6 +17,8 @@ Inputs:  fetched in 60-day windows (the API's limit) from Curiosity's landing
 Output:  data/processed/space_weather.json
 
 Units and conventions: all times are UTC, ISO 8601, as DONKI gives them.
+Each event keeps only what the page shows (type, time, detail, where seen),
+because the file ships with the offline site.
 
 API key: read from the NASA_API_KEY environment variable and sent in the
 X-Api-Key header; without it NASA's shared DEMO_KEY is used, which allows only
@@ -35,7 +37,7 @@ import urllib.error
 import urllib.request
 from typing import Any
 
-from mars_data import RAW_DIR, write_processed
+from mars_data import RAW_DIR, to_columns, write_processed
 
 DONKI_URL = "https://api.nasa.gov/DONKI/{kind}?startDate={start}&endDate={end}"
 FIRST_DAY = dt.date(2012, 8, 6)  # Curiosity's landing
@@ -83,7 +85,6 @@ def mars_arrivals(simulations: list[dict[str, Any]]) -> list[dict[str, Any]]:
                     "isGlancingBlow": is_glancing,
                     "detail": "glancing blow" if is_glancing else "direct arrival",
                     "observedAt": "WSA-Enlil model forecast",
-                    "link": run.get("link", ""),
                 }
     return list(events.values())
 
@@ -95,7 +96,6 @@ def particle_events(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
         "time": record["eventTime"],
         "detail": "solar energetic particles",
         "observedAt": ", ".join(i["displayName"] for i in record.get("instruments") or []),
-        "link": record.get("link", ""),
     } for record in records if record.get("eventTime")]
 
 
@@ -106,7 +106,6 @@ def strong_flares(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
         "time": record.get("peakTime") or record["beginTime"],
         "detail": f"class {record['classType']} flare",
         "observedAt": ", ".join(i["displayName"] for i in record.get("instruments") or []),
-        "link": record.get("link", ""),
     } for record in records if str(record.get("classType", "")).startswith(STRONG_FLARE_CLASSES)]
 
 
@@ -117,7 +116,6 @@ def shocks(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
         "time": record["eventTime"],
         "detail": "interplanetary shock",
         "observedAt": record.get("location") or "",
-        "link": record.get("link", ""),
     } for record in records if record.get("eventTime")]
 
 
@@ -153,7 +151,7 @@ def main() -> None:
         "source": "https://api.nasa.gov/DONKI/ (NASA Community Coordinated Modeling Center)",
         "coverage": {"start": FIRST_DAY.isoformat(), "end": today.isoformat()},
         "unavailable": unavailable,
-        "events": events,
+        "events": to_columns([{"isGlancingBlow": False, **event} for event in events]),
     })
     counts = {kind: sum(1 for event in events if event["type"] == kind) for kind in ("CME-MARS", "SEP", "FLR", "IPS")}
     print(f"Wrote {path}: {counts}")

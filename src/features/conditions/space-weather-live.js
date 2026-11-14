@@ -1,29 +1,37 @@
 // @ts-check
 /**
- * Read today's space weather straight from NASA DONKI, for the "Present" sol.
- * Past sols use the prepared file instead; see scripts/prepare_space_weather.py,
- * whose rules this mirrors (Mars arrivals from WSA-Enlil runs, and SEP events).
+ * Bring the bundled space weather up to date from NASA DONKI, when online.
  *
- * Uses NASA's public DEMO_KEY. It is not a secret, but it is rate-limited per
- * visitor (a few requests an hour), so this runs only when "Present" is chosen
- * and the reply is kept for the rest of the visit.
+ * The site carries a record up to the day it was built
+ * (data/processed/space_weather.json). Online, this reads only the days after
+ * that, with the same rules as scripts/prepare_space_weather.py (arrivals at
+ * Mars from WSA-Enlil runs, particle events, interplanetary shocks), and joins
+ * them on. Offline, or if NASA does not answer, the bundled record is used as
+ * it is and the page says how recent it is.
+ *
+ * Uses NASA's public DEMO_KEY: not a secret, but limited to a few requests an
+ * hour per visitor, so this runs once per visit (three requests).
  */
+import { mergeSpaceWeather } from './space-weather-model.js';
 
 /** @typedef {import('./space-weather-model.js').SpaceWeather} SpaceWeather */
 /** @typedef {import('./space-weather-model.js').SpaceEvent} SpaceEvent */
 
 const DONKI_URL = 'https://api.nasa.gov/DONKI';
 const PUBLIC_KEY = 'DEMO_KEY';
-/** Model runs from this many days back can still forecast an arrival today. */
+/** DONKI answers at most 60 days per request. */
+const MAX_WINDOW_DAYS = 60;
+/** Model runs from this many days earlier can still forecast an arrival in the window. */
 const LOOKBACK_DAYS = 7;
+const DAY_MS = 86_400_000;
 
 /**
- * @param {Date} day
+ * @param {string} date "YYYY-MM-DD"
  * @param {number} days
  * @returns {string} "YYYY-MM-DD" (UTC).
  */
-function shiftDate(day, days) {
-  return new Date(day.getTime() + days * 86_400_000).toISOString().slice(0, 10);
+function shiftDate(date, days) {
+  return new Date(Date.parse(`${date}T00:00:00Z`) + days * DAY_MS).toISOString().slice(0, 10);
 }
 
 /**
@@ -33,18 +41,11 @@ function shiftDate(day, days) {
  * @returns {Promise<any[]>}
  */
 async function getKind(kind, start, end) {
-  const url = `${DONKI_URL}/${kind}?startDate=${start}&endDate=${end}&api_key=${PUBLIC_KEY}`;
-  let response;
-  try {
-    response = await fetch(url);
-  } catch {
-    throw new Error("NASA's space weather service could not be reached.");
-  }
-  if (response.status === 429) throw new Error("NASA's space weather service is busy (rate limit). Try again in an hour.");
-  if (!response.ok) throw new Error(`NASA's space weather service answered with status ${response.status}.`);
+  const response = await fetch(`${DONKI_URL}/${kind}?startDate=${start}&endDate=${end}&api_key=${PUBLIC_KEY}`);
+  if (response.status === 429) throw new Error("NASA's space weather service is busy (hourly limit).");
+  if (!response.ok) throw new Error(`NASA's space weather service answered ${response.status}.`);
   const text = await response.text();
-  if (text.trim() === '') return [];
-  const data = JSON.parse(text);
+  const data = text.trim() === '' ? [] : JSON.parse(text);
   if (!Array.isArray(data)) throw new Error("NASA's space weather service sent an unexpected reply.");
   return data;
 }
@@ -53,9 +54,10 @@ async function getKind(kind, start, end) {
  * Turn DONKI replies into events, with the same rules as the preparation script.
  * @param {any[]} simulations WSAEnlilSimulations reply.
  * @param {any[]} particles SEP reply.
- * @returns {SpaceEvent[]}
+ * @param {any[]} shocks IPS reply.
+ * @returns {SpaceEvent[]} Sorted by time.
  */
-export function eventsFromDonki(simulations, particles) {
+export function eventsFromDonki(simulations, particles, shocks) {
   /** @type {Map<string, SpaceEvent>} */
   const arrivals = new Map();
   for (const run of simulations) {
@@ -66,29 +68,39 @@ export function eventsFromDonki(simulations, particles) {
       if (!previous || (previous.isGlancingBlow && !isGlancingBlow)) {
         arrivals.set(impact.arrivalTime, {
           type: 'CME-MARS', time: impact.arrivalTime, isGlancingBlow,
-          detail: isGlancingBlow ? 'glancing blow' : 'direct arrival', observedAt: 'WSA-Enlil model forecast', link: String(run.link ?? ''),
+          detail: isGlancingBlow ? 'glancing blow' : 'direct arrival', observedAt: 'WSA-Enlil model forecast',
         });
       }
     }
   }
+  /** @type {(record: any) => string} */
+  const instruments = (record) => (record.instruments ?? []).map((/** @type {{ displayName: string }} */ i) => i.displayName).join(', ');
   const seps = particles.filter((record) => typeof record?.eventTime === 'string').map((record) => /** @type {SpaceEvent} */ ({
-    type: 'SEP', time: record.eventTime, isGlancingBlow: false, detail: 'solar energetic particles',
-    observedAt: (record.instruments ?? []).map((/** @type {any} */ i) => i.displayName).join(', '), link: String(record.link ?? ''),
+    type: 'SEP', time: record.eventTime, isGlancingBlow: false, detail: 'solar energetic particles', observedAt: instruments(record),
   }));
-  return [...arrivals.values(), ...seps].sort((a, b) => a.time.localeCompare(b.time));
+  const ips = shocks.filter((record) => typeof record?.eventTime === 'string').map((record) => /** @type {SpaceEvent} */ ({
+    type: 'IPS', time: record.eventTime, isGlancingBlow: false, detail: 'interplanetary shock', observedAt: String(record.location ?? ''),
+  }));
+  return [...arrivals.values(), ...seps, ...ips].sort((a, b) => a.time.localeCompare(b.time));
 }
 
 /**
- * Fetch the space weather around today.
+ * Add the days since the bundled record ends, read live from NASA.
+ * @param {SpaceWeather} bundled The record stored with the site.
  * @param {Date} now The present moment.
- * @returns {Promise<SpaceWeather>}
+ * @returns {Promise<SpaceWeather>} The record extended to today, or the bundled record if it is already current.
  * @throws {Error} With a plain message when NASA's service cannot be read.
  */
-export async function fetchLiveSpaceWeather(now) {
-  const end = shiftDate(now, 0);
-  const [simulations, particles] = await Promise.all([
-    getKind('WSAEnlilSimulations', shiftDate(now, -LOOKBACK_DAYS), end),
-    getKind('SEP', shiftDate(now, -1), end),
+export async function refreshSpaceWeather(bundled, now) {
+  const today = now.toISOString().slice(0, 10);
+  if (bundled.coverageEnd >= today) return bundled;
+  // At most the last 60 days: an older bundle keeps a gap, which the page reports.
+  const start = [shiftDate(bundled.coverageEnd, 1), shiftDate(today, 1 - MAX_WINDOW_DAYS)].sort()[1];
+  const [simulations, particles, shocks] = await Promise.all([
+    getKind('WSAEnlilSimulations', shiftDate(start, -LOOKBACK_DAYS), today),
+    getKind('SEP', start, today),
+    getKind('IPS', start, today),
   ]);
-  return { coverageStart: shiftDate(now, -1), coverageEnd: end, unavailable: [], events: eventsFromDonki(simulations, particles), isLive: true };
+  const fresh = eventsFromDonki(simulations, particles, shocks).filter((event) => event.time.slice(0, 10) >= start);
+  return mergeSpaceWeather(bundled, fresh, start, today);
 }

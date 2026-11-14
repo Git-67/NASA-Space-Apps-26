@@ -74,3 +74,18 @@ export function earthDateOfSol(sol, reference) {
   const time = Date.parse(`${reference.earthDate}T12:00:00Z`) + (sol - reference.sol) * SOL_IN_EARTH_DAYS * 86_400_000;
   return new Date(time).toISOString().slice(0, 10);
 }
+
+/**
+ * Great-circle distance between two points on Mars.
+ * @param {number} latA Degrees.
+ * @param {number} lonA Degrees.
+ * @param {number} latB Degrees.
+ * @param {number} lonB Degrees.
+ * @returns {number} Metres, on Mars' mean radius.
+ */
+export function greatCircleM(latA, lonA, latB, lonB) {
+  const rad = Math.PI / 180;
+  const h = Math.sin(((latB - latA) * rad) / 2) ** 2
+    + Math.cos(latA * rad) * Math.cos(latB * rad) * Math.sin(((lonB - lonA) * rad) / 2) ** 2;
+  return 2 * MARS_RADIUS_M * Math.asin(Math.sqrt(h));
+}

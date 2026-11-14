@@ -49,7 +49,7 @@ export function renderVerdict(container, verdict) {
  */
 export function renderConditions(container, sol, record, comparison) {
   if (!record) {
-    container.replaceChildren(el('p', { className: 'chart-state', text: `Curiosity recorded no weather on sol ${sol}. The weather feed has gaps and ends at sol 4995 (25 Aug 2026).` }));
+    container.replaceChildren(el('p', { className: 'chart-state', text: `No rover weather for sol ${sol}.` }));
     return;
   }
   const degrees = (/** @type {number | null} */ value) => (value === null ? MISSING : `${value} °C`);
@@ -67,7 +67,7 @@ export function renderConditions(container, sol, record, comparison) {
       row('Daylight', daylight),
       row('Air, high / low', `${degrees(record.airMaxC)} / ${degrees(record.airMinC)}`),
       row('Ground, high / low', `${degrees(record.groundMaxC)} / ${degrees(record.groundMinC)}`),
-      row('Typical high this season', comparison ? `${comparison.medianAirMaxC} °C (${comparison.sampleSize} sols)` : 'too few sols to say'),
+      row('Usual high this season', comparison ? `${comparison.medianAirMaxC} °C` : 'not enough data'),
       row('Ultraviolet', record.uv ? UV_LABEL[/** @type {keyof typeof UV_LABEL} */ (record.uv)] : MISSING),
       row('Pressure', record.pressurePa === null ? MISSING : `${record.pressurePa} Pa`),
     ]),
@@ -77,25 +77,22 @@ export function renderConditions(container, sol, record, comparison) {
 /**
  * List the space weather events on the chosen date, by type, with where each was seen.
  * @param {HTMLElement} container
- * @param {SpaceWeather | Error | null} weather Null while the live reading is loading.
+ * @param {SpaceWeather | Error} weather The bundled record, or why it could not be loaded.
  * @param {string | null} date Earth date of the chosen sol.
  */
 export function renderSpaceWeather(container, weather, date) {
-  if (weather === null) {
-    container.replaceChildren(el('p', { className: 'chart-state', text: "Reading today's space weather from NASA…" }));
-    return;
-  }
   if (weather instanceof Error) {
-    container.replaceChildren(el('p', { className: 'chart-state', text: `Space weather unavailable: ${weather.message}` }));
+    container.replaceChildren(el('p', { className: 'chart-state', text: `Space weather unavailable. ${weather.message}` }));
     return;
   }
   const events = date ? eventsOnDate(weather, date) : [];
-  const heading = el('h4', { text: `Space weather on ${date ?? 'this date'} (UTC)${weather.isLive ? ', live' : ''}` });
-  const missing = weather.unavailable.length > 0
-    ? [el('p', { className: 'basis', text: `Not available from NASA when this record was built: ${weather.unavailable.join(', ')}.` })]
-    : [];
+  const heading = el('h4', { text: `Space weather, ${date ?? 'this date'}` });
+  const missing = [
+    ...(weather.unavailable.length > 0 ? [el('p', { className: 'basis', text: `Missing from NASA's data: ${weather.unavailable.join(', ')}.` })] : []),
+    ...((weather.gaps ?? []).length > 0 ? [el('p', { className: 'basis', text: `No data for ${(weather.gaps ?? []).join(', ')}.` })] : []),
+  ];
   if (events.length === 0) {
-    container.replaceChildren(heading, el('p', { className: 'chart-state', text: 'No solar storm, particle event or shock recorded for this date.' }), ...missing);
+    container.replaceChildren(heading, el('p', { className: 'chart-state', text: 'Quiet: no storms or particle events.' }), ...missing);
     return;
   }
   container.replaceChildren(heading, el('ul', { className: 'event-list' }, events.map((event) => el('li', {}, [

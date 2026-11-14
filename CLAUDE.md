@@ -20,14 +20,14 @@ Every piece of work should move at least one judging criterion. If it moves none
 A briefing for **one real Marswalk** in the boxwork region of Mount Sharp, Gale Crater, that answers five questions on one map:
 
 1. **Why go:** one science question, and what a human can do at each stop that the rover could not.
-2. **Where:** Curiosity's real path as the proven route, walked out and back from the first stop, with distance, climb, time and difficulty for each section. Do not write a pathfinder.
+2. **Where:** the safest path between the chosen stops, over ground Curiosity actually drove, with distance, climb, time and difficulty for each section. **Changed 14 Nov 2026 by the team:** a pathfinder is now in scope, but only over rover-driven ground (`scripts/safe_paths.py`); never across ground no rover crossed, because our offline elevation data (18.6 m steps) cannot judge walker-scale slopes.
 3. **When:** a go / caution / no-go verdict for any sol in Curiosity's weather record, judged against other sols at the same season.
 4. **How sure:** the orbital view beside the rover's ground photo at each stop. Stretch: a data confidence layer.
 5. **What if:** replay a real bad day (the 2018 dust storm, the 2017 solar storm) against the plan.
 
 The verdict rests on daylight, how unusual the chosen sol is for its season, and whether a solar storm is under way. It does **not** use invented temperature, ultraviolet or dose thresholds; no citable Mars suit limits exist.
 
-Out of scope: other sites, a 3D globe, a helmet display, automatic route finding. See `docs/COMPETITIVE_ANALYSIS.md` for why, and `docs/DATA_SOURCES.md` for what each data source can and cannot support.
+Out of scope: other sites, a 3D globe, a helmet display, route finding across undriven ground. See `docs/COMPETITIVE_ANALYSIS.md` for why, and `docs/DATA_SOURCES.md` for what each data source can and cannot support.
 
 ### Team roles (agreed 13 Nov 2026)
 
@@ -52,9 +52,11 @@ Chosen for a team that knows Python, HTML, CSS and basic JavaScript, and for fre
 
 - **Site:** static HTML, CSS and JavaScript (ES modules). **No framework and no build step**, so what is in the repo is what Pages serves.
 - **Types:** plain JavaScript with JSDoc types and `// @ts-check` at the top of each file. This replaces TypeScript, which would need a build step.
-- **Map:** Leaflet 1.9.4, vendored in `public/vendor/leaflet/`. **Charts:** hand-drawn inline SVG so far; add a charting library only if a chart needs more than that.
+- **Map:** Leaflet 1.9.4, the official minified build, vendored in `public/vendor/leaflet/` and loaded as a classic script (`src/lib/leaflet.js` hands it to the modules). **Charts:** hand-drawn inline SVG so far; add a charting library only if a chart needs more than that.
 - **Data preparation:** Python scripts in `scripts/` turn raw NASA data into small JSON, GeoJSON or image files in `data/processed/`. The browser never parses raw mission files.
-- **Hosting:** GitHub Pages, served from `main`. The repository must be public for this on a free plan.
+- **Online with an offline mode (decided 14 Nov 2026):** online, the page reads live NASA data (map tiles, DONKI space weather, the REMS feed). When NASA cannot be reached, or the visitor chooses offline, it uses the copy stored with the site (tiles, fonts, icons, all data) and says how recent that copy is. The offline copy must always be complete: refresh it with the scripts in `scripts/` before each release. Keep the first load under about 1.5 MB, and do heavy computation in the scripts, not the browser, because computers on Mars will be modest.
+- **Safety rules are NASA's (decided 14 Nov 2026):** use NASA's published figures (EVA-EXP-0042, NASA-STD-3001) wherever one exists, cite it, and say "lunar" when it is a lunar figure. Our own numbers are allowed only where NASA has none, and are labelled "ours" in the page.
+- **Hosting:** GitHub Pages, served from `main`, for judges. The same folder runs from a local server with no internet. The repository must be public for Pages on a free plan.
 
 | Task | Command |
 |---|---|

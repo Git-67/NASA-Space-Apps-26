@@ -3,7 +3,9 @@
  * Pure logic for the verdict's solar storm check, from NASA DONKI.
  *
  * Dataset: data/processed/space_weather.json (scripts/prepare_space_weather.py),
- *          or, for the present day, DONKI read live (space-weather-live.js).
+ *          bundled with the site, extended to today from NASA DONKI when
+ *          online (space-weather-live.js). Offline, as on Mars, the bundle
+ *          alone is used and the page says how recent it is.
  * Times:   UTC. A sol is matched to the UTC Earth date it falls on.
  *
  * Event types, and what each can and cannot say about Mars:
@@ -19,23 +21,26 @@
  * glancing arrival, or particles detected near Earth, is caution.
  */
 
+import { fromColumns } from '../../lib/columns.js';
+
 /** @typedef {import('./conditions-model.js').Reason} Reason */
 /**
  * @typedef {'CME-MARS' | 'SEP' | 'FLR' | 'IPS'} SpaceEventType
- * @typedef {{ type: SpaceEventType, time: string, detail: string, observedAt: string, link: string, isGlancingBlow: boolean }} SpaceEvent
- * @typedef {{ coverageStart: string, coverageEnd: string, unavailable: string[], events: SpaceEvent[], isLive: boolean }} SpaceWeather
+ * @typedef {{ type: SpaceEventType, time: string, detail: string, observedAt: string, isGlancingBlow: boolean }} SpaceEvent
+ * @typedef {{ coverageStart: string, coverageEnd: string, unavailable: string[], events: SpaceEvent[], gaps?: string[] }} SpaceWeather
+ *   `gaps`: date ranges with no data, when a live update could not reach back to the bundled record's end.
  */
 
 /** Plain names for each event type, shown in the panel. */
 export const EVENT_TYPE_LABEL = {
-  'CME-MARS': 'Solar storm forecast at Mars (coronal mass ejection)',
-  SEP: 'Solar energetic particles (seen near Earth)',
+  'CME-MARS': 'Solar storm forecast at Mars',
+  SEP: 'Solar particles (near Earth)',
   FLR: 'Solar flare',
-  IPS: 'Interplanetary shock',
+  IPS: 'Shock wave in space',
 };
 
 const KNOWN_TYPES = Object.keys(EVENT_TYPE_LABEL);
-const BASIS = 'NASA DONKI space weather database. Our rule: a storm forecast to hit Mars directly means no walk; a glancing hit, or particles detected near Earth, means caution.';
+const BASIS = 'NASA DONKI. Our rule: direct hit = no-go; glancing hit or particles = caution.';
 
 /**
  * Check the prepared file's shape and turn it into typed data.
@@ -44,8 +49,14 @@ const BASIS = 'NASA DONKI space weather database. Our rule: a storm forecast to 
  * @throws {Error} When the file is damaged.
  */
 export function parseSpaceWeather(data) {
-  const { coverage, events, unavailable } = data ?? {};
-  if (typeof coverage?.start !== 'string' || typeof coverage?.end !== 'string' || !Array.isArray(events)) {
+  const { coverage, unavailable } = data ?? {};
+  let events;
+  try {
+    events = fromColumns(data?.events);
+  } catch {
+    events = null;
+  }
+  if (typeof coverage?.start !== 'string' || typeof coverage?.end !== 'string' || events === null) {
     throw new Error('The space weather file is empty or damaged.');
   }
   return {
@@ -57,10 +68,8 @@ export function parseSpaceWeather(data) {
       time: event.time,
       detail: String(event.detail ?? ''),
       observedAt: String(event.observedAt ?? ''),
-      link: String(event.link ?? ''),
       isGlancingBlow: Boolean(event.isGlancingBlow),
     })),
-    isLive: false,
   };
 }
 
@@ -82,23 +91,43 @@ export function eventsOnDate(weather, date) {
  */
 export function assessSpaceWeather(weather, date) {
   if (weather instanceof Error) {
-    return { level: 'unknown', text: 'Space weather could not be checked.', basis: weather.message };
+    return { level: 'unknown', text: 'Could not check space weather.', basis: weather.message };
   }
   if (date === null || date < weather.coverageStart || date > weather.coverageEnd) {
-    return { level: 'unknown', text: 'No space weather record covers this date.', basis: `DONKI record held: ${weather.coverageStart} to ${weather.coverageEnd}.` };
+    return { level: 'unknown', text: 'No space weather data for this date.', basis: `Data covers ${weather.coverageStart} to ${weather.coverageEnd}.` };
   }
   const today = eventsOnDate(weather, date);
   const marsArrivals = today.filter((event) => event.type === 'CME-MARS');
   const direct = marsArrivals.find((event) => !event.isGlancingBlow);
   if (direct) {
-    return { level: 'no-go', text: `A solar storm was forecast to hit Mars directly at ${direct.time.slice(11, 16)} UTC. Stay under shelter.`, basis: BASIS };
+    return { level: 'no-go', text: `Solar storm forecast to hit Mars (${direct.time.slice(11, 16)} UTC). Stay inside.`, basis: BASIS };
   }
   if (marsArrivals.length > 0) {
-    return { level: 'caution', text: 'A solar storm was forecast to give Mars a glancing blow on this date. Stay close to shelter.', basis: BASIS };
+    return { level: 'caution', text: 'Solar storm forecast to graze Mars. Stay near shelter.', basis: BASIS };
   }
   const particles = today.filter((event) => event.type === 'SEP');
   if (particles.length > 0) {
-    return { level: 'caution', text: 'Solar energetic particles were detected near Earth on this date. Whether they reached Mars depends on where Mars was.', basis: BASIS };
+    return { level: 'caution', text: 'Solar particles seen near Earth. They may or may not reach Mars.', basis: BASIS };
   }
-  return { level: 'go', text: 'No solar storm was forecast to reach Mars on this date.', basis: BASIS };
+  return { level: 'go', text: 'No solar storm forecast for Mars.', basis: BASIS };
+}
+
+/**
+ * Join newer events onto a record.
+ * @param {SpaceWeather} record The record so far.
+ * @param {SpaceEvent[]} fresh Events read for `start` to `end`.
+ * @param {string} start First date the fresh events cover, "YYYY-MM-DD".
+ * @param {string} end Last date they cover.
+ * @returns {SpaceWeather} The record covering up to `end`. If `start` leaves a gap after the old
+ *   record, the gap is reported in `gaps` so the page can say so.
+ */
+export function mergeSpaceWeather(record, fresh, start, end) {
+  const nextDay = new Date(Date.parse(`${record.coverageEnd}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
+  const gap = start > nextDay ? [`${nextDay} to ${start}`] : [];
+  return {
+    ...record,
+    coverageEnd: end,
+    events: [...record.events.filter((event) => event.time.slice(0, 10) < start), ...fresh],
+    gaps: [...(record.gaps ?? []), ...gap],
+  };
 }

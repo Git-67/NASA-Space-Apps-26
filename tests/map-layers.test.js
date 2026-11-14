@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { chainSegments, smoothLine, traceLevel, traceStepContours } from '../src/features/map/contour-model.js';
-import { activeSection, difficultyRuns, sectionPath } from '../src/features/map/route-geometry.js';
+import { activeSection, midpointHeading } from '../src/features/map/route-geometry.js';
 import { chooseGridStep, formatGridDegrees, gridValues } from '../src/features/map/graticule-model.js';
 import { latitudeOfMercatorRow, mercatorRowFraction, mercatorRowsForBand, toTmsRow } from '../src/features/map/mercator-tiles.js';
 import { stackLabels } from '../src/features/map/label-stacking.js';
@@ -107,17 +107,7 @@ test('smoothLine keeps the ends of an open line and rounds its corner', () => {
   assert.equal(smooth.length / 2, 6);
 });
 
-/** Three route points joined by drives with a bend in each. Test data only. */
-const routePoints = [
-  { sol: 1, lat: 0, lon: 0, elevationM: 0, tiltDeg: 1, alongM: 0, track: [] },
-  { sol: 2, lat: 0, lon: 2, elevationM: 0, tiltDeg: 12, alongM: 2, track: [[0, 0], [1, 1], [0, 2]] },
-  { sol: 3, lat: 0, lon: 4, elevationM: 0, tiltDeg: 3, alongM: 4, track: [[0, 2], [-1, 3], [0, 4]] },
-];
 
-test('sectionPath follows the drives and reverses for a walk back', () => {
-  assert.deepEqual(sectionPath(routePoints, 0, 2), [[0, 0], [1, 1], [0, 2], [-1, 3], [0, 4]]);
-  assert.deepEqual(sectionPath(routePoints, 2, 1), [[0, 4], [-1, 3], [0, 2]]);
-});
 
 test('activeSection picks the section leaving the chosen stop', () => {
   const sections = [{ fromId: 'a', toId: 'b' }, { fromId: 'b', toId: 'a' }];
@@ -125,10 +115,10 @@ test('activeSection picks the section leaving the chosen stop', () => {
   assert.equal(activeSection(/** @type {any} */ (sections), null), null);
 });
 
-test('difficultyRuns colours each drive by its own tilt and merges equal neighbours', () => {
-  const rate = (/** @type {number} */ tilt) => (tilt >= 10 ? 'moderate' : 'easier');
-  const runs = difficultyRuns(routePoints, 0, 2, rate);
-  // Both drives touch the 12 degree waypoint, so both are moderate and merge into one run.
-  assert.deepEqual(runs.map((run) => run.difficulty), ['moderate']);
-  assert.equal(runs[0].path.length, 5);
+
+test('midpointHeading finds the halfway point and the direction of travel', () => {
+  const east = midpointHeading([[0, 0], [0, 4]]);
+  assert.deepEqual([east.lat, east.lon, east.angleDeg], [0, 2, 0]);
+  const south = midpointHeading([[2, 0], [0, 0]]);
+  assert.equal(south.angleDeg, 90);
 });

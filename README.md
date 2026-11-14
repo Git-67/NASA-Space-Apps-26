@@ -9,10 +9,12 @@ Mars maps show where to walk. Sol Stroll tells a crew whether to go. It follows 
 ## What works today
 
 - A map of the boxwork on high-resolution orbital imagery, with the path Curiosity actually drove and five science stops. It zooms from the whole crater down to the rocks.
-- A plan built from the stops you tick, in the order you choose: each section's distance, climb, walking time and difficulty on hover or tap, the route coloured by difficulty, and callouts at steep ground, sand and the biggest climb.
+- A plan built from stops you search for and add, in the order you choose (or the recommended shortest order). Map numbers and arrows follow that order. For each leg: each section's distance, climb, walking time and difficulty on hover or tap, the route coloured by difficulty, and callouts at steep ground, sand and the biggest climb.
 - A verdict (go, caution, no-go) for any sol in Curiosity's weather record, or for today, including NASA's space weather for that date. Every reason shows its basis.
-- Hazards on the route, a packing list, and what Curiosity found at each stop.
-- Map options: contour lines traced live from NASA's Gale elevation model, colour HiRISE imagery, names of places Curiosity explored, and a latitude/longitude grid.
+- A task list for each stop with why it matters, hazards on the route, and a packing list.
+- **Live, with an offline mode:** online it reads live NASA data; with no link (as on Mars), or at the press of a button, it uses the copy stored with the site and says how recent it is (first load about 1.2 MB).
+- The **safest path** between stops under **NASA's rules**: only ground Curiosity actually drove (263 rover drives joined into a network), never steeper than NASA's 20° suit limit, and the shortest within it. The verdict also applies NASA's 8-hour and 2 km walk limits.
+- Map options: contour lines from NASA's Gale elevation model, colour HiRISE imagery, names of places Curiosity explored, and a latitude/longitude grid.
 - Dark and light themes.
 
 Not built yet: the orbit and ground photo comparison at each stop, and a guided replay of the 2018 dust storm.
@@ -38,7 +40,7 @@ Full details, limits and usage terms are in [`docs/DATA_SOURCES.md`](docs/DATA_S
 - **Measured by NASA missions:** imagery, rover positions and elevations, daily temperatures, sunrise and sunset.
 - **Derived by us:** distances along the path, climb, how unusual a sol is for its season, and the elevation scale behind the contour lines.
 - **Taken from NASA's lunar planning, because none exists for Mars:** the 2 km/h walking pace and the 20° slope mark (NASA EVA-EXP-0042).
-- **Assumed by us, and labelled in the page:** time spent at each stop, the daylight safety margin, the 10° "moderate" mark, the packing list, and what a person could do at each stop.
+- **Assumed by us, and labelled in the page:** time spent at each stop, the daylight safety margin, the packing list, and the tasks at each stop. The slope (17°, 20°), walk length (8 h), distance (2 km) and pace (2 km/h) are NASA's lunar planning figures (EVA-EXP-0042).
 
 NASA's own planning document says walking ranges for Mars are still "forward work", and no Mars surface suit limits are public. So the verdict uses no temperature, ultraviolet or radiation dose thresholds.
 
@@ -76,6 +78,20 @@ python3 scripts/prepare_landmarks.py --refresh
 python3 scripts/calibrate_dem.py --refresh
 ```
 
+```bash
+python3 scripts/prepare_safe_paths.py
+```
+
+Rebuild the offline imagery and fonts (needs the internet once, then never again):
+
+```bash
+python3 scripts/build_offline_tiles.py
+```
+
+```bash
+python3 scripts/vendor_fonts.py
+```
+
 The space weather script needs a free key from https://api.nasa.gov in `NASA_API_KEY` (see `.env.example`):
 
 ```bash
@@ -108,7 +124,9 @@ python3 scripts/build_tokens.py
 | `data/stops.json` | The five stops, written by hand with sources |
 | `data/raw/`, `data/processed/` | Untouched downloads, and the scripts' output |
 | `tests/` | Tests for the planning and verdict logic |
-| `public/vendor/leaflet/` | Leaflet 1.9.4 (BSD 2-Clause), the map library |
+| `public/vendor/leaflet/` | Leaflet 1.9.4 (BSD 2-Clause), minified, the map library |
+| `public/fonts/` | Bundled fonts and icons (OFL, Apache 2.0) |
+| `data/processed/tiles/` | Bundled map imagery (about 4 MB), from `scripts/build_offline_tiles.py` |
 | `docs/` | Data sources, science brief, pitch, competitive analysis |
 
 Rules for contributing are in [`CLAUDE.md`](CLAUDE.md). The design specification is [`DESIGN.md`](DESIGN.md).

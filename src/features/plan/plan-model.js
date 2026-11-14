@@ -1,36 +1,45 @@
 // @ts-check
 /**
- * Pure planning logic: turns Curiosity's path and the stops a visitor selects
- * into walking sections with distance, climb, time and difficulty.
+ * Pure planning logic: turns the stops a visitor selects into walking sections
+ * with distance, climb, time and difficulty.
  *
- * Dataset: data/processed/route.json (Curiosity waypoints, NASA/JPL-Caltech).
+ * Datasets: data/processed/route.json (stops at Curiosity waypoints) and
+ * data/processed/safe_paths.json (the safest path between each pair of stops,
+ * over ground Curiosity drove; see scripts/safe_paths.py).
  * Distances are in metres, elevations in metres, tilt in degrees.
  * Everything returned here is DERIVED, and the times rest on assumptions
  * that the interface must show next to the numbers.
  */
 
 /**
- * @typedef {{ sol: number, lat: number, lon: number, elevationM: number, tiltDeg: number, alongM: number,
- *   track: number[][] }} RoutePoint `track` is the path the rover drove from the previous point, as [lat, lon] pairs.
+ * @typedef {{ sol: number, lat: number, lon: number, elevationM: number, tiltDeg: number, alongM: number }} RoutePoint
  * @typedef {{ id: string, name: string, summary: string, terrain: 'transition' | 'ridge' | 'hollow', found: string,
- *   taskOurs: string, kitOurs: string[], workMinutesOurs: number, sourceLabel: string, sourceUrl: string,
+ *   tasksOurs: string[], kitOurs: string[], workMinutesOurs: number, sourceLabel: string, sourceUrl: string,
  *   pointIndex: number }} Stop
- * @typedef {{ points: RoutePoint[], stops: Stop[] }} Route
  * @typedef {'easier' | 'moderate' | 'hard'} Difficulty
- * @typedef {{ fromId: string, toId: string, fromName: string, toName: string, fromIndex: number, toIndex: number,
+ * @typedef {{ difficulty: Difficulty, points: number[][] }} PathRun A stretch of one difficulty, as [lat, lon] pairs.
+ * @typedef {{ distanceM: number, ascentM: number, descentM: number, maxTiltDeg: number,
+ *   steepest: number[], middle: number[], runs: PathRun[], profile: number[][] }} SafePath
+ *   One safest path, in walking direction: the shortest over rover-driven ground within NASA's
+ *   20-degree suit slope limit (scripts/safe_paths.py). `profile` is [metres walked, elevation m] pairs.
+ * @typedef {{ points: RoutePoint[], stops: Stop[], safePaths: Record<string, SafePath> }} Route
+ *   `safePaths` is keyed "fromId|toId", stored for one direction of each pair.
+ * @typedef {{ fromId: string, toId: string, fromName: string, toName: string, path: SafePath,
  *   distanceM: number, ascentM: number, descentM: number, maxRoverTiltDeg: number, difficulty: Difficulty,
- *   walkMinutes: number, isReturn: boolean }} Section `fromIndex` and `toIndex` are route point indexes, in walking direction.
+ *   walkMinutes: number, isReturn: boolean }} Section
  * @typedef {{ stops: Stop[], sections: Section[], walkMinutes: number, workMinutes: number, totalMinutes: number,
- *   distanceM: number, ascentM: number }} Plan
+ *   distanceM: number, ascentM: number, furthestM: number }} Plan
+ *   `furthestM`: the farthest the walk goes from its start, in a straight line, in metres.
  */
+import { greatCircleM } from '../../lib/mars.js';
 
 /**
  * Default suited walking speed in km/h.
  * Basis: NASA's Exploration EVA System Concept of Operations (EVA-EXP-0042
  * Rev B, section 4.2.1.3.1) plans lunar traverses at "an ~2 km/hr walking
  * pace over relatively level regolith". That is a LUNAR planning figure:
- * the same document says Mars walk-back ranges are "forward work". So for
- * Mars it is an assumption the visitor can change, not a NASA limit.
+ * the same document says Mars walk-back ranges are "forward work". It is the
+ * closest NASA figure, so the plan uses it for every walk.
  */
 export const DEFAULT_WALKING_SPEED_KMH = 2;
 
@@ -42,8 +51,13 @@ export const DEFAULT_WALKING_SPEED_KMH = 2;
  */
 export const HARD_TILT_DEG = 20;
 
-/** Rover tilt, in degrees, at which a section is called "moderate". Our own choice: half the hard limit. */
-export const MODERATE_TILT_DEG = 10;
+/**
+ * Rover tilt, in degrees, at which a section is called "moderate" (harder).
+ * Basis: the same NASA document notes that Apollo 15 crews crossed slopes of
+ * about 17 degrees; steeper ground is within the suit's limit but beyond what
+ * people have walked. Lunar, and applied to rover tilt.
+ */
+export const MODERATE_TILT_DEG = 17;
 
 /**
  * Rate a section from the steepest attitude the rover recorded on it.
@@ -58,44 +72,32 @@ export function rateDifficulty(maxRoverTiltDeg) {
 }
 
 /**
- * Measure the rover's path between two points.
- * @param {RoutePoint[]} points The whole path.
- * @param {number} fromIndex Index of the first point.
- * @param {number} toIndex Index of the last point (must not be before fromIndex).
- * @returns {{ distanceM: number, ascentM: number, descentM: number, maxRoverTiltDeg: number }}
+ * The safest path between two stops, in walking direction. Paths are stored
+ * one way; walking the other way reverses the line and swaps climb and descent.
+ * @param {Route} route
+ * @param {string} fromId
+ * @param {string} toId
+ * @returns {SafePath}
+ * @throws {Error} When the pair is missing from the prepared file.
  */
-export function measurePath(points, fromIndex, toIndex) {
-  let ascentM = 0;
-  let descentM = 0;
-  let maxRoverTiltDeg = points[fromIndex].tiltDeg;
-  for (let i = fromIndex + 1; i <= toIndex; i += 1) {
-    const change = points[i].elevationM - points[i - 1].elevationM;
-    if (change > 0) ascentM += change;
-    else descentM -= change;
-    maxRoverTiltDeg = Math.max(maxRoverTiltDeg, points[i].tiltDeg);
-  }
-  return { distanceM: points[toIndex].alongM - points[fromIndex].alongM, ascentM, descentM, maxRoverTiltDeg };
+export function orientedPath(route, fromId, toId) {
+  const forward = route.safePaths[`${fromId}|${toId}`];
+  if (forward) return forward;
+  const back = route.safePaths[`${toId}|${fromId}`];
+  if (!back) throw new Error(`No safe path between ${fromId} and ${toId}. Run scripts/prepare_safe_paths.py again.`);
+  return {
+    ...back,
+    ascentM: back.descentM,
+    descentM: back.ascentM,
+    runs: back.runs.map((run) => ({ difficulty: run.difficulty, points: [...run.points].reverse() })).reverse(),
+    profile: back.profile.map(([walked, height]) => [back.distanceM - walked, height]).reverse(),
+  };
 }
 
 /**
- * Measure one section in walking direction, which may run against the rover's direction.
- * Walking the rover's path backwards turns every climb into a descent and the reverse.
- * @param {RoutePoint[]} points The whole path.
- * @param {number} fromIndex Point the walker starts from.
- * @param {number} toIndex Point the walker walks to.
- * @returns {{ distanceM: number, ascentM: number, descentM: number, maxRoverTiltDeg: number }}
- */
-export function measureLeg(points, fromIndex, toIndex) {
-  if (fromIndex <= toIndex) return measurePath(points, fromIndex, toIndex);
-  const forward = measurePath(points, toIndex, fromIndex);
-  return { ...forward, ascentM: forward.descentM, descentM: forward.ascentM };
-}
-
-/**
- * Build a walk along the rover's path that visits the chosen stops in the chosen order.
- * There is no route finding: every section follows Curiosity's own path between
- * two stops, forwards or backwards. The walk starts at the first stop on the
- * route (assumed to be where the crew parks) and returns there at the end.
+ * Build a walk that visits the chosen stops in the chosen order, each leg on
+ * its safest path. The walk starts at the first stop on the route (assumed to
+ * be where the crew parks) and returns there at the end.
  * @param {Route} route The prepared route.
  * @param {string[]} visitOrder Ids of the stops to visit, in visiting order. The start is added if missing and always comes first.
  * @param {number} walkingSpeedKmh Walking speed in km/h. Must be greater than zero.
@@ -114,17 +116,19 @@ export function buildPlan(route, visitOrder, walkingSpeedKmh) {
 
   /** @type {(from: Stop, to: Stop, isReturn: boolean) => Section} */
   const section = (from, to, isReturn) => {
-    const measured = measureLeg(route.points, from.pointIndex, to.pointIndex);
+    const path = orientedPath(route, from.id, to.id);
     return {
-      ...measured,
       fromId: from.id,
       toId: to.id,
       fromName: from.name,
       toName: to.name,
-      fromIndex: from.pointIndex,
-      toIndex: to.pointIndex,
-      difficulty: rateDifficulty(measured.maxRoverTiltDeg),
-      walkMinutes: measured.distanceM / metresPerMinute,
+      path,
+      distanceM: path.distanceM,
+      ascentM: path.ascentM,
+      descentM: path.descentM,
+      maxRoverTiltDeg: path.maxTiltDeg,
+      difficulty: rateDifficulty(path.maxTiltDeg),
+      walkMinutes: path.distanceM / metresPerMinute,
       isReturn,
     };
   };
@@ -143,7 +147,61 @@ export function buildPlan(route, visitOrder, walkingSpeedKmh) {
     totalMinutes: walkMinutes + workMinutes,
     distanceM: sections.reduce((sum, item) => sum + item.distanceM, 0),
     ascentM: sections.reduce((sum, item) => sum + item.ascentM, 0),
+    furthestM: furthestFrom(route.points[start.pointIndex], sections),
   };
+}
+
+/**
+ * The farthest any point of the walk lies from its start, in a straight line.
+ * @param {{ lat: number, lon: number }} start
+ * @param {Section[]} sections
+ * @returns {number} Metres, great-circle on Mars' mean radius.
+ */
+function furthestFrom(start, sections) {
+  let furthest = 0;
+  for (const section of sections) {
+    for (const run of section.path.runs) {
+      for (const [lat, lon] of run.points) furthest = Math.max(furthest, greatCircleM(start.lat, start.lon, lat, lon));
+    }
+  }
+  return furthest;
+}
+
+/**
+ * Every ordering of a list.
+ * @template T
+ * @param {T[]} items
+ * @returns {T[][]}
+ */
+function permutations(items) {
+  if (items.length <= 1) return [items];
+  return items.flatMap((item, index) => permutations([...items.slice(0, index), ...items.slice(index + 1)]).map((rest) => [item, ...rest]));
+}
+
+/**
+ * Total walking distance for visiting stops in an order and returning to the
+ * start. NASA gives no weighting between slopes within its limit, so the
+ * safest order is the one that keeps the crew on the surface for the fewest metres.
+ * @param {Route} route
+ * @param {string[]} order Stop ids after the start.
+ * @returns {number}
+ */
+export function planRisk(route, order) {
+  const ids = [route.stops[0].id, ...order, route.stops[0].id];
+  return ids.slice(1).reduce((sum, id, index) => sum + orientedPath(route, ids[index], id).distanceM, 0);
+}
+
+/**
+ * The recommended plan: every stop, in the order with the shortest total walk.
+ * Tries every order; with four stops after the start that is 24 orders, which
+ * is instant even on a slow computer. Beyond about 8 stops this grows too fast
+ * and a smarter search would be needed.
+ * @param {Route} route
+ * @returns {string[]} Stop ids after the start, in the safest order.
+ */
+export function recommendedOrder(route) {
+  const others = route.stops.slice(1).map((stop) => stop.id);
+  return permutations(others).reduce((best, order) => (planRisk(route, order) < planRisk(route, best) ? order : best));
 }
 
 /**
@@ -162,11 +220,11 @@ export function listDangers(plan) {
 
   const hollows = plan.stops.filter((stop) => stop.terrain === 'hollow');
   dangers.push({
-    title: 'Loose sand between the ridges',
+    title: 'Loose sand',
     detail: hollows.length > 0
-      ? `This plan enters a sandy hollow at ${hollows.map((stop) => stop.name).join(' and ')}. Keep to the ridgetops between stops.`
-      : 'The hollows beside this route are sandy. Keep to the ridgetops.',
-    basis: 'NASA/JPL-Caltech release 2026-013: ridgetops were easy to drive, and sand in the hollows could cause wheel slip.',
+      ? `You enter a sandy hollow at ${hollows.map((stop) => stop.name).join(' and ')}. Otherwise keep to the ridgetops.`
+      : 'The hollows are sandy. Keep to the ridgetops.',
+    basis: 'NASA/JPL release 2026-013: sand in the hollows made the rover slip.',
   });
 
   const steep = plan.sections.filter((section) => !section.isReturn && section.difficulty !== 'easier');
@@ -174,28 +232,28 @@ export function listDangers(plan) {
     const worst = Math.max(...steep.map((section) => section.maxRoverTiltDeg));
     dangers.push({
       title: 'Steep ground',
-      detail: `Curiosity was tilted by up to ${worst.toFixed(1)}° on ${steep.length === 1 ? 'one section' : `${steep.length} sections`} of this plan. Steep sections are marked on the map.`,
-      basis: 'Derived from the rover tilt recorded in the Curiosity waypoint file. Tilt hints at slope; it is not a slope measurement.',
+      detail: `The rover tilted up to ${worst.toFixed(1)}° on ${steep.length === 1 ? 'one leg' : `${steep.length} legs`}. Marked on the map.`,
+      basis: 'Derived from Curiosity\'s recorded tilt, a hint at slope, not a measurement.',
     });
   }
 
   dangers.push({
-    title: 'Ridges about as wide as the rover',
-    detail: 'The ridges stand 1 to 2 m above the hollows and are not much wider than Curiosity. Watch your footing near the edges.',
-    basis: 'NASA/JPL-Caltech release 2026-013.',
+    title: 'Narrow ridges',
+    detail: 'Ridges are 1 to 2 m high and about rover-wide. Watch the edges.',
+    basis: 'NASA/JPL release 2026-013.',
   });
 
   dangers.push({
-    title: 'Radiation during a solar storm',
-    detail: 'A normal walk adds little dose. A solar particle event is different: do not start a walk while an alert is in effect.',
-    basis: 'Published studies report surface dose rates two to three times background during the September 2017 event (Zeitlin et al. 2018; Hassler et al. 2018). Not yet verified by the team against the papers.',
+    title: 'Solar storms',
+    detail: 'A normal walk adds little radiation. During a solar storm, stay inside. The verdict checks this for you.',
+    basis: 'Studies report 2 to 3 times normal dose in the Sept 2017 storm (Zeitlin 2018; Hassler 2018). Not yet checked by the team.',
   });
 
   return dangers;
 }
 
 /** Items every walk needs, whatever the stops. Our own suggestion, not a NASA list. */
-const BASE_KIT = ['Printed copy of this briefing', 'Spare sample bags', 'Marker flags for the return route'];
+const BASE_KIT = ['This briefing, printed', 'Spare sample bags', 'Marker flags for the way back'];
 
 /**
  * Collect the kit suggested for the selected stops, without repeats.

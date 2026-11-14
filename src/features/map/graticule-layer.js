@@ -3,7 +3,7 @@
  * Latitude and longitude grid over the map, redrawn whenever the view changes.
  * Positions are degrees as the map's sources give them; see graticule-model.js.
  */
-import * as L from '../../../public/vendor/leaflet/leaflet-src.esm.js';
+import L from '../../lib/leaflet.js';
 import { el } from '../../lib/dom.js';
 import { chooseGridStep, formatGridDegrees, gridValues } from './graticule-model.js';
 

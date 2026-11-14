@@ -1,118 +1,125 @@
 // @ts-check
 /**
  * Page script for the briefing page. It loads the prepared data, keeps the
- * page's state (stops and their order, the chosen leg, the sol, walking
- * speed) and asks the feature modules to redraw. No planning logic lives here.
+ * page's state (the stops in visiting order, the chosen stop, the sol) and
+ * asks the feature modules to redraw. No planning logic lives here.
  */
 import { el, requireElement } from '../lib/dom.js';
 import { earthDateOfSol, solOnEarthDate } from '../lib/mars.js';
 import { initThemeToggle } from '../features/theme/theme-toggle.js';
 import { createMapView } from '../features/map/map-view.js';
-import { buildPlan, DEFAULT_WALKING_SPEED_KMH } from '../features/plan/plan-model.js';
-import { renderPlan, renderStopDetails, renderStopList } from '../features/plan/plan-view.js';
+import { buildPlan, DEFAULT_WALKING_SPEED_KMH, recommendedOrder } from '../features/plan/plan-model.js';
+import { renderPlan, renderTasks } from '../features/plan/plan-view.js';
+import { createStopPicker } from '../features/plan/stop-picker.js';
 import { compareWithSeason, decideVerdict } from '../features/conditions/conditions-model.js';
 import { renderConditions, renderSpaceWeather, renderVerdict } from '../features/conditions/conditions-view.js';
 import { assessSpaceWeather } from '../features/conditions/space-weather-model.js';
-import { fetchLiveSpaceWeather } from '../features/conditions/space-weather-live.js';
+import { refreshSpaceWeather } from '../features/conditions/space-weather-live.js';
+import { renderConnection } from '../features/connection/connection-view.js';
+import { canReachNasa, detectMode, setPrefersOffline } from '../lib/connection.js';
 import { loadBriefingData } from './load-briefing-data.js';
 
 /** @typedef {import('./load-briefing-data.js').BriefingData} BriefingData */
-/** @typedef {import('../features/conditions/space-weather-model.js').SpaceWeather} SpaceWeather */
 
 /** Sol the page opens on: the sol Curiosity reached the last stop, in the boxwork itself. */
 const DEFAULT_SOL = 4711;
-const MIN_SPEED_KMH = 0.5;
-const MAX_SPEED_KMH = 5;
 
 /**
  * Start the page once the data has loaded.
  * @param {BriefingData} data
+ * @param {import('../lib/connection.js').ConnectionMode} startMode Online (live NASA data) or offline (stored data).
  */
-function start({ route, records, places, calibration, spaceWeather }) {
+function start({ route, records, places, calibration, spaceWeather: bundledSpaceWeather }, startMode) {
   const recordBySol = new Map(records.map((record) => [record.sol, record]));
   const firstSol = records[0].sol;
   const reference = records[records.length - 1];
   const today = new Date();
   const presentSol = solOnEarthDate(today.toISOString().slice(0, 10), reference);
 
+  const recommended = recommendedOrder(route);
   const state = {
-    /** Every stop id in visiting order; the start stays first. */
-    stopOrder: route.stops.map((stop) => stop.id),
-    selectedStopIds: route.stops.map((stop) => stop.id),
-    /** The stop whose leg is brought forward on the map, or null to show the whole walk equally. */
+    /** Stops to visit after the start, in visiting order. Opens on the recommended plan. */
+    visitOrder: recommended,
+    /** The chosen stop: its leg is brought forward on the map and its tasks highlighted. Null shows the whole walk. */
     activeStopId: /** @type {string | null} */ (null),
-    detailStopId: route.stops[0].id,
     sol: DEFAULT_SOL,
-    walkingSpeedKmh: DEFAULT_WALKING_SPEED_KMH,
-    /** Live space weather for the present sol: undefined until asked for, null while loading. */
-    liveSpaceWeather: /** @type {SpaceWeather | Error | null | undefined} */ (undefined),
+    mode: startMode,
+    /** Space weather in use: the bundled record, extended to today when online. */
+    spaceWeather: bundledSpaceWeather,
+    /** Why the page is offline when it was not the visitor's choice, if so. */
+    connectionNote: /** @type {string | undefined} */ (undefined),
+  };
+  const connection = {
+    status: requireElement('connection-status'),
+    toggle: /** @type {HTMLButtonElement} */ (requireElement('connection-toggle')),
   };
 
   const solInput = /** @type {HTMLInputElement} */ (requireElement('sol-input'));
   const solSlider = /** @type {HTMLInputElement} */ (requireElement('sol-slider'));
   const presentButton = requireElement('present-button');
   const presentNote = requireElement('present-note');
-  const speedInput = /** @type {HTMLInputElement} */ (requireElement('speed-input'));
   for (const input of [solInput, solSlider]) {
     input.min = String(firstSol);
     input.max = String(presentSol);
   }
-  speedInput.min = String(MIN_SPEED_KMH);
-  speedInput.max = String(MAX_SPEED_KMH);
-  speedInput.value = String(state.walkingSpeedKmh);
 
-  const mapView = createMapView(requireElement('map'), route, { places, calibration }, (stopId) => {
+  /** @param {string} stopId */
+  const focusStop = (stopId) => {
     state.activeStopId = state.activeStopId === stopId ? null : stopId;
-    state.detailStopId = stopId;
     redraw();
-    requireElement('stop-details').scrollIntoView({ block: 'nearest' });
+    document.getElementById(`tasks-${stopId}`)?.scrollIntoView({ block: 'nearest' });
+  };
+  const mapView = createMapView(requireElement('map'), route, { places, calibration }, state.mode, focusStop);
+  const recommendedKm = (buildPlan(route, recommended, DEFAULT_WALKING_SPEED_KMH).distanceM / 1000).toFixed(1);
+  const picker = createStopPicker(requireElement('stop-picker'), route, `All ${route.stops.length} stops, safest order (${recommendedKm} km)`, {
+    onAdd: (stopId) => { state.visitOrder = [...state.visitOrder, stopId]; redraw(); },
+    onRecommended: () => { state.visitOrder = recommended; redraw(); },
+    onRemove: (stopId) => {
+      state.visitOrder = state.visitOrder.filter((id) => id !== stopId);
+      if (state.activeStopId === stopId) state.activeStopId = null;
+      redraw();
+    },
+    onMove: (stopId, step) => {
+      const from = state.visitOrder.indexOf(stopId);
+      const to = from + step;
+      if (from < 0 || to < 0 || to >= state.visitOrder.length) return;
+      const order = [...state.visitOrder];
+      [order[from], order[to]] = [order[to], order[from]];
+      state.visitOrder = order;
+      redraw();
+      const name = route.stops.find((stop) => stop.id === stopId)?.name;
+      /** @type {HTMLElement | null} */ (requireElement('stop-picker').querySelector(`[aria-label="${step < 0 ? 'Visit earlier' : 'Visit later'}: ${name}"]:not(:disabled)`))?.focus();
+    },
+    onFocus: focusStop,
   });
 
   /** Redraw everything that depends on the state. */
   function redraw() {
-    const visitOrder = state.stopOrder.filter((id) => state.selectedStopIds.includes(id));
-    const plan = buildPlan(route, visitOrder, state.walkingSpeedKmh);
+    const plan = buildPlan(route, state.visitOrder, DEFAULT_WALKING_SPEED_KMH);
     const record = recordBySol.get(state.sol);
     const comparison = record ? compareWithSeason(record, records) : null;
     const isPresent = state.sol === presentSol;
     const date = isPresent ? today.toISOString().slice(0, 10) : record?.earthDate ?? earthDateOfSol(state.sol, reference);
-    const weatherForDate = isPresent ? state.liveSpaceWeather : spaceWeather;
+    // Without a live update, today's space weather is the newest day on board; the note says how old it is.
+    const spaceWeather = state.spaceWeather;
+    const latest = spaceWeather instanceof Error ? null : spaceWeather.coverageEnd;
+    const weatherDate = isPresent && latest !== null && latest < date ? latest : date;
 
     solInput.value = String(state.sol);
     solSlider.value = String(state.sol);
     presentButton.setAttribute('aria-pressed', String(isPresent));
     presentNote.hidden = !isPresent;
-    presentNote.textContent = `Present: ${date}, about sol ${presentSol} (counted from the date). Curiosity's weather feed ends at sol ${reference.sol}, so only space weather is read for today.`;
+    presentNote.textContent = `Today, ${date} (about sol ${presentSol}). No rover weather after sol ${reference.sol}. `
+      + (state.mode === 'online' && latest === date ? 'Space weather is live from NASA.' : `Space weather is the latest stored: ${latest ?? 'none'}.`);
+    renderConnection(connection, { mode: state.mode, dataTo: latest, note: state.connectionNote });
 
     renderVerdict(requireElement('verdict'), decideVerdict({
-      planMinutes: plan.totalMinutes, record, comparison,
-      spaceWeather: weatherForDate === null || weatherForDate === undefined
-        ? { level: 'unknown', text: "Reading today's space weather from NASA…", basis: 'NASA DONKI, read live.' }
-        : assessSpaceWeather(weatherForDate, date),
+      planMinutes: plan.totalMinutes, furthestM: plan.furthestM, record, comparison,
+      spaceWeather: assessSpaceWeather(spaceWeather, weatherDate),
     }));
     renderConditions(requireElement('conditions'), state.sol, record, comparison);
-    renderSpaceWeather(requireElement('space-weather'), weatherForDate ?? null, date);
-    renderStopList(requireElement('stop-list'), route, { order: state.stopOrder, selectedIds: state.selectedStopIds }, {
-      onToggle: (stopId, isSelected) => {
-        state.selectedStopIds = isSelected ? [...state.selectedStopIds, stopId] : state.selectedStopIds.filter((id) => id !== stopId);
-        redraw();
-      },
-      onMove: (stopId, step) => {
-        const from = state.stopOrder.indexOf(stopId);
-        const to = from + step;
-        if (from < 1 || to < 1 || to >= state.stopOrder.length) return; // the start stays first
-        const order = [...state.stopOrder];
-        [order[from], order[to]] = [order[to], order[from]];
-        state.stopOrder = order;
-        redraw();
-        requireElement('stop-list').querySelector(`[aria-label$=": ${route.stops.find((stop) => stop.id === stopId)?.name}"]:not(:disabled)`)?.focus();
-      },
-      onShowDetails: (stopId) => {
-        state.detailStopId = stopId;
-        state.activeStopId = stopId;
-        redraw();
-      },
-    });
+    renderSpaceWeather(requireElement('space-weather'), spaceWeather, weatherDate);
+    picker.update(state.visitOrder, state.activeStopId);
     renderPlan({
       sections: requireElement('sections'),
       totals: requireElement('totals'),
@@ -120,10 +127,9 @@ function start({ route, records, places, calibration, spaceWeather }) {
       dangers: requireElement('dangers'),
       kit: requireElement('kit'),
     }, route, plan);
-    const detailStop = route.stops.find((stop) => stop.id === state.detailStopId) ?? route.stops[0];
-    renderStopDetails(requireElement('stop-details'), route, detailStop);
+    renderTasks(requireElement('tasks'), plan, state.activeStopId);
     mapView.showPlan(plan, state.activeStopId);
-    mapView.highlightStop(detailStop.id);
+    mapView.highlightStop(state.activeStopId);
   }
 
   /** @param {string} value */
@@ -131,24 +137,42 @@ function start({ route, records, places, calibration, spaceWeather }) {
     const sol = Math.round(Number(value));
     if (!Number.isFinite(sol)) return;
     state.sol = Math.min(presentSol, Math.max(firstSol, sol));
-    if (state.sol === presentSol && state.liveSpaceWeather === undefined) {
-      state.liveSpaceWeather = null;
-      fetchLiveSpaceWeather(today)
-        .then((weather) => { state.liveSpaceWeather = weather; })
-        .catch((error) => { state.liveSpaceWeather = error instanceof Error ? error : new Error(String(error)); })
-        .finally(redraw);
-    }
     redraw();
   };
+  /** Online: extend the space weather to today. Falls back to the bundle, with a note, if NASA does not answer. */
+  const goLive = () => {
+    if (bundledSpaceWeather instanceof Error) return;
+    refreshSpaceWeather(bundledSpaceWeather, today)
+      .then((fresh) => { if (state.mode === 'online') state.spaceWeather = fresh; })
+      .catch((error) => { state.connectionNote = `Live space weather failed: ${error instanceof Error ? error.message : error}`; })
+      .finally(redraw);
+  };
+  /** @param {import('../lib/connection.js').ConnectionMode} mode */
+  const setMode = (mode) => {
+    state.mode = mode;
+    mapView.setMode(mode);
+    if (mode === 'online') goLive();
+    else state.spaceWeather = bundledSpaceWeather;
+    redraw();
+  };
+  connection.toggle.addEventListener('click', async () => {
+    if (state.mode === 'online') {
+      setPrefersOffline(true);
+      state.connectionNote = 'You chose offline.';
+      setMode('offline');
+      return;
+    }
+    setPrefersOffline(false);
+    renderConnection(connection, { mode: 'checking', dataTo: null });
+    const isReachable = await canReachNasa();
+    state.connectionNote = isReachable ? undefined : 'NASA could not be reached. Showing the data stored with the site.';
+    setMode(isReachable ? 'online' : 'offline');
+  });
+  if (state.mode === 'online') goLive();
+
   solInput.addEventListener('change', () => setSol(solInput.value));
   solSlider.addEventListener('input', () => setSol(solSlider.value));
   presentButton.addEventListener('click', () => setSol(String(presentSol)));
-  speedInput.addEventListener('change', () => {
-    const speed = Number(speedInput.value);
-    if (Number.isFinite(speed) && speed >= MIN_SPEED_KMH && speed <= MAX_SPEED_KMH) state.walkingSpeedKmh = speed;
-    speedInput.value = String(state.walkingSpeedKmh);
-    redraw();
-  });
 
   redraw();
 }
@@ -158,10 +182,11 @@ async function main() {
   initThemeToggle(requireElement('theme-toggle'));
   const status = requireElement('load-status');
   try {
-    const data = await loadBriefingData();
+    // Check the link to NASA while the stored data loads; neither waits for the other.
+    const [data, mode] = await Promise.all([loadBriefingData(), detectMode()]);
     status.remove();
     requireElement('briefing').hidden = false;
-    start(data);
+    start(data, mode);
   } catch (error) {
     const retry = el('button', { className: 'button-secondary', text: 'Try again', attrs: { type: 'button' } });
     retry.addEventListener('click', () => window.location.reload());

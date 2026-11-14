@@ -188,3 +188,21 @@
 }
 .map-layer-toggle { gap: var(--space-xs); }
 .map-layer-choice label { display: inline-flex; align-items: center; gap: var(--space-xs); }
+
+/* map-arrow: which way a leg is walked. A dark disc keeps it readable on any imagery. */
+.map-arrow-anchor { overflow: visible; }
+.map-arrow {
+  position: absolute;
+  left: calc(var(--space-md) / -2 - 2px);
+  top: calc(var(--space-md) / -2 - 2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--space-md) + 4px);
+  height: calc(var(--space-md) + 4px);
+  background: var(--color-route-casing);
+  color: var(--color-map-ink);
+  border-radius: var(--radius-full);
+  pointer-events: none;
+}
+.map-arrow .icon { font-size: var(--space-md); }

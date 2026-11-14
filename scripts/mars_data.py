@@ -54,3 +54,14 @@ def distance_m(lat_a: float, lon_a: float, lat_b: float, lon_b: float) -> float:
     d_lambda = math.radians(lon_b - lon_a)
     h = math.sin(d_phi / 2) ** 2 + math.cos(phi_a) * math.cos(phi_b) * math.sin(d_lambda / 2) ** 2
     return 2 * MARS_RADIUS_M * math.asin(math.sqrt(h))
+
+
+def to_columns(records: list[dict[str, Any]]) -> dict[str, Any]:
+    """Store records as column names plus rows of values, so each key is written once.
+
+    The site runs on low-power, offline computers; for the weather record this
+    cuts the file to about a third with every value kept. src/lib/columns.js
+    turns it back into records.
+    """
+    columns = list(records[0].keys()) if records else []
+    return {"columns": columns, "rows": [[record.get(name) for name in columns] for record in records]}

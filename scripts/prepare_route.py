@@ -13,8 +13,6 @@ Units and conventions:
 - Elevation is the source's `elev_geoid` field, in metres.
 - Tilt is the rover's attitude when parked, in degrees. It hints at slope but
   is NOT a slope measurement.
-- Each point carries `track`: the path the rover drove from the previous
-  point, as [lat, lon] pairs, simplified to within 0.25 m (see traverse.py).
 - Distances are great-circle distances in metres on a sphere of Mars' mean
   radius, summed along the full-resolution drives (not the straight lines
   between waypoints). They are derived, not measured.
@@ -30,14 +28,12 @@ import json
 from typing import Any
 
 from mars_data import REPO_ROOT, load_raw, write_processed
-from traverse import legs_between, path_length_m, simplify
+from traverse import legs_between, path_length_m
 
 WAYPOINTS_URL = "https://mars.nasa.gov/mmgis-maps/MSL/Layers/json/MSL_waypoints.json"
 TRAVERSE_URL = "https://mars.nasa.gov/mmgis-maps/MSL/Layers/json/MSL_traverse.json"
 RAW_FILE = "msl_waypoints.json"
 TRAVERSE_FILE = "msl_traverse.json"
-# Decimal places kept for track coordinates: 1e-7 degrees is about 6 mm on Mars.
-TRACK_DECIMALS = 7
 STOPS_FILE = REPO_ROOT / "data" / "stops.json"
 OUTPUT_FILE = "route.json"
 
@@ -72,11 +68,8 @@ def build_route(waypoints: list[dict[str, Any]], stops: list[dict[str, Any]], dr
     along_m = 0.0
     for i in range(first, last + 1):
         w = waypoints[i]
-        track: list[list[float]] = []
         if i > first:
-            leg = legs[i - first - 1]
-            along_m += path_length_m(leg)
-            track = [[round(p[1], TRACK_DECIMALS), round(p[0], TRACK_DECIMALS)] for p in simplify(leg)]
+            along_m += path_length_m(legs[i - first - 1])
         points.append({
             "sol": w["sol"],
             "lat": w["lat"],
@@ -84,7 +77,6 @@ def build_route(waypoints: list[dict[str, Any]], stops: list[dict[str, Any]], dr
             "elevationM": round(w["elev_geoid"], 1),
             "tiltDeg": w["tilt"],
             "alongM": round(along_m, 1),
-            "track": track,
         })
 
     out_stops = [{**stop, "pointIndex": idx - first} for stop, idx in zip(stops, stop_indexes)]

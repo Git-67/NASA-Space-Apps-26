@@ -4,7 +4,7 @@
  * It starts closed, as a 44px "Layers" button, so it never covers the map
  * until asked; this is also how it collapses on small screens.
  */
-import * as L from '../../../public/vendor/leaflet/leaflet-src.esm.js';
+import L from '../../lib/leaflet.js';
 import { el } from '../../lib/dom.js';
 import { icon } from '../../components/ui/icon.js';
 
@@ -21,7 +21,6 @@ import { icon } from '../../components/ui/icon.js';
  * @typedef {object} LayerPanel
  * @property {L.Control} control The Leaflet control to add to the map.
  * @property {(id: string, message: string) => void} setStatus Show a loading or error line under an option; an empty message clears it.
- * @property {(id: string, isDisabled: boolean) => void} setDisabled Grey out an option while another choice makes it meaningless.
  */
 
 /**
@@ -88,10 +87,6 @@ export function createLayerPanel({ imagery, overlays, onImageryChange, onOverlay
     setStatus(id, message) {
       const row = rows.get(id);
       if (row) row.status.textContent = message;
-    },
-    setDisabled(id, isDisabled) {
-      const row = rows.get(id);
-      if (row) row.input.disabled = isDisabled;
     },
   };
 }

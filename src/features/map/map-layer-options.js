@@ -3,9 +3,9 @@
  * The map's optional layers and the panel that switches them: colour imagery,
  * contour lines, place names and a latitude/longitude grid.
  *
- * The route and stops stay on top of both imagery choices. Contours are
- * switched off in the colour view (DESIGN.md: no data layer over colour
- * imagery); the route is the one exception, drawn with its dark casing.
+ * Every layer works on both imagery choices. Over colour imagery the route
+ * and contours rely on their dark casing to stay readable (DESIGN.md, Mars
+ * map rules: team decision of 14 Nov 2026).
  */
 import { createColourImageryLayer } from './colour-imagery-layer.js';
 import { createContourLayer } from './contour-layer.js';
@@ -25,7 +25,7 @@ const GRID = 'grid';
 
 /**
  * Report a tiled layer's progress and failures in the panel.
- * @param {import('../../../public/vendor/leaflet/leaflet-src.esm.js').GridLayer} layer
+ * @param {import('../../lib/leaflet.js').MapLayer} layer
  * @param {(message: string) => void} setStatus
  * @param {string} loadingMessage Shown while tiles load.
  * @param {string} failureMessage Shown when any tile in the view failed.
@@ -39,16 +39,17 @@ function reportProgress(layer, setStatus, loadingMessage, failureMessage) {
 
 /**
  * Add the optional layers and their panel to a map.
- * @param {import('../../../public/vendor/leaflet/leaflet-src.esm.js').Map} map
+ * @param {import('../../lib/leaflet.js').MapView} map
  * @param {object} options
  * @param {LabelledPlace[]} options.stopLabels Names of the walk's stops, at their positions.
  * @param {Place[] | Error} options.places Places Curiosity explored, or why they could not be loaded.
  * @param {DemCalibration | Error} options.calibration Scale of the elevation tiles, or why it could not be loaded.
- * @param {string} options.demTileUrl Mars Trek tile URL of the elevation model, with {z}, {y} and {x}.
+ * @param {import('./tile-sources.js').TileSets} options.tiles Where to read imagery and elevation at start.
+ * @returns {{ setTiles: (tiles: import('./tile-sources.js').TileSets) => void }} Switch every tiled layer to other tiles (online or offline).
  */
-export function addLayerOptions(map, { stopLabels, places, calibration, demTileUrl }) {
-  const colourLayer = createColourImageryLayer();
-  const contourLayer = calibration instanceof Error ? null : createContourLayer(demTileUrl);
+export function addLayerOptions(map, { stopLabels, places, calibration, tiles }) {
+  let colourLayer = createColourImageryLayer(tiles.colour);
+  let contourLayer = calibration instanceof Error ? null : createContourLayer(tiles.dem);
   const stopLabelLayer = createPlaceLabelLayer(stopLabels);
   const placeLabelLayer = places instanceof Error ? null
     : createPlaceLabelLayer(places.map((place) => ({ ...place, hasMarker: true })));
@@ -58,10 +59,10 @@ export function addLayerOptions(map, { stopLabels, places, calibration, demTileU
 
   /** Put every layer in the state the choices ask for. */
   const apply = () => {
-    /** @type {[import('../../../public/vendor/leaflet/leaflet-src.esm.js').Layer | null, boolean][]} */
+    /** @type {[import('../../lib/leaflet.js').MapLayer | null, boolean][]} */
     const wanted = [
       [colourLayer, isColour],
-      [contourLayer, !isColour && shown.has(CONTOURS)],
+      [contourLayer, shown.has(CONTOURS)],
       [stopLabelLayer, shown.has(NAMES)],
       [placeLabelLayer, shown.has(NAMES)],
       [gridLayer, shown.has(GRID)],
@@ -71,35 +72,46 @@ export function addLayerOptions(map, { stopLabels, places, calibration, demTileU
       if (isWanted && !map.hasLayer(layer)) layer.addTo(map);
       if (!isWanted && map.hasLayer(layer)) layer.remove();
     }
-    panel.setDisabled(CONTOURS, isColour || !contourLayer);
   };
 
-  const contourNote = calibration instanceof Error ? 'Elevation from NASA Mars Trek (MRO HiRISE Gale elevation model).'
-    : `Derived. A line every ${calibration.metresPerLevel.toFixed(1)} m of height, traced in your browser from NASA Mars Trek's `
-      + `Gale elevation model (MRO HiRISE) as the map loads. Trek serves it only as 8-bit images, so that step is the finest it allows; `
-      + `we matched the steps to ${calibration.waypointCount} Curiosity elevations (typical error ${calibration.rmsErrorM} m). `
-      + 'Corners are rounded for reading; that moves a line by less than one source pixel. Shown from zoom 12 inwards.';
+  const contourNote = calibration instanceof Error ? 'NASA Mars Trek elevation (MRO HiRISE).'
+    : `One line every ${calibration.metresPerLevel.toFixed(0)} m of height, from NASA Mars Trek (MRO HiRISE). `
+      + `Derived; about ±${Math.round(calibration.rmsErrorM)} m. Zoom in to see them.`;
 
   const panel = createLayerPanel({
     imagery: [
-      { id: GRAYSCALE, label: 'MRO HiRISE, grayscale', icon: 'filter_b_and_w', note: 'NASA Mars Trek mosaic, with the MRO CTX mosaic around it when zoomed out. Every layer is drawn on this view.' },
-      { id: COLOUR, label: 'MRO HiRISE, colour', icon: 'palette', note: "From NASA's Curiosity location map. It covers only the area around Curiosity's drive. Contours are off in this view, so colour on the map is not mistaken for data." },
+      { id: GRAYSCALE, label: 'MRO HiRISE, grayscale', icon: 'filter_b_and_w', note: 'NASA Mars Trek. Sharp around the walk; MRO CTX elsewhere.' },
+      { id: COLOUR, label: 'MRO HiRISE, colour', icon: 'palette', note: "NASA's Curiosity map. Around the walk only." },
     ],
     overlays: [
       { id: CONTOURS, label: 'Contour lines', icon: 'landscape', note: contourNote, unavailableReason: calibration instanceof Error ? calibration.message : undefined },
-      { id: NAMES, label: 'Place names', icon: 'label', note: "The stops, and places Curiosity explored as named by NASA's Curiosity location map. Those lie north of the boxwork, along the rover's earlier drive: zoom out and pan north to see them.", unavailableReason: places instanceof Error ? places.message : undefined },
-      { id: GRID, label: 'Latitude and longitude grid', icon: 'grid_on', note: 'Degrees as the sources give them. Their convention (planetocentric or planetographic) is not yet confirmed.' },
+      { id: NAMES, label: 'Place names', icon: 'label', note: "Stops, plus places Curiosity explored (NASA). Those are north: zoom out to see them.", unavailableReason: places instanceof Error ? places.message : undefined },
+      { id: GRID, label: 'Latitude and longitude grid', icon: 'grid_on', note: 'Degrees as NASA gives them. Convention not yet confirmed.' },
     ],
     onImageryChange: (id) => { isColour = id === COLOUR; apply(); },
     onOverlayChange: (id, isShown) => { if (isShown) shown.add(id); else shown.delete(id); apply(); },
   });
   panel.control.addTo(map);
 
-  if (contourLayer) {
-    reportProgress(contourLayer, (message) => panel.setStatus(CONTOURS, message),
-      'Loading elevation tiles from NASA Mars Trek…', 'Some elevation tiles could not be loaded from NASA Mars Trek, so some lines are missing.');
-  }
-  reportProgress(colourLayer, (message) => panel.setStatus(COLOUR, message),
-    'Loading colour imagery from NASA…', "Some colour tiles could not be loaded from NASA's Curiosity map.");
+  /** Report progress and failures of the current tiled layers in the panel. */
+  const watch = () => {
+    if (contourLayer) {
+      reportProgress(contourLayer, (message) => panel.setStatus(CONTOURS, message),
+        'Drawing contours…', 'Some elevation tiles are missing. Lines may be missing.');
+    }
+    reportProgress(colourLayer, (message) => panel.setStatus(COLOUR, message),
+      'Loading colour imagery…', 'Some colour tiles are missing.');
+  };
+  watch();
   apply();
+
+  return {
+    setTiles(next) {
+      for (const layer of [colourLayer, contourLayer]) if (layer && map.hasLayer(layer)) layer.remove();
+      colourLayer = createColourImageryLayer(next.colour);
+      contourLayer = calibration instanceof Error ? null : createContourLayer(next.dem);
+      watch();
+      apply();
+    },
+  };
 }

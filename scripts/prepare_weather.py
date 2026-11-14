@@ -28,7 +28,7 @@ from __future__ import annotations
 import argparse
 from typing import Any
 
-from mars_data import REPO_ROOT, load_raw, write_processed
+from mars_data import REPO_ROOT, load_raw, to_columns, write_processed
 
 WEATHER_URL = "https://mars.nasa.gov/rss/api/?feed=weather&category=msl&feedtype=json"
 RAW_FILE = "msl_weather.json"
@@ -85,7 +85,7 @@ def main() -> None:
             "url": WEATHER_URL,
             "note": "Labelled by its provider as intended for outreach purposes only.",
         },
-        "records": records,
+        "records": to_columns(records),
     }
     path = write_processed(OUTPUT_FILE, payload)
     with_temperature = sum(1 for r in records if r["airMaxC"] is not None)

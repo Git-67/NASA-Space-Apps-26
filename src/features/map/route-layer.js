@@ -2,23 +2,24 @@
 /**
  * The planned walk on the map.
  *
- * - Every section of the plan is drawn along Curiosity's driven path, each
- *   drive coloured by its own difficulty (see plan-model.js: rover tilt under
- *   10°, 10° to 20°, 20° or more), so only the steep parts stand out.
+ * - Every section is drawn on its safest path over rover-driven ground
+ *   (scripts/safe_paths.py), each stretch coloured by its difficulty (rover
+ *   tilt under 10°, 10° to 20°, 20° or more), so only the steep parts stand out.
  * - When a stop is chosen, the section leaving it is drawn solid and every
  *   other section translucent and dotted, so one leg can be read at a time.
  * - Hovering, tapping or focusing a section shows its distance, climb, time
  *   and difficulty.
  * - Callouts mark the harder parts: the steepest point of a moderate or hard
  *   section, the biggest climb in the plan, and sandy hollows.
+ * - An arrow halfway along each shown leg points the way the walker goes, so a
+ *   changed visiting order is visible on the map.
  * Difficulty is never shown by colour alone: the popups and callouts say it in words.
  */
-import * as L from '../../../public/vendor/leaflet/leaflet-src.esm.js';
+import L from '../../lib/leaflet.js';
 import { el } from '../../lib/dom.js';
 import { formatDuration } from '../../lib/mars.js';
-import { rateDifficulty } from '../plan/plan-model.js';
 import { stackLabels } from './label-stacking.js';
-import { activeSection, difficultyRuns, sectionPath, steepestPoint } from './route-geometry.js';
+import { activeSection, midpointHeading } from './route-geometry.js';
 
 /** @typedef {import('../plan/plan-model.js').Route} Route */
 /** @typedef {import('../plan/plan-model.js').Plan} Plan */
@@ -44,9 +45,9 @@ function sectionCard(section) {
     el('p', { className: 'section-card-title', text: title }),
     el('dl', { className: 'reading-list' }, [
       row('Distance', `${Math.round(section.distanceM)} m`),
-      row('Climb / descent', `+${Math.round(section.ascentM)} m / −${Math.round(section.descentM)} m`),
-      row('Walking time (estimate)', formatDuration(section.walkMinutes)),
-      row('Difficulty', `${DIFFICULTY_LABEL[section.difficulty]} (rover tilt up to ${section.maxRoverTiltDeg.toFixed(1)}°)`),
+      row('Up / down', `+${Math.round(section.ascentM)} m / −${Math.round(section.descentM)} m`),
+      row('Walk (est.)', formatDuration(section.walkMinutes)),
+      row('Difficulty', `${DIFFICULTY_LABEL[section.difficulty]} (tilt ${section.maxRoverTiltDeg.toFixed(0)}°)`),
     ]),
   ]);
 }
@@ -66,6 +67,18 @@ function callout(position, iconName, text) {
     keyboard: false,
     alt: text,
   });
+}
+
+/**
+ * An arrow on a leg, pointing the way the walker goes.
+ * @param {number[][]} path The leg, in walking direction.
+ * @returns {L.Marker}
+ */
+function directionArrow(path) {
+  const { lat, lon, angleDeg } = midpointHeading(path);
+  const arrow = el('span', { className: 'map-arrow', attrs: { 'aria-hidden': 'true' } }, [el('span', { className: 'icon', text: 'arrow_forward' })]);
+  arrow.style.rotate = `${angleDeg.toFixed(1)}deg`;
+  return L.marker([lat, lon], { icon: L.divIcon({ html: arrow, className: 'map-arrow-anchor', iconSize: [0, 0] }), interactive: false, keyboard: false });
 }
 
 /**
@@ -108,13 +121,14 @@ export function createRouteLayer() {
       // The return retraces the way out, so it is drawn only when it is the leg being looked at.
       const shown = plan.sections.filter((section) => !section.isReturn || section === active);
       for (const section of shown) {
-        const path = /** @type {[number, number][]} */ (sectionPath(route.points, section.fromIndex, section.toIndex));
+        const path = /** @type {[number, number][]} */ (section.path.runs.flatMap((run, index) => (index === 0 ? run.points : run.points.slice(1))));
         const state = active === null || section === active ? 'is-active' : 'is-muted';
         if (state === 'is-active') L.polyline(path, { className: `map-route-casing ${state}`, interactive: false }).addTo(layer);
-        for (const run of difficultyRuns(route.points, section.fromIndex, section.toIndex, rateDifficulty)) {
-          L.polyline(/** @type {[number, number][]} */ (run.path), { className: `map-route is-${run.difficulty} ${state}`, interactive: false }).addTo(layer);
+        for (const run of section.path.runs) {
+          L.polyline(/** @type {[number, number][]} */ (run.points), { className: `map-route is-${run.difficulty} ${state}`, interactive: false }).addTo(layer);
         }
         const hit = L.polyline(path, { className: 'map-route-hit', weight: HIT_WIDTH_PX, opacity: 0 }).addTo(layer);
+        if (path.length >= 2 && (state === 'is-active' || section.isReturn)) directionArrow(path).addTo(layer);
         hit.bindTooltip(sectionCard(section), { sticky: true, className: 'map-popup' });
         hit.bindPopup(sectionCard(section), { className: 'map-popup', maxWidth: 320 });
       }
@@ -123,21 +137,20 @@ export function createRouteLayer() {
       const calloutSections = active ? [active] : plan.sections.filter((section) => !section.isReturn);
       for (const section of calloutSections) {
         if (section.difficulty !== 'easier') {
-          const point = steepestPoint(route.points, section);
-          addCallout(callout([point.lat, point.lon], 'warning', `Steep: rover tilt ${point.tiltDeg.toFixed(1)}°`));
+          const [lat, lon] = section.path.steepest;
+          addCallout(callout([lat, lon], 'warning', `Steep: ${section.path.maxTiltDeg.toFixed(0)}° tilt`));
         }
         const target = route.stops.find((stop) => stop.id === section.toId);
         if (target?.terrain === 'hollow' && !section.isReturn) {
           const point = route.points[target.pointIndex];
-          addCallout(callout([point.lat, point.lon], 'grain', 'Sand: risk of slipping'));
+          addCallout(callout([point.lat, point.lon], 'grain', 'Sand: slippery'));
         }
       }
       const outward = plan.sections.filter((section) => !section.isReturn);
       const biggest = outward.reduce((best, section) => (best === null || section.ascentM > best.ascentM ? section : best), /** @type {Section | null} */ (null));
       if (biggest && (!active || active === biggest) && biggest.ascentM >= 1) {
-        const path = sectionPath(route.points, biggest.fromIndex, biggest.toIndex);
-        const middle = path[Math.floor(path.length / 2)];
-        addCallout(callout([middle[0], middle[1]], 'trending_up', `Biggest climb: +${Math.round(biggest.ascentM)} m`));
+        const [lat, lon] = biggest.path.middle;
+        addCallout(callout([lat, lon], 'trending_up', `Biggest climb: +${Math.round(biggest.ascentM)} m`));
       }
       stack();
     },

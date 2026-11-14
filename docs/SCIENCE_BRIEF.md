@@ -84,9 +84,9 @@ Also named by the mission, not yet placed on the map: Volcán Peña Blanca, Los 
 | Limit | Value | Source | Status |
 |---|---|---|---|
 | Walking pace | About 2 km/h "over relatively level regolith" | EVA-EXP-0042 Rev B, 19 Oct 2020, section 4.2.1.3.1 | **Read.** Lunar. Used as the product's default speed |
-| Slope a suited walker can handle | "Walking up/down/across a slope of up to 20°". The document notes Apollo 15 crossed slopes of about 17° | Same document, section 4.2.1.3 | **Read.** Lunar. Used as the product's "hard" mark |
-| Length of a walk | "EVAs of up to 8 hours in duration (6±2 hours)" | Same document, section 4.1.4 | **Read.** Suit capability, not Mars-specific |
-| Distance from shelter on foot | Up to 2 km from the lander in a straight line, and 16 km walked in total | Same document, section 4.2.1.3.1 | **Read.** Lunar. Our route's furthest point is 537 m from its start |
+| Slope a suited walker can handle | "Walking up/down/across a slope of up to 20°". The document notes Apollo 15 crossed slopes of about 17° | Same document, section 4.2.1.3 | **Read.** Lunar. The product's limit: ground steeper than 20° is never used, and 17° to 20° is marked "harder" (Apollo 15) |
+| Length of a walk | "EVAs of up to 8 hours in duration (6±2 hours)" | Same document, section 4.1.4 | **Read.** Suit capability, not Mars-specific. In the verdict: a plan over 8 h out is no-go |
+| Distance from shelter on foot | Up to 2 km from the lander in a straight line, and 16 km walked in total | Same document, section 4.2.1.3.1 | **Read.** Lunar. In the verdict: more than 2 km from the start is no-go. The safest full walk's furthest point is 520 m |
 | Walk-back after a rover failure | 12 km for a 6-hour walk at 2 km/h | Same document, section 4.2.1.3.1 | **Read.** Lunar, and not relevant to a walk this short |
 | Career radiation dose | "Total career effective radiation dose due to spaceflight radiation exposure shall be less than 600 mSv. This limit is universal for all ages and sexes." | NASA-STD-3001 Volume 1 Revision C, approved 15 Sep 2023, section 4.8.2 [V1 4030] | **Read** |
 | Radiation on the surface, normal day | 180 to 225 micrograys per day (absorbed dose, galactic cosmic rays) | Hassler et al. 2014, *Science* 343(6169), doi 10.1126/science.1244797 | Snippet. The abstract was read and confirms the measurements were made over 300 days from 7 Aug 2012, but gives no numbers. A dose equivalent near 0.64 mSv per day is widely quoted from this paper and remains **unconfirmed** |
