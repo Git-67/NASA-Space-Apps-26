@@ -22,11 +22,15 @@ from mars_data import REPO_ROOT
 
 OUTPUT_FILE = REPO_ROOT / "src" / "components" / "ui" / "icon-paths.js"
 SVG_URL = "https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/{name}/default/24px.svg"
-# Every icon the page uses.
+# Every icon the page uses, the Weather tab's included.
 ICON_NAMES = [
-    "add_location", "arrow_downward", "arrow_forward", "arrow_upward", "check_box_outline_blank", "close",
-    "directions_walk", "fast_forward", "filter_b_and_w", "flag", "grain", "grid_on", "label", "landscape",
-    "layers", "my_location", "palette", "pause", "play_arrow", "star", "today", "trending_up", "warning",
+    "add_location", "air", "arrow_downward", "arrow_forward", "arrow_upward", "blur_on", "calendar_month",
+    "check_box_outline_blank", "check_circle", "chevron_right", "close", "close_fullscreen", "cloud", "compress",
+    "cyclone", "dashboard", "directions_walk", "error", "event", "fast_forward", "filter_b_and_w", "flag",
+    "flare", "grain", "grid_on", "height", "help", "info", "label", "landscape", "layers", "light_mode", "my_location",
+    "open_in_full", "palette", "partly_cloudy_day", "pause", "play_arrow", "refresh", "scatter_plot", "schedule",
+    "show_chart", "star", "storm", "table_chart", "thermostat", "today", "trending_down", "trending_flat",
+    "trending_up", "visibility", "warning", "water_drop", "wb_twilight",
 ]
 VIEW_BOX = "0 -960 960 960"
 PATH = re.compile(r'<path d="([^"]+)"')
