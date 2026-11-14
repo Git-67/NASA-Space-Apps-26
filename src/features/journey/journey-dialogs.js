@@ -1,8 +1,10 @@
 // @ts-check
 /**
- * The journey's pop-ups, all in one modal <dialog>: a stop's tasks on
- * arrival, ending the walk, and a simulated space weather alert. The walk
- * waits while any of them is open (journey-mode.js).
+ * The journey's pop-ups: a stop's tasks on arrival, the end of the walk,
+ * ending it early, and a simulated space weather alert. The walk waits while
+ * any of them is open (journey-mode.js).
+ * They appear only in the map view, as a modal <dialog>: the visor view never
+ * asks for input (journey-mode.js shows read-only notices there instead).
  *
  * Built for gloved hands and dusty screens (journey-confirm.js):
  * - Submitting a stop's tasks takes two presses: "Submit tasks", then a
@@ -29,6 +31,7 @@ const END_STEPS = [
 /** Create the dialog (not yet on the page) and the ways to fill it. */
 export function createJourneyDialogs() {
   const dialog = /** @type {HTMLDialogElement} */ (el('dialog', { className: 'journey-dialog', attrs: { 'aria-labelledby': DIALOG_TITLE_ID } }));
+  const isOpen = () => dialog.open;
   /** What Escape does for what is shown now. */
   let onEscape = () => {};
   /** Whether the dialog must stay open (a stop's tasks wait for an answer). */
@@ -67,7 +70,7 @@ export function createJourneyDialogs() {
 
   return {
     element: dialog,
-    isOpen: () => dialog.open,
+    isOpen,
     close,
     /**
      * Three checks before the walk ends.

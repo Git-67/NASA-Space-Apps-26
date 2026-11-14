@@ -32,6 +32,12 @@ const MAX_ZOOM = 18;
 const ROUTE_PADDING_PX = 48;
 /** A followed walker this many pixels or more from their place on screen is moved back; less is not worth a redraw. */
 const RECENTRE_MIN_PX = 1;
+/**
+ * While following, the map's layers (route lines, contours, the tile grid) are told the view
+ * moved at most this often, in milliseconds. Telling them every frame redrew every route line
+ * 60 times a second; this rate is still far quicker than they leave their drawn margin.
+ */
+const SETTLE_EVERY_MS = 400;
 /** Side of the square hit area around each stop badge, in pixels (the 44px touch target). */
 const HIT_AREA_PX = 44;
 /** Stops closer together than this, in metres, would hide each other on the map. */
@@ -116,6 +122,8 @@ export function createMapView(container, route, extras, mode, onStopChosen) {
   addOverZoomNotice(map);
 
   const rotation = createMapRotation(map, container);
+  /** When the layers were last told the followed view settled, from performance.now(). */
+  let lastSettledAt = 0;
   const routeLayer = L.layerGroup().addTo(map);
   const astronaut = createAstronautMarker();
   const planRoute = createRouteLayer();
@@ -177,6 +185,7 @@ export function createMapView(container, route, extras, mode, onStopChosen) {
      */
     showPlan(plan, activeStopId) {
       planRoute.show(route, plan, activeStopId);
+      rotation.straightenText();
       const visited = plan.stops.map((stop) => stop.id);
       for (const [id, badge] of markerElements) {
         const position = visited.indexOf(id);
@@ -199,8 +208,16 @@ export function createMapView(container, route, extras, mode, onStopChosen) {
       // Where the point should sit, measured from the screen's centre, turned into the map box's axes.
       const wanted = rotation.toBox({ x: 0, y: (inset.top - inset.bottom) / 2 });
       const offset = map.latLngToContainerPoint([lat, lon]).subtract(map.getSize().divideBy(2)).subtract(wanted).round();
-      // An unanimated pan of a few pixels: no tile reload, no animation restarted every frame.
-      if (Math.abs(offset.x) >= RECENTRE_MIN_PX || Math.abs(offset.y) >= RECENTRE_MIN_PX) map.panBy(offset, { animate: false });
+      if (Math.abs(offset.x) < RECENTRE_MIN_PX && Math.abs(offset.y) < RECENTRE_MIN_PX) return;
+      // Move the map's pane only, the way Leaflet's own animated pans do each frame ('move'); tell
+      // the layers it settled ('moveend', which redraws them) at most every SETTLE_EVERY_MS.
+      /** @type {{ _rawPanBy: (offset: L.Point) => void }} */ (/** @type {unknown} */ (map))._rawPanBy(offset);
+      map.fire('move');
+      const now = performance.now();
+      if (now - lastSettledAt >= SETTLE_EVERY_MS) {
+        lastSettledAt = now;
+        map.fire('moveend');
+      }
     },
     setJourneyView(isOn) {
       rotation.setEnabled(isOn);

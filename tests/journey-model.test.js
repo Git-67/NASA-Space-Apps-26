@@ -1,7 +1,7 @@
 // @ts-check
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { bearingDeg, buildJourney, headingAhead, positionAt, turnToward, walkOn } from '../src/features/journey/journey-model.js';
+import { bearingDeg, buildJourney, hazardsWithin, headingAhead, positionAt, turnToward, walkOn } from '../src/features/journey/journey-model.js';
 import { drawDrill } from '../src/features/conditions/space-weather-drill.js';
 
 /** A leg in a plan. Test data only. */
@@ -95,4 +95,31 @@ test('drawDrill picks an alert our rule knows, with a duration in range', () => 
     assert.equal(drill.durationMinutes % 5, 0);
   }
   assert.notEqual(lowest.title, highest.title);
+});
+
+test('buildJourney marks steep stretches and sandy stops, in walking order', () => {
+  // Leg to b: easy then hard; b is a sandy hollow. Test data only.
+  const hazardous = /** @type {any} */ ({
+    stops: [{ id: 'a', terrain: 'ridge' }, { id: 'b', terrain: 'hollow' }],
+    sections: [
+      { toId: 'b', toName: 'b', isReturn: false, path: { runs: [
+        { difficulty: 'easier', points: [[0, 0], [0.001, 0]] },
+        { difficulty: 'hard', points: [[0.001, 0], [0.002, 0]] },
+      ] } },
+      section('a', [[0.002, 0], [0, 0]], true),
+    ],
+  });
+  const journey = buildJourney(hazardous);
+  assert.deepEqual(journey.hazards.map((hazard) => hazard.kind), ['steep', 'sand']);
+  assert.ok(Math.abs(journey.hazards[0].alongM - 59.157) < 0.5);
+  assert.equal(journey.hazards[1].alongM, journey.arrivals[0].alongM);
+  assert.equal(journey.points.length, 4);
+});
+
+test('hazardsWithin warns once each, only inside the warning distance', () => {
+  const journey = /** @type {any} */ ({ hazards: [{ alongM: 100 }, { alongM: 105 }, { alongM: 300 }] });
+  assert.equal(hazardsWithin(journey, 0, 50, 30), 0);
+  assert.equal(hazardsWithin(journey, 0, 80, 30), 2);
+  assert.equal(hazardsWithin(journey, 2, 80, 30), 2);
+  assert.equal(hazardsWithin(journey, 2, 400, 30), 3);
 });

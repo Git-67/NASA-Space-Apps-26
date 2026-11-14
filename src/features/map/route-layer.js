@@ -7,8 +7,8 @@
  *   tilt under 10°, 10° to 20°, 20° or more), so only the steep parts stand out.
  * - When a stop is chosen, the section leaving it is drawn solid and every
  *   other section translucent and dotted, so one leg can be read at a time.
- * - Hovering, tapping or focusing a section shows its distance, climb, time
- *   and difficulty.
+ * - Tapping or focusing a section shows its distance, climb, time and
+ *   difficulty; with a mouse, so does hovering (not on touch screens).
  * - Callouts mark the harder parts: the steepest point of a moderate or hard
  *   section, the biggest climb in the plan, and sandy hollows.
  * - An arrow halfway along each shown leg points the way the walker goes, so a
@@ -33,6 +33,8 @@ const CALLOUT_MIN_ZOOM = 13;
 const CALLOUT_GAP_PX = 4;
 /** Wider invisible line along each section, so it is easy to hover and tap (DESIGN.md: hit areas larger than the mark). */
 const HIT_WIDTH_PX = 24;
+/** Whether the main pointer can hover (a mouse), not a finger on a tablet. */
+const CAN_HOVER = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
 /**
  * Text describing one section, for its popup.
@@ -130,7 +132,9 @@ export function createRouteLayer() {
         }
         const hit = L.polyline(path, { className: 'map-route-hit', weight: HIT_WIDTH_PX, opacity: 0 }).addTo(layer);
         if (path.length >= 2 && (state === 'is-active' || section.isReturn)) directionArrow(path).addTo(layer);
-        hit.bindTooltip(sectionCard(section), { sticky: true, className: 'map-popup' });
+        // Hover info only where there is a real pointer: on a touch screen a tap would raise the
+        // tooltip and the popup together, and a stray touch would cover the map.
+        if (CAN_HOVER) hit.bindTooltip(sectionCard(section), { sticky: true, className: 'map-popup' });
         hit.bindPopup(sectionCard(section), { className: 'map-popup', maxWidth: 320 });
       }
 

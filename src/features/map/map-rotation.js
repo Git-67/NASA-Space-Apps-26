@@ -14,12 +14,19 @@
  *   off: Leaflet works out a pointer's map position from the unturned box.
  * - Taps on map features would land in the wrong place for the same reason;
  *   journey.css turns them off while walking (also fewer mis-taps in dust).
- * Text on the map is turned back the other way in journey.css, so it stays upright.
+ * Text on the map is turned back the other way, so it stays upright.
+ *
+ * Speed: turning a screen-sized map is the costliest thing journey mode does.
+ * The angle is set on the box itself (not through a CSS variable, which made
+ * every tile restyle), only for turns of a degree or more, and the few text
+ * labels are turned back one by one.
  */
 import L from '../../lib/leaflet.js';
 
-/** Turns smaller than this, in degrees, are not drawn: no style change every frame for nothing. */
-const MIN_TURN_DEG = 0.2;
+/** Turns smaller than this, in degrees, are not drawn: a degree is not visible, and each redraw is costly. */
+const MIN_TURN_DEG = 1;
+/** Map text that is turned back to stay upright. */
+const UPRIGHT_SELECTOR = '.map-label, .map-waypoint';
 
 /**
  * @typedef {object} LeafletDraggable The parts of Leaflet's private drag handler this file corrects.
@@ -53,6 +60,12 @@ export function createMapRotation(map, container) {
     ));
   });
 
+  /** Turn every map label back by the map's angle, so it reads upright. */
+  const straighten = () => {
+    const upright = `${(-angleDeg).toFixed(1)}deg`;
+    for (const label of container.querySelectorAll(UPRIGHT_SELECTOR)) /** @type {HTMLElement} */ (label).style.rotate = upright;
+  };
+
   /** Size the box to the screen's diagonal. */
   const fit = () => {
     const parent = container.parentElement;
@@ -74,7 +87,8 @@ export function createMapRotation(map, container) {
       if (!isTurning) {
         angleDeg = 0;
         container.style.removeProperty('--map-turned-side');
-        container.style.removeProperty('--map-angle');
+        container.style.rotate = '';
+        for (const label of container.querySelectorAll(UPRIGHT_SELECTOR)) /** @type {HTMLElement} */ (label).style.rotate = '';
         map.invalidateSize({ animate: false });
         return;
       }
@@ -88,7 +102,12 @@ export function createMapRotation(map, container) {
     setAngle(nextAngleDeg) {
       if (!isOn || Math.abs(nextAngleDeg - angleDeg) < MIN_TURN_DEG) return;
       angleDeg = nextAngleDeg;
-      container.style.setProperty('--map-angle', `${angleDeg.toFixed(1)}deg`);
+      container.style.rotate = `${angleDeg.toFixed(1)}deg`;
+      straighten();
+    },
+    /** Turn map text upright again, after labels are redrawn. */
+    straightenText() {
+      if (isOn) straighten();
     },
     /** @returns {number} Screen angle of the map, degrees clockwise. */
     angle() {

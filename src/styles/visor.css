@@ -89,3 +89,6 @@ body.is-visor .map-attribution { position: fixed; left: 50%; right: auto; bottom
 
 /* The walker's 88px marker would fill the minimap; it is drawn smaller there. */
 body.is-visor .map-astronaut { scale: 0.6; }
+
+/* A hazard just ahead, under the heading. */
+.visor-hazard { font: var(--type-body-sm-medium); }

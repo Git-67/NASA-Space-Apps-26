@@ -12,7 +12,7 @@
  */
 
 /**
- * @typedef {'arrival' | 'step' | 'submitted' | 'complete' | 'ended' | 'caution' | 'no-go' | 'clear'} Cue
+ * @typedef {'arrival' | 'step' | 'submitted' | 'complete' | 'ended' | 'caution' | 'no-go' | 'clear' | 'hazard'} Cue
  * @typedef {{ hz: number, seconds: number }} Note
  */
 
@@ -41,6 +41,8 @@ const CUES = /** @type {Record<Cue, { wave: OscillatorType, notes: Note[] }>} */
       { hz: 880, seconds: 0.16 }, { hz: 587.33, seconds: 0.22 },
     ],
   },
+  // A hazard just ahead (steep ground, sand): a low double note.
+  hazard: { wave: 'triangle', notes: [{ hz: 440, seconds: 0.1 }, { hz: 0, seconds: 0.05 }, { hz: 440, seconds: 0.16 }] },
   // An alert over: one soft rising note.
   clear: { wave: 'sine', notes: [{ hz: 587.33, seconds: 0.1 }, { hz: 783.99, seconds: 0.18 }] },
 });
