@@ -7,3 +7,6 @@ node_modules/
 .vscode/
 .idea/
 data/raw/donki/
+
+# Personal chat handoff notes (active-memory); not project files.
+handoff*.md
