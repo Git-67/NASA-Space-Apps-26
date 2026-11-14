@@ -16,6 +16,7 @@ import { compareWithSeason, decideVerdict } from '../features/conditions/conditi
 import { renderConditions, renderSpaceWeather, renderVerdict } from '../features/conditions/conditions-view.js';
 import { assessSpaceWeather } from '../features/conditions/space-weather-model.js';
 import { refreshSpaceWeather } from '../features/conditions/space-weather-live.js';
+import { drawDrill } from '../features/conditions/space-weather-drill.js';
 import { renderConnection } from '../features/connection/connection-view.js';
 import { canReachNasa, detectMode, setPrefersOffline } from '../lib/connection.js';
 import { loadBriefingData } from './load-briefing-data.js';
@@ -131,8 +132,11 @@ function start({ route, records, places, calibration, spaceWeather: bundledSpace
     }, route, plan);
     renderTasks(requireElement('tasks'), plan, state.activeStopId);
     beginButton.disabled = plan.sections.length === 0;
-    mapView.showPlan(plan, state.activeStopId);
-    mapView.highlightStop(state.activeStopId);
+    // During a journey the map shows the leg being walked; journey mode redraws the page's view when it ends.
+    if (!journeyMode.isActive()) {
+      mapView.showPlan(plan, state.activeStopId);
+      mapView.highlightStop(state.activeStopId);
+    }
   }
 
   /** @param {string} value */
@@ -169,12 +173,14 @@ function start({ route, records, places, calibration, spaceWeather: bundledSpace
         return {
           level: reason.level,
           text: reason.text,
-          isLive,
+          source: isLive ? 'live' : 'stored',
           asOf: isLive && liveReadAt ? `Read from NASA at ${liveReadAt.toISOString().slice(11, 16)} UTC` : `Stored data up to ${latest ?? 'unknown'}`,
         };
       },
       refresh: goLive,
+      drill: () => drawDrill(Math.random),
     },
+    onEnd: () => redraw(),
   });
   const beginButton = /** @type {HTMLButtonElement} */ (requireElement('begin-journey'));
   beginButton.addEventListener('click', () => {

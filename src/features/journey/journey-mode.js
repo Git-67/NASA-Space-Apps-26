@@ -3,53 +3,73 @@
  * "Begin journey": a full-screen, simulated walk of the current plan.
  *
  * The page hides its top bar and side panel (fewer things to press by mistake,
- * more map to see through a dusty visor), zooms in on the walker and moves
- * them from the start to the end of the plan at NASA's planning pace (2 km/h),
- * sped up so a walk takes about a minute. At each stop the walk pauses and the
- * stop's tasks pop up. The walker faces the way the device's compass points,
- * where it has one, or else the direction of travel.
+ * more map to see through a dusty visor), zooms in close on the walker and
+ * moves them from the start to the end of the plan at NASA's planning pace
+ * (2 km/h), sped up so a walk takes a few minutes.
+ * - The map keeps the walker centred and turns so the way they face is up,
+ *   until the walker drags it; "Re-centre" brings both back.
+ * - Only the leg being walked is drawn solid; the rest are dotted and faint
+ *   until the walker reaches the stop where they begin.
+ * - At each stop the walk waits for the stop's tasks to be submitted (two
+ *   presses). Ending the walk takes three (journey-dialogs.js).
+ * - "Simulate alert" plays a random space weather alert, labelled as a drill.
+ * The walker faces the way the device's compass points, where it has one,
+ * or else the direction of travel.
  *
  * SIMULATION: there is no real astronaut position; the overlay says so.
  */
 import { startCompass } from '../../lib/compass.js';
-import { buildJourney, nextArrival, positionAt } from './journey-model.js';
+import { formatDuration } from '../../lib/mars.js';
+import { buildJourney, headingAhead, positionAt, turnToward, walkOn } from './journey-model.js';
 import { createJourneyHud } from './journey-hud.js';
 
 /** @typedef {import('../plan/plan-model.js').Plan} Plan */
 /** @typedef {import('../map/map-view.js').MapViewApi} MapViewApi */
 /** @typedef {import('./journey-hud.js').WeatherSummary} WeatherSummary */
+/** @typedef {import('../conditions/space-weather-drill.js').Drill} Drill */
 
 /** How much faster than real walking the simulation runs; the button cycles through these. */
 const SPEEDS = [60, 120, 30];
-/** Zoom while walking: the sharpest real imagery (HiRISE is published to zoom 16), close enough to see the ground. */
-const WALK_ZOOM = 16;
+/** Zoom while walking: one step past the sharpest real imagery (HiRISE, zoom 16), so the ground near the walker is large. */
+const WALK_ZOOM = 17;
 /** Under reduced motion, the walker moves in steps this far apart in time, in milliseconds. */
 const STEP_MS = 1000;
+/** Longest time one frame may advance the walk, in milliseconds: after the tab was hidden, the walker must not jump past stops. */
+const MAX_FRAME_MS = 1500;
 /** The status text changes at most this often, in milliseconds: no need to rewrite it every frame. */
 const STATUS_EVERY_MS = 250;
 /** How often live space weather is read again during a walk, in milliseconds (15 minutes). */
 const WEATHER_REFRESH_MS = 15 * 60 * 1000;
+/** The map's heading looks this far ahead along the path, in metres, so it does not swing at every small bend. */
+const LOOK_AHEAD_M = 25;
+/** The map turns most of the way to a new heading in about this long, in milliseconds. */
+const TURN_TIME_MS = 600;
 
 /**
  * Set up journey mode.
  * @param {object} options
  * @param {MapViewApi} options.map
  * @param {number} options.walkingSpeedKmh Real walking pace to simulate.
- * @param {{ current: () => WeatherSummary, refresh: () => Promise<void> }} options.weather Space weather for now.
- * @returns {{ begin: (plan: Plan) => Promise<void>, end: () => void, isActive: () => boolean }}
+ * @param {{ current: () => WeatherSummary, refresh: () => Promise<void>, drill: () => Drill }} options.weather
+ *   Space weather for now, how to read it again, and how to draw a simulated alert.
+ * @param {() => void} options.onEnd Called after the journey closes, so the page can redraw its own view.
+ * @returns {{ begin: (plan: Plan) => Promise<void>, isActive: () => boolean }}
  */
-export function createJourneyMode({ map, walkingSpeedKmh, weather }) {
+export function createJourneyMode({ map, walkingSpeedKmh, weather, onEnd }) {
   const metresPerMs = (walkingSpeedKmh * 1000) / 3_600_000;
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   /** @type {ReturnType<typeof buildJourney> | null} */
   let journey = null;
   /** @type {Plan | null} */
   let plan = null;
-  let walkedM = 0;
+  /** Metres walked, and the index of the next stop not yet reached. */
+  let progress = { walkedM: 0, nextIndex: 0 };
   let isPlaying = false;
   let speedIndex = 0;
   /** @type {number | null} */
   let compassHeading = null;
+  /** Heading the map is turned to (compass degrees); eases towards the walker's. */
+  let mapHeading = /** @type {number | null} */ (null);
   /** @type {(() => void) | null} */
   let stopCompass = null;
   /** @type {number | null} */
@@ -57,17 +77,23 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather }) {
   /** @type {number | null} */
   let weatherTimer = null;
   let lastTime = 0;
+  /** Simulated time since the walk began, in milliseconds: real time times the speed. */
+  let simulatedMs = 0;
+  /** @type {{ drill: Drill, endsAtMs: number } | null} A simulated alert under way. */
+  let drill = null;
   /** @type {Element | null} */
   let returnFocusTo = null;
-  /** Whether the map keeps the walker in view. Dragging the map stops this until "Re-centre". */
+  /** Whether the map keeps the walker centred. Dragging the map stops this until "Re-centre". */
   let isFollowing = true;
   let lastStatusAt = 0;
+  let insets = { top: 0, bottom: 0 };
 
   const hud = createJourneyHud({
-    onEnd: () => end(),
-    onTogglePlay: () => { isPlaying = !isPlaying; lastTime = performance.now(); render(); },
-    onSpeed: () => { speedIndex = (speedIndex + 1) % SPEEDS.length; render(); },
-    onRecentre: () => { isFollowing = true; hud.setFollowing(true); render(true); },
+    onEnd: () => askToEnd(),
+    onTogglePlay: () => { isPlaying = !isPlaying; render(0); },
+    onSpeed: () => { speedIndex = (speedIndex + 1) % SPEEDS.length; render(0); },
+    onRecentre: () => { isFollowing = true; hud.setFollowing(true); render(0, true); },
+    onDrill: () => startDrill(),
   });
   map.onUserPan(() => {
     if (!journey) return;
@@ -75,51 +101,78 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather }) {
     hud.setFollowing(false);
   });
 
-  /**
-   * Draw the walker, keep them in view, and refresh the status text.
-   * @param {boolean} [isRecentring] Centre on the walker now instead of waiting for them to near an edge.
-   */
-  function render(isRecentring = false) {
+  /** Draw the leg being walked solid and the rest faint, and mark the stop it leads to. */
+  function showLeg() {
     if (!journey || !plan) return;
-    const position = positionAt(journey, walkedM);
-    const heading = compassHeading ?? position.headingDeg;
-    map.showAstronaut(position.lat, position.lon, heading);
-    if (isRecentring) map.follow(position.lat, position.lon, null, !prefersReducedMotion);
-    // Small, unanimated pans: an animation restarted every frame would stutter.
-    else if (isFollowing) map.keepInView(position.lat, position.lon, hud.insets(), false);
+    const leg = plan.sections[progress.nextIndex];
+    map.showPlan(plan, leg ? leg.fromId : null);
+    map.highlightStop(leg ? leg.toId : null);
+  }
+
+  /**
+   * Draw the walker, keep them centred with the map turned their way, and refresh the status text.
+   * @param {number} elapsedMs Time since the last frame, for easing the map's turn.
+   * @param {boolean} [isSnap] Turn and centre at once (starting, or "Re-centre").
+   */
+  function render(elapsedMs, isSnap = false) {
+    if (!journey || !plan) return;
     const now = performance.now();
-    if (!isRecentring && isPlaying && now - lastStatusAt < STATUS_EVERY_MS) return;
+    const isStatusDue = isSnap || now - lastStatusAt >= STATUS_EVERY_MS;
+    if (isStatusDue) insets = hud.insets();
+    const position = positionAt(journey, progress.walkedM);
+    const next = journey.arrivals[progress.nextIndex] ?? null;
+    const travel = headingAhead(journey, progress.walkedM, LOOK_AHEAD_M, next ? next.alongM : journey.totalM);
+    const facing = compassHeading ?? travel;
+    map.showAstronaut(position.lat, position.lon, facing);
+    if (isFollowing) {
+      mapHeading = isSnap || prefersReducedMotion || mapHeading === null
+        ? facing
+        : turnToward(mapHeading, facing, 1 - Math.exp(-elapsedMs / TURN_TIME_MS));
+      map.setHeading(mapHeading);
+      hud.setNorth(-mapHeading);
+      map.keepCentred(position.lat, position.lon, insets);
+    }
+    if (!isStatusDue) return;
     lastStatusAt = now;
-    const next = nextArrival(journey, walkedM);
-    const metresToGo = next ? next.alongM - walkedM : 0;
+    const metresToGo = next ? next.alongM - progress.walkedM : 0;
     hud.setStatus({
       nextName: next ? next.name : null,
       metresToGo,
       minutesToGo: metresToGo / metresPerMs / 60_000,
       facingFrom: compassHeading === null ? 'travel' : 'compass',
+      enlargement: map.imageryEnlargement(),
     });
     hud.setControls(isPlaying, SPEEDS[speedIndex]);
+    if (drill) showWeather();
+  }
+
+  /** @param {import('./journey-model.js').Arrival} arrival */
+  function arrive(arrival) {
+    if (!plan) return;
+    isPlaying = false;
+    showLeg();
+    const stop = plan.stops.find((item) => item.id === arrival.stopId);
+    hud.dialogs.showArrival(arrival, stop, plan.stops.length, () => {
+      if (arrival.isFinish) { end(); return; }
+      isPlaying = true;
+      render(0);
+    });
   }
 
   /** @param {number} now performance.now() */
   function tick(now) {
-    if (journey && plan && isPlaying && !hud.isDialogOpen()) {
-      const next = nextArrival(journey, walkedM);
-      walkedM += (now - lastTime) * metresPerMs * SPEEDS[speedIndex];
-      if (next && walkedM >= next.alongM) {
-        walkedM = next.alongM;
-        isPlaying = false;
-        const stop = plan.stops.find((item) => item.id === next.stopId);
-        hud.showArrival(next, stop, plan.stops.length, () => {
-          if (next.isFinish) { end(); return; }
-          isPlaying = true;
-          lastTime = performance.now();
-          render(isFollowing);
-        });
-      }
-      render();
-    }
+    if (!journey) return;
+    const elapsedMs = Math.min(now - lastTime, MAX_FRAME_MS);
     lastTime = now;
+    const speed = SPEEDS[speedIndex];
+    simulatedMs += elapsedMs * speed;
+    if (drill && simulatedMs >= drill.endsAtMs) { drill = null; showWeather(); }
+    if (isPlaying && !hud.dialogs.isOpen()) {
+      const step = walkOn(journey, progress, elapsedMs * metresPerMs * speed);
+      progress = { walkedM: step.walkedM, nextIndex: step.nextIndex };
+      if (step.arrival) arrive(step.arrival);
+    }
+    render(elapsedMs);
     schedule();
   }
 
@@ -130,12 +183,41 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather }) {
   }
 
   function showWeather() {
-    hud.setWeather(weather.current());
+    if (!drill) { hud.setWeather(weather.current()); return; }
+    const minutesLeft = Math.max(0, (drill.endsAtMs - simulatedMs) / 60_000);
+    hud.setWeather({
+      level: drill.drill.level,
+      text: `${drill.drill.title}. ${drill.drill.text}`,
+      source: 'drill',
+      asOf: `Drill ends in ${formatDuration(Math.ceil(minutesLeft))} (simulated time)`,
+    });
+  }
+
+  /** Play a random simulated alert. A no-go alert pauses the walk, as a real one would. */
+  function startDrill() {
+    const next = weather.drill();
+    const isPausing = isPlaying && next.level === 'no-go';
+    if (isPausing) isPlaying = false;
+    drill = { drill: next, endsAtMs: simulatedMs + next.durationMinutes * 60_000 };
+    showWeather();
+    hud.dialogs.showDrill(next, isPausing, () => render(0));
+    render(0);
+  }
+
+  function askToEnd() {
+    if (!journey || hud.dialogs.isOpen()) return;
+    hud.dialogs.askToEnd(() => end(), () => render(0));
   }
 
   /** @param {KeyboardEvent} event */
   function onKey(event) {
-    if (event.key === 'Escape' && !hud.isDialogOpen()) end();
+    // Escape asks, like the End button; it never ends the walk at once.
+    if (event.key === 'Escape' && !hud.dialogs.isOpen()) askToEnd();
+  }
+
+  function onResize() {
+    map.resize();
+    render(0, true);
   }
 
   /** @param {Plan} nextPlan */
@@ -144,21 +226,26 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather }) {
     returnFocusTo = document.activeElement;
     plan = nextPlan;
     journey = buildJourney(nextPlan);
-    walkedM = 0;
+    progress = { walkedM: 0, nextIndex: 0 };
     isPlaying = true;
     compassHeading = null;
+    mapHeading = null;
+    simulatedMs = 0;
+    drill = null;
     isFollowing = true;
     hud.setFollowing(true);
     document.body.classList.add('is-journey');
-    map.resize();
+    map.setJourneyView(true);
     const start = positionAt(journey, 0);
     map.follow(start.lat, start.lon, WALK_ZOOM, false);
+    showLeg();
     hud.setShown(true);
     showWeather();
     weather.refresh().then(showWeather, showWeather);
     weatherTimer = window.setInterval(() => { weather.refresh().then(showWeather, showWeather); }, WEATHER_REFRESH_MS);
     document.addEventListener('keydown', onKey);
-    render();
+    window.addEventListener('resize', onResize);
+    render(0, true);
     lastTime = performance.now();
     schedule();
     stopCompass = await startCompass((heading) => { compassHeading = heading; });
@@ -168,17 +255,20 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather }) {
     if (!journey) return;
     journey = null;
     plan = null;
+    drill = null;
     if (frame !== null) { window.cancelAnimationFrame(frame); window.clearTimeout(frame); }
     if (weatherTimer !== null) window.clearInterval(weatherTimer);
     stopCompass?.();
     stopCompass = null;
     document.removeEventListener('keydown', onKey);
+    window.removeEventListener('resize', onResize);
     hud.setShown(false);
     map.hideAstronaut();
     document.body.classList.remove('is-journey');
-    map.resize();
+    map.setJourneyView(false);
+    onEnd();
     if (returnFocusTo instanceof HTMLElement) returnFocusTo.focus();
   }
 
-  return { begin, end, isActive: () => journey !== null };
+  return { begin, isActive: () => journey !== null };
 }

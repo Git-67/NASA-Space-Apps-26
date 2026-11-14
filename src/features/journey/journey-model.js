@@ -13,6 +13,9 @@
  */
 import { greatCircleM } from '../../lib/mars.js';
 
+/** Closer than this, in metres, two points give no reliable direction; the current segment's is used. */
+const MIN_LOOK_AHEAD_M = 1;
+
 /** @typedef {import('../plan/plan-model.js').Plan} Plan */
 /**
  * @typedef {object} JourneyPoint
@@ -97,11 +100,49 @@ export function positionAt(journey, alongM) {
 }
 
 /**
- * The first stop not yet reached.
+ * Walk on by some distance, stopping at the next stop not yet reached.
+ * Each stop is returned exactly once, in order, even when two stops lie at the
+ * same distance along the walk (the walk then stops at each in turn).
+ * @param {Journey} journey
+ * @param {{ walkedM: number, nextIndex: number }} progress Metres walked, and the index in
+ *   journey.arrivals of the next stop not yet reached.
+ * @param {number} metres How far to walk on (not negative).
+ * @returns {{ walkedM: number, nextIndex: number, arrival: Arrival | null }} The new progress, and the
+ *   stop reached on the way, if any.
+ */
+export function walkOn(journey, progress, metres) {
+  const next = journey.arrivals[progress.nextIndex];
+  const walkedM = Math.min(progress.walkedM + metres, journey.totalM);
+  if (!next || walkedM < next.alongM) return { walkedM, nextIndex: progress.nextIndex, arrival: null };
+  return { walkedM: next.alongM, nextIndex: progress.nextIndex + 1, arrival: next };
+}
+
+/**
+ * The direction of travel, looking a little ahead so the map does not swing at
+ * every small bend of the rover's track. The look stops at the next stop, so
+ * the map does not turn early towards the leg after it.
  * @param {Journey} journey
  * @param {number} alongM Metres walked.
- * @returns {Arrival | null} Null when the walk is over.
+ * @param {number} aheadM How far ahead to look, in metres.
+ * @param {number} limitM Look no further than this distance along the walk (the next stop).
+ * @returns {number} Compass degrees, 0 north, clockwise.
  */
-export function nextArrival(journey, alongM) {
-  return journey.arrivals.find((arrival) => arrival.alongM > alongM) ?? null;
+export function headingAhead(journey, alongM, aheadM, limitM) {
+  const here = positionAt(journey, alongM);
+  const targetM = Math.min(alongM + aheadM, limitM, journey.totalM);
+  if (targetM - alongM < MIN_LOOK_AHEAD_M) return here.headingDeg;
+  const there = positionAt(journey, targetM);
+  return bearingDeg(here.lat, here.lon, there.lat, there.lon);
+}
+
+/**
+ * Turn part of the way from one heading towards another, the short way round.
+ * @param {number} currentDeg Compass degrees.
+ * @param {number} targetDeg Compass degrees.
+ * @param {number} share How much of the turn to make, 0 (none) to 1 (all of it).
+ * @returns {number} Compass degrees, 0 to 360.
+ */
+export function turnToward(currentDeg, targetDeg, share) {
+  const difference = ((((targetDeg - currentDeg) % 360) + 540) % 360) - 180;
+  return (((currentDeg + difference * share) % 360) + 360) % 360;
 }
