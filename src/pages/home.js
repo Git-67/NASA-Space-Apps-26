@@ -10,7 +10,7 @@ import { earthDateOfSol, solOnEarthDate } from '../lib/mars.js';
 import { initThemeToggle } from '../features/theme/theme-toggle.js';
 import { createMapView } from '../features/map/map-view.js';
 import { buildPlan, DEFAULT_WALKING_SPEED_KMH, recommendedOrder } from '../features/plan/plan-model.js';
-import { renderPlan, renderTasks } from '../features/plan/plan-view.js';
+import { renderMission, renderPlan, renderTasks } from '../features/plan/plan-view.js';
 import { createStopPicker } from '../features/plan/stop-picker.js';
 import { compareWithSeason, decideVerdict } from '../features/conditions/conditions-model.js';
 import { renderConditions, renderSpaceWeather, renderVerdict } from '../features/conditions/conditions-view.js';
@@ -22,6 +22,8 @@ import { renderConnection } from '../features/connection/connection-view.js';
 import { canReachNasa, detectMode, setPrefersOffline } from '../lib/connection.js';
 import { loadBriefingData } from './load-briefing-data.js';
 import { createJourneyMode } from '../features/journey/journey-mode.js';
+import { missionForSol } from '../features/plan/daily-mission.js';
+import { addCustomPoint } from '../features/plan/custom-points.js';
 
 /** @typedef {import('./load-briefing-data.js').BriefingData} BriefingData */
 
@@ -40,10 +42,19 @@ function start({ route, records, places, calibration, spaceWeather: bundledSpace
   const today = new Date();
   const presentSol = solOnEarthDate(today.toISOString().slice(0, 10), reference);
 
-  const recommended = recommendedOrder(route);
+  /** The sol's mission (ours), and its stops in the safest order. */
+  const missionFor = (/** @type {number} */ sol) => {
+    const mission = missionForSol(sol, route.stops);
+    return { mission, order: recommendedOrder(route, mission.stopIds) };
+  };
+  let solMission = missionFor(DEFAULT_SOL);
   const state = {
-    /** Stops to visit after the start, in visiting order. Opens on the recommended plan. */
-    visitOrder: recommended,
+    /** Stops to visit after the start, in visiting order. Opens on the sol's mission. */
+    visitOrder: solMission.order,
+    /** Whether the walk is still the sol's mission; it follows the sol until the crew changes the stops. */
+    isMissionPlan: true,
+    /** Whether the next tap on the map adds a point. */
+    isPicking: false,
     /** The chosen stop: its leg is brought forward on the map and its tasks highlighted. Null shows the whole walk. */
     activeStopId: /** @type {string | null} */ (null),
     sol: DEFAULT_SOL,
@@ -73,12 +84,23 @@ function start({ route, records, places, calibration, spaceWeather: bundledSpace
     redraw();
     document.getElementById(`tasks-${stopId}`)?.scrollIntoView({ block: 'nearest' });
   };
+  const missionBox = requireElement('mission');
   const mapView = createMapView(requireElement('map'), route, { places, calibration }, state.mode, focusStop);
-  const recommendedKm = (buildPlan(route, recommended, DEFAULT_WALKING_SPEED_KMH).distanceM / 1000).toFixed(1);
-  const picker = createStopPicker(requireElement('stop-picker'), route, `All ${route.stops.length} stops, safest order (${recommendedKm} km)`, {
-    onAdd: (stopId) => { state.visitOrder = [...state.visitOrder, stopId]; redraw(); },
-    onRecommended: () => { state.visitOrder = recommended; redraw(); },
+  /** The picker's top option: the sol's mission. */
+  const missionOption = () => {
+    const km = (buildPlan(route, solMission.order, DEFAULT_WALKING_SPEED_KMH).distanceM / 1000).toFixed(1);
+    return { label: `Mission: ${solMission.mission.title}`, detail: `${solMission.order.length} stops, safest order (${km} km)` };
+  };
+  const useMission = () => {
+    state.isMissionPlan = true;
+    state.visitOrder = solMission.order;
+    redraw();
+  };
+  const picker = createStopPicker(requireElement('stop-picker'), route, missionOption(), {
+    onAdd: (stopId) => { state.isMissionPlan = false; state.visitOrder = [...state.visitOrder, stopId]; redraw(); },
+    onRecommended: useMission,
     onRemove: (stopId) => {
+      state.isMissionPlan = false;
       state.visitOrder = state.visitOrder.filter((id) => id !== stopId);
       if (state.activeStopId === stopId) state.activeStopId = null;
       redraw();
@@ -89,6 +111,7 @@ function start({ route, records, places, calibration, spaceWeather: bundledSpace
       if (from < 0 || to < 0 || to >= state.visitOrder.length) return;
       const order = [...state.visitOrder];
       [order[from], order[to]] = [order[to], order[from]];
+      state.isMissionPlan = false;
       state.visitOrder = order;
       redraw();
       const name = route.stops.find((stop) => stop.id === stopId)?.name;
@@ -117,13 +140,14 @@ function start({ route, records, places, calibration, spaceWeather: bundledSpace
       + (state.mode === 'online' && latest === date ? 'Space weather is live from NASA.' : `Space weather is the latest stored: ${latest ?? 'none'}.`);
     renderConnection(connection, { mode: state.mode, dataTo: latest, note: state.connectionNote });
 
-    renderVerdict(requireElement('verdict'), decideVerdict({
+    renderVerdict(requireElement('verdict'), requireElement('verdict-reasons'), decideVerdict({
       planMinutes: plan.totalMinutes, furthestM: plan.furthestM, record, comparison,
       spaceWeather: assessSpaceWeather(spaceWeather, weatherDate),
     }));
     renderConditions(requireElement('conditions'), state.sol, record, comparison);
     renderSpaceWeather(requireElement('space-weather'), spaceWeather, weatherDate);
     picker.update(state.visitOrder, state.activeStopId);
+    renderMission(missionBox, { sol: state.sol, ...solMission.mission, isFollowed: state.isMissionPlan }, useMission);
     renderPlan({
       sections: requireElement('sections'),
       totals: requireElement('totals'),
@@ -145,6 +169,10 @@ function start({ route, records, places, calibration, spaceWeather: bundledSpace
     const sol = Math.round(Number(value));
     if (!Number.isFinite(sol)) return;
     state.sol = Math.min(presentSol, Math.max(firstSol, sol));
+    // A new sol brings its own mission; the walk follows it unless the crew changed the stops.
+    solMission = missionFor(state.sol);
+    picker.setRecommended(missionOption());
+    if (state.isMissionPlan) state.visitOrder = solMission.order;
     redraw();
   };
   /** When live space weather was last read, for the journey's weather card. */
@@ -185,6 +213,26 @@ function start({ route, records, places, calibration, spaceWeather: bundledSpace
     onEnd: () => redraw(),
   });
   const beginButton = /** @type {HTMLButtonElement} */ (requireElement('begin-journey'));
+
+  // "Add a point on the map": the next tap near a rover track adds a stop there and puts it in the walk.
+  const addPointButton = /** @type {HTMLButtonElement} */ (requireElement('add-point'));
+  const setPicking = (/** @type {boolean} */ isPicking) => {
+    state.isPicking = isPicking;
+    addPointButton.setAttribute('aria-pressed', String(isPicking));
+    requireElement('add-point-label').textContent = isPicking ? 'Cancel adding' : 'Add a point on the map';
+    if (!isPicking) { mapView.stopPicking(); return; }
+    requireElement('map').scrollIntoView({ block: 'nearest' });
+    mapView.startPicking((lat, lon) => {
+      const added = addCustomPoint(route, lat, lon);
+      if ('error' in added) { mapView.showPickMessage(added.error); return; }
+      mapView.addStop(added.stop);
+      setPicking(false);
+      state.isMissionPlan = false;
+      if (!state.visitOrder.includes(added.stop.id)) state.visitOrder = [...state.visitOrder, added.stop.id];
+      redraw();
+    });
+  };
+  addPointButton.addEventListener('click', () => setPicking(!state.isPicking));
   beginButton.addEventListener('click', () => {
     journeyMode.begin(buildPlan(route, state.visitOrder, DEFAULT_WALKING_SPEED_KMH));
   });

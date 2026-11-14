@@ -18,9 +18,14 @@ Rules:    NASA's, from the Exploration EVA System Concept of Operations
           under 17 easier, 17 to 20 harder, 20 or more beyond the suit limit.
           Ground beyond the limit is NOT USED. These are lunar figures; NASA
           has set none for Mars.
-Search:   Dijkstra's shortest path by distance over the usable ground. NASA
-          publishes no weighting between the two usable classes, so none is
-          invented: the safest path is the shortest one within NASA's limits.
+Search:   A* (A-star) shortest path by distance over the usable ground,
+          guided by the straight-line (great-circle) distance to the goal.
+          That guess never overstates the distance left, and no step is
+          shorter than the straight line between its ends, so A* returns
+          exactly the shortest path, as Dijkstra's method did, while
+          exploring fewer places. NASA publishes no weighting between the
+          two usable classes, so none is invented: the safest path is the
+          shortest one within NASA's limits.
 
 Units: metres and degrees. Coordinates as the sources give them.
 """
@@ -76,6 +81,7 @@ class Network:
         self.places: list[list[float]] = []  # (lon, lat, elevation) of each place
         self.edges: dict[int, list[tuple[int, float, float, str]]] = {}  # place -> (other, length m, tilt deg, class)
         self._grid: dict[tuple[int, int], list[int]] = {}
+        self.explored = 0  # places expanded by the last search
 
     def _cell(self, lon: float, lat: float) -> tuple[int, int]:
         size_deg = math.degrees(JOIN_M / 3_389_500.0)
@@ -114,27 +120,37 @@ class Network:
         """The place closest to a position."""
         return min(range(len(self.places)), key=lambda i: distance_m(self.places[i][1], self.places[i][0], lat, lon))
 
+    def straight_m(self, a: int, b: int) -> float:
+        """Great-circle distance between two places, in metres: A*'s guess of the distance left."""
+        pa, pb = self.places[a], self.places[b]
+        return distance_m(pa[1], pa[0], pb[1], pb[0])
+
     def safest(self, start: int, goal: int) -> list[tuple[int, float, str]]:
-        """Shortest path as (place, tilt of the step into it, class), start first.
+        """Shortest path as (place, tilt of the step into it, class), start first, found by A*.
+
+        Sets `self.explored` to how many places the search expanded (for comparison).
 
         Raises:
             ValueError: when the two places are not connected.
         """
         best = {start: 0.0}
         came: dict[int, tuple[int, float, str]] = {}
-        queue = [(0.0, start)]
+        # Ordered by distance so far plus the straight-line distance still to go.
+        queue = [(self.straight_m(start, goal), 0.0, start)]
+        self.explored = 0
         while queue:
-            cost, node = heapq.heappop(queue)
+            _, cost, node = heapq.heappop(queue)
+            if cost > best[node]:
+                continue  # an older, longer way to this place
+            self.explored += 1
             if node == goal:
                 break
-            if cost > best[node]:
-                continue
             for other, length, tilt, difficulty in self.edges[node]:
                 new = cost + length
                 if new < best.get(other, math.inf):
                     best[other] = new
                     came[other] = (node, tilt, difficulty)
-                    heapq.heappush(queue, (new, other))
+                    heapq.heappush(queue, (new + self.straight_m(other, goal), new, other))
         if goal not in best:
             raise ValueError("The two stops are not joined by rover-driven ground")
         path = [(goal, came[goal][1] if goal in came else 0.0, came[goal][2] if goal in came else "easier")]

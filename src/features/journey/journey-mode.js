@@ -224,7 +224,6 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather, limits, onEnd
       nextName: next ? next.name : null,
       metresToGo,
       minutesToGo: metresToGo / metresPerMs / 60_000,
-      facingFrom: compassHeading === null ? 'travel' : 'compass',
       enlargement: map.imageryEnlargement(),
     });
     hud.setControls(isPlaying, SPEEDS[speedIndex]);

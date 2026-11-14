@@ -85,8 +85,8 @@ a { color: var(--color-link); }
   color: var(--color-accent);
 }
 .telemetry { font: var(--type-telemetry); color: var(--color-text-secondary); }
-.lede { font: var(--type-body-sm); color: var(--color-text-secondary); }
-.basis, .data-source-caption { font: var(--type-caption); color: var(--color-text-muted); }
+/* Supporting text: 14px, the smallest size read easily at arm's length on a tablet in glare. */
+.basis, .data-source-caption { font: var(--type-body-sm); color: var(--color-text-muted); }
 .data-source-caption { padding-top: var(--space-xs); }
 .numeric { text-align: right; font-variant-numeric: tabular-nums; }
 
@@ -162,3 +162,7 @@ a { color: var(--color-link); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
+
+/* When: "Today" and the exact sol side by side, the slider under them. */
+.when-row { display: flex; align-items: flex-end; gap: var(--space-sm); }
+.when-row .when-sol { flex: 1; }

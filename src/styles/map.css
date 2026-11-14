@@ -110,7 +110,7 @@
 .map-layer-body legend { font: var(--type-caption-bold); color: var(--color-text-secondary); padding: 0; }
 .map-layer-choice { padding-bottom: var(--space-xs); border-bottom: 1px solid var(--color-hairline); }
 .map-layer-choice:last-child { border-bottom: 0; }
-.map-layer-choice input { width: var(--space-lg); height: var(--space-lg); accent-color: var(--color-primary); flex: none; }
+.map-layer-choice input { width: var(--space-xl); height: var(--space-xl); accent-color: var(--color-primary); flex: none; }
 .map-layer-choice input:disabled + label { color: var(--color-text-disabled); }
 .map-layer-status { font: var(--type-caption); color: var(--color-text-secondary); }
 .map-layer-status:empty { display: none; }
@@ -232,3 +232,26 @@
   border-radius: var(--radius-full);
   box-shadow: 0 0 0 2px var(--color-route);
 }
+
+/* map-picker: adding a point. Every rover track shows as a thin dotted line; a banner says what to do. */
+.map-tracks { stroke: var(--color-route); stroke-width: 2; stroke-dasharray: 2 4; opacity: 0.8; fill: none; }
+.map-container.is-picking { cursor: crosshair; }
+.map-pick-banner {
+  position: absolute;
+  top: var(--space-md);
+  left: 50%;
+  translate: -50% 0;
+  z-index: 1000;
+  max-width: min(var(--size-panel), calc(100% - var(--space-xxxl)));
+  padding: var(--space-xs) var(--space-md);
+  background: var(--color-surface-raised);
+  color: var(--color-ink);
+  border: 1px solid var(--color-link);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-floating);
+  font: var(--type-body-sm-medium);
+  text-align: center;
+}
+.map-pick-banner[hidden] { display: none; }
+/* Extra stops (Curiosity's parking places, your points) are told apart from the curated five by a dashed ring. */
+.map-waypoint.is-rover, .map-waypoint.is-custom { border-style: dashed; }

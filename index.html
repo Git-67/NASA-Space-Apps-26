@@ -50,7 +50,6 @@
         <header class="panel-intro">
           <p class="eyebrow">Mount Sharp · Gale Crater · Mars</p>
           <h1>The boxwork Marswalk</h1>
-          <p class="lede">Walk the safest way over Curiosity's tracks to find out how long water lasted here. Pick your stops and a day; we tell you if it's safe to go.</p>
         </header>
 
         <div class="tabs" role="tablist" aria-label="Sidebar sections">
@@ -61,47 +60,53 @@
         <div id="tab-briefing" class="tabpanel" role="tabpanel" aria-labelledby="tab-btn-briefing">
 
         <section class="card verdict-card" aria-labelledby="verdict-title">
-          <h2 id="verdict-title" class="card-title">Verdict</h2>
+          <h2 id="verdict-title" class="visually-hidden">Verdict</h2>
           <div id="verdict" class="verdict" aria-live="polite"></div>
           <div class="verdict-action">
-            <button id="begin-journey" class="button-primary" type="button"><span data-icon="directions_walk"></span>Begin journey</button>
-            <p class="basis">A simulated, full-screen walk of your plan. Not a real position.</p>
+            <button id="begin-journey" class="button-primary button-large" type="button"><span data-icon="directions_walk"></span>Begin journey</button>
+            <p class="basis">Simulated walk of your plan.</p>
           </div>
+          <div id="verdict-reasons"></div>
         </section>
 
         <section class="card" aria-labelledby="when-title">
           <h2 id="when-title" class="card-title">When</h2>
-          <div class="field-row">
-            <div class="field">
-              <label for="sol-input">Sol (Mars day of Curiosity's mission)</label>
+          <div class="when-row">
+            <button id="present-button" class="button-secondary" type="button" aria-pressed="false"><span data-icon="today"></span>Today</button>
+            <div class="field when-sol">
+              <label for="sol-input">Sol (mission day)</label>
               <input id="sol-input" class="text-input" type="number" step="1" inputmode="numeric">
             </div>
           </div>
           <div class="slider-row">
             <label class="visually-hidden" for="sol-slider">Sol, as a slider</label>
             <input id="sol-slider" class="slider" type="range" step="1">
-            <button id="present-button" class="button-secondary" type="button" aria-pressed="false"><span data-icon="today"></span>Present</button>
           </div>
           <p id="present-note" class="basis" hidden></p>
           <div id="conditions"></div>
           <div id="space-weather" class="space-weather" aria-live="polite"></div>
-          <p class="data-source-caption">Weather: <a class="button-link" href="https://mars.nasa.gov/rss/api/?feed=weather&amp;category=msl&amp;feedtype=json" rel="noopener">Curiosity REMS</a> (Centro de Astrobiología, NASA), measured, outreach use only. Space weather: <a class="button-link" href="https://api.nasa.gov/" rel="noopener">NASA DONKI</a>; storms at Mars are forecasts, particles were seen near Earth. Accessed 14 Nov 2026.</p>
+          <p class="data-source-caption">Sources: <a class="button-link" href="https://mars.nasa.gov/rss/api/?feed=weather&amp;category=msl&amp;feedtype=json" rel="noopener">Curiosity REMS</a> (measured) · <a class="button-link" href="https://api.nasa.gov/" rel="noopener">NASA DONKI</a> (storms at Mars are forecasts). Accessed 14 Nov 2026.</p>
         </section>
 
         <section class="card" aria-labelledby="where-title">
           <h2 id="where-title" class="card-title">Where</h2>
+          <div id="mission" class="mission" aria-live="polite"></div>
           <div id="stop-picker" class="stop-picker"></div>
-          <p class="basis">Tap a stop to see its leg on the map. Hover or tap a leg for details.</p>
+          <button id="add-point" class="button-secondary add-point" type="button" aria-pressed="false"><span data-icon="add_location"></span><span id="add-point-label">Add a point on the map</span></button>
+          <p class="basis">Tap a stop to show its leg on the map. Points you add snap to Curiosity's tracks.</p>
           <div id="totals" class="stat-grid"></div>
-          <div id="sections"></div>
-          <p class="basis">NASA's rules (lunar; none set for Mars yet): 2 km/h, up to 8 h out, up to 2 km from base, slopes up to 20°. Paths use only ground Curiosity drove and skip anything steeper than 20°. Slope is from the rover's tilt: under 17° easier (Apollo 15 walked 17°), 17° to 20° harder.</p>
           <div id="profile"></div>
+          <div id="sections"></div>
+          <details class="disclosure">
+            <summary>Safety rules used</summary>
+            <p class="basis">NASA's rules (lunar; none set for Mars yet): 2 km/h, up to 8 h out, up to 2 km from base, slopes up to 20°. Paths use only ground Curiosity drove and skip anything steeper than 20°. Slope is from the rover's tilt: under 17° easier (Apollo 15 walked 17°), 17° to 20° harder.</p>
+          </details>
         </section>
 
         <section class="card" aria-labelledby="stop-title">
           <h2 id="stop-title" class="card-title">Tasks</h2>
+          <p class="basis">Tap a stop for its tasks. Our suggestions, not NASA's.</p>
           <div id="tasks"></div>
-          <p class="basis">Tasks and times are our suggestions, not NASA's.</p>
         </section>
 
         <section class="card" aria-labelledby="danger-title">
@@ -110,9 +115,11 @@
         </section>
 
         <section class="card" aria-labelledby="kit-title">
-          <h2 id="kit-title" class="card-title">What to pack</h2>
-          <div id="kit"></div>
-          <p class="basis">Our suggestion, not a NASA list.</p>
+          <details class="disclosure disclosure-card">
+            <summary><h2 id="kit-title" class="card-title">What to pack</h2></summary>
+            <div id="kit"></div>
+            <p class="basis">Our suggestion, not a NASA list.</p>
+          </details>
         </section>
 
         </div>
@@ -120,7 +127,7 @@
 
         <footer class="panel-footer">
           <p>Made for the NASA Space Apps Challenge 2026. Not affiliated with or endorsed by NASA.</p>
-          <p><a class="button-link" href="docs/DATA_SOURCES.md">Data sources</a></p>
+          <p><a class="button-link source-link" href="docs/DATA_SOURCES.md">Data sources</a></p>
         </footer>
       </aside>
     </div>

@@ -19,17 +19,27 @@ const UV_LABEL = { Low: 'Low', Moderate: 'Moderate', High: 'High', Very_High: 'V
 const MISSING = 'not recorded';
 
 /**
- * Draw the verdict and the reasons behind it.
- * @param {HTMLElement} container
+ * Draw the verdict: one big word and a one-line summary, read at a glance. The reasons and
+ * their basis go in a separate disclosure under "Begin journey", for anyone who asks why.
+ * @param {HTMLElement} container Where the verdict itself goes.
+ * @param {HTMLElement} reasonsContainer Where the "Why" disclosure goes.
  * @param {Verdict} verdict
  */
-export function renderVerdict(container, verdict) {
+export function renderVerdict(container, reasonsContainer, verdict) {
   container.dataset.level = verdict.level;
+  const flagged = verdict.reasons.filter((reason) => reason.level !== 'go');
+  const summary = flagged.length === 0
+    ? `All ${verdict.reasons.length} checks pass.`
+    : flagged.map((reason) => reason.text).join(' ');
   container.replaceChildren(
     el('p', { className: 'verdict-level' }, [
       el('span', { className: 'verdict-symbol', text: VERDICT_SYMBOL[verdict.level], attrs: { 'aria-hidden': 'true' } }),
       VERDICT_LABEL[verdict.level],
     ]),
+    el('p', { className: 'verdict-summary', text: summary }),
+  );
+  reasonsContainer.replaceChildren(el('details', { className: 'disclosure' }, [
+    el('summary', { text: `Why (${verdict.reasons.length} checks)` }),
     el('ul', { className: 'reason-list' }, verdict.reasons.map((reason) => el('li', { attrs: { 'data-level': reason.level } }, [
       el('span', { className: 'reason-symbol', text: VERDICT_SYMBOL[reason.level], attrs: { 'aria-hidden': 'true' } }),
       el('div', {}, [
@@ -37,7 +47,7 @@ export function renderVerdict(container, verdict) {
         el('p', { className: 'basis', text: `Basis: ${reason.basis}` }),
       ]),
     ]))),
-  );
+  ]));
 }
 
 /**
@@ -62,14 +72,21 @@ export function renderConditions(container, sol, record, comparison) {
   ]);
 
   container.replaceChildren(
-    el('p', { className: 'telemetry', text: `Sol ${record.sol} · ${record.earthDate} (Earth date) · solar longitude ${record.ls ?? '?'}°` }),
+    el('p', { className: 'telemetry', text: `Sol ${record.sol} · ${record.earthDate} on Earth` }),
+    // What a walker plans around: light and cold. The rest is a tap away.
     el('dl', { className: 'reading-list' }, [
       row('Daylight', daylight),
       row('Air, high / low', `${degrees(record.airMaxC)} / ${degrees(record.airMinC)}`),
-      row('Ground, high / low', `${degrees(record.groundMaxC)} / ${degrees(record.groundMinC)}`),
-      row('Usual high this season', comparison ? `${comparison.medianAirMaxC} °C` : 'not enough data'),
-      row('Ultraviolet', record.uv ? UV_LABEL[/** @type {keyof typeof UV_LABEL} */ (record.uv)] : MISSING),
-      row('Pressure', record.pressurePa === null ? MISSING : `${record.pressurePa} Pa`),
+    ]),
+    el('details', { className: 'disclosure' }, [
+      el('summary', { text: 'More readings' }),
+      el('dl', { className: 'reading-list' }, [
+        row('Ground, high / low', `${degrees(record.groundMaxC)} / ${degrees(record.groundMinC)}`),
+        row('Usual high this season', comparison ? `${comparison.medianAirMaxC} °C` : 'not enough data'),
+        row('Ultraviolet', record.uv ? UV_LABEL[/** @type {keyof typeof UV_LABEL} */ (record.uv)] : MISSING),
+        row('Pressure', record.pressurePa === null ? MISSING : `${record.pressurePa} Pa`),
+        row('Season (solar longitude)', record.ls === null || record.ls === undefined ? MISSING : `${record.ls}°`),
+      ]),
     ]),
   );
 }
@@ -86,11 +103,16 @@ export function renderSpaceWeather(container, weather, date) {
     return;
   }
   const events = date ? eventsOnDate(weather, date) : [];
-  const heading = el('h4', { text: `Space weather, ${date ?? 'this date'}` });
-  const missing = [
-    ...(weather.unavailable.length > 0 ? [el('p', { className: 'basis', text: `Missing from NASA's data: ${weather.unavailable.join(', ')}.` })] : []),
-    ...((weather.gaps ?? []).length > 0 ? [el('p', { className: 'basis', text: `No data for ${(weather.gaps ?? []).join(', ')}.` })] : []),
+  const heading = el('h4', { text: 'Space weather' });
+  const gaps = [
+    ...(weather.unavailable.length > 0 ? [`Missing from NASA's data: ${weather.unavailable.join(', ')}.`] : []),
+    ...((weather.gaps ?? []).length > 0 ? [`No data for ${(weather.gaps ?? []).join(', ')}.`] : []),
   ];
+  // Gaps matter to a judge checking the data, not to a walker: kept, but folded away.
+  const missing = gaps.length === 0 ? [] : [el('details', { className: 'disclosure' }, [
+    el('summary', { text: 'Data gaps' }),
+    ...gaps.map((gap) => el('p', { className: 'basis', text: gap })),
+  ])];
   if (events.length === 0) {
     container.replaceChildren(heading, el('p', { className: 'chart-state', text: 'Quiet: no storms or particle events.' }), ...missing);
     return;

@@ -7,6 +7,7 @@ import { walkProfile } from '../src/features/plan/elevation-profile.js';
 /** A tiny made-up route of three stops with precomputed safe paths. Test data only. */
 const stop = (id, pointIndex, terrain, kit) => ({
   id, name: id, summary: '', terrain, found: '', tasksOurs: [], kitOurs: kit, workMinutesOurs: 30, sourceLabel: '', sourceUrl: '', pointIndex,
+  kind: 'curated', lat: 0, lon: 0,
 });
 /** A straight safe path with one difficulty. Test data only. */
 const path = (distanceM, ascentM, descentM, maxTiltDeg, startM = 100) => ({
@@ -26,6 +27,7 @@ const route = {
     'a|c': path(800, 6, 0, 21),
     'b|c': path(500, 0, 4, 21, 110),
   },
+  network: null,
 };
 
 test('rateDifficulty uses NASA\'s 17 and 20 degree marks', () => {
