@@ -29,6 +29,8 @@ import { createAstronautMarker } from './astronaut-marker.js';
 const MIN_ZOOM = 8;
 const MAX_ZOOM = 18;
 const ROUTE_PADDING_PX = 48;
+/** Room kept between a followed walker and the edges of the clear area, in pixels. */
+const KEEP_IN_VIEW_MARGIN_PX = 96;
 /** Side of the square hit area around each stop badge, in pixels (the 44px touch target). */
 const HIT_AREA_PX = 44;
 /** Stops closer together than this, in metres, would hide each other on the map. */
@@ -63,6 +65,9 @@ function addOverZoomNotice(map) {
  * @property {(lat: number, lon: number, headingDeg: number) => void} showAstronaut Place the walker, facing headingDeg (compass).
  * @property {() => void} hideAstronaut
  * @property {(lat: number, lon: number, zoom: number | null, isAnimated: boolean) => void} follow Centre on a point; null keeps the zoom.
+ * @property {(lat: number, lon: number, inset: { top: number, bottom: number }, isAnimated: boolean) => void} keepInView
+ *   Pan only if the point has left the clear area between panels (insets in pixels from the top and bottom edges).
+ * @property {(handler: () => void) => void} onUserPan Called when the visitor drags the map.
  * @property {() => void} resize Tell the map its box changed size.
  */
 
@@ -184,6 +189,18 @@ export function createMapView(container, route, extras, mode, onStopChosen) {
     },
     follow(lat, lon, zoom, isAnimated) {
       map.setView([lat, lon], zoom ?? map.getZoom(), { animate: isAnimated });
+    },
+    keepInView(lat, lon, inset, isAnimated) {
+      // Leaflet pans only when the point is outside the padded box, so most frames cost nothing
+      // and tiles are not cancelled mid-load (which showed as blurry patches).
+      map.panInside([lat, lon], {
+        paddingTopLeft: [KEEP_IN_VIEW_MARGIN_PX, inset.top + KEEP_IN_VIEW_MARGIN_PX],
+        paddingBottomRight: [KEEP_IN_VIEW_MARGIN_PX, inset.bottom + KEEP_IN_VIEW_MARGIN_PX],
+        animate: isAnimated,
+      });
+    },
+    onUserPan(handler) {
+      map.on('dragstart', handler);
     },
     resize() {
       map.invalidateSize({ animate: false });

@@ -390,3 +390,8 @@
 }
 .button-primary:hover { background: var(--color-primary-pressed); }
 .button-primary:disabled { background: var(--color-surface-raised); color: var(--color-text-disabled); cursor: default; }
+
+/* button-large: any button in its large size, for journey mode (gloved hands, dusty visors). */
+.button-large { min-height: var(--size-touch-large); padding: 0 var(--space-xl); font: var(--type-body-md-medium); }
+.button-secondary:hover { background: var(--color-surface-raised); }
+.verdict-action { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-xs); padding-top: var(--space-sm); border-top: 1px solid var(--color-hairline); }

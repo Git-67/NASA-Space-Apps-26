@@ -35,25 +35,9 @@ body.is-journey .map-container { height: 100%; min-height: 0; border-radius: 0; 
 }
 .journey-top > * { pointer-events: auto; }
 
-/* Large controls on solid panels, readable through dust. */
-.journey-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-xs);
-  min-height: var(--size-touch-large);
-  padding: 0 var(--space-lg);
-  background: var(--color-surface-raised);
-  color: var(--color-ink);
-  border: 2px solid var(--color-border-control);
-  border-radius: var(--radius-md);
-  font: var(--type-body-md-medium);
-  cursor: pointer;
-}
-.journey-button:hover { background: var(--color-surface); }
-.journey-primary { background: var(--color-primary); color: var(--color-on-primary); border-color: var(--color-primary); }
-.journey-primary:hover { background: var(--color-primary-pressed); }
-.journey-end { box-shadow: var(--shadow-floating); }
+/* Controls are DESIGN.md's button-primary and button-secondary in the button-large size (components.css). */
+.journey-end { background: var(--color-surface-raised); box-shadow: var(--shadow-floating); }
+.journey-bottom .button-secondary { background: var(--color-surface); }
 .journey-controls { display: flex; gap: var(--space-sm); flex-wrap: wrap; justify-content: center; }
 
 .journey-sim { font: var(--type-eyebrow); letter-spacing: var(--tracking-eyebrow); text-transform: uppercase; color: var(--color-accent); }

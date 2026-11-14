@@ -25,6 +25,8 @@ const SPEEDS = [60, 120, 30];
 const WALK_ZOOM = 16;
 /** Under reduced motion, the walker moves in steps this far apart in time, in milliseconds. */
 const STEP_MS = 1000;
+/** The status text changes at most this often, in milliseconds: no need to rewrite it every frame. */
+const STATUS_EVERY_MS = 250;
 /** How often live space weather is read again during a walk, in milliseconds (15 minutes). */
 const WEATHER_REFRESH_MS = 15 * 60 * 1000;
 
@@ -57,20 +59,37 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather }) {
   let lastTime = 0;
   /** @type {Element | null} */
   let returnFocusTo = null;
+  /** Whether the map keeps the walker in view. Dragging the map stops this until "Re-centre". */
+  let isFollowing = true;
+  let lastStatusAt = 0;
 
   const hud = createJourneyHud({
     onEnd: () => end(),
     onTogglePlay: () => { isPlaying = !isPlaying; lastTime = performance.now(); render(); },
     onSpeed: () => { speedIndex = (speedIndex + 1) % SPEEDS.length; render(); },
+    onRecentre: () => { isFollowing = true; hud.setFollowing(true); render(true); },
+  });
+  map.onUserPan(() => {
+    if (!journey) return;
+    isFollowing = false;
+    hud.setFollowing(false);
   });
 
-  /** Draw the walker and the status for the current distance. */
-  function render() {
+  /**
+   * Draw the walker, keep them in view, and refresh the status text.
+   * @param {boolean} [isRecentring] Centre on the walker now instead of waiting for them to near an edge.
+   */
+  function render(isRecentring = false) {
     if (!journey || !plan) return;
     const position = positionAt(journey, walkedM);
     const heading = compassHeading ?? position.headingDeg;
     map.showAstronaut(position.lat, position.lon, heading);
-    map.follow(position.lat, position.lon, null, false);
+    if (isRecentring) map.follow(position.lat, position.lon, null, !prefersReducedMotion);
+    // Small, unanimated pans: an animation restarted every frame would stutter.
+    else if (isFollowing) map.keepInView(position.lat, position.lon, hud.insets(), false);
+    const now = performance.now();
+    if (!isRecentring && isPlaying && now - lastStatusAt < STATUS_EVERY_MS) return;
+    lastStatusAt = now;
     const next = nextArrival(journey, walkedM);
     const metresToGo = next ? next.alongM - walkedM : 0;
     hud.setStatus({
@@ -95,7 +114,7 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather }) {
           if (next.isFinish) { end(); return; }
           isPlaying = true;
           lastTime = performance.now();
-          render();
+          render(isFollowing);
         });
       }
       render();
@@ -128,6 +147,8 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather }) {
     walkedM = 0;
     isPlaying = true;
     compassHeading = null;
+    isFollowing = true;
+    hud.setFollowing(true);
     document.body.classList.add('is-journey');
     map.resize();
     const start = positionAt(journey, 0);

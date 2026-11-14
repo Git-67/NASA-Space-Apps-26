@@ -62,6 +62,10 @@
         <section class="card verdict-card" aria-labelledby="verdict-title">
           <h2 id="verdict-title" class="card-title">Verdict</h2>
           <div id="verdict" class="verdict" aria-live="polite"></div>
+          <div class="verdict-action">
+            <button id="begin-journey" class="button-primary" type="button"><span class="icon" aria-hidden="true">directions_walk</span>Begin journey</button>
+            <p class="basis">A simulated, full-screen walk of your plan. Not a real position.</p>
+          </div>
         </section>
 
         <section class="card" aria-labelledby="when-title">
@@ -86,8 +90,6 @@
         <section class="card" aria-labelledby="where-title">
           <h2 id="where-title" class="card-title">Where</h2>
           <div id="stop-picker" class="stop-picker"></div>
-          <button id="begin-journey" class="button-primary" type="button"><span class="icon" aria-hidden="true">directions_walk</span>Begin journey</button>
-          <p class="basis">Opens a full-screen, simulated walk of this plan with tasks at each stop. Not a real position.</p>
           <p class="basis">Tap a stop to see its leg on the map. Hover or tap a leg for details.</p>
           <div id="totals" class="stat-grid"></div>
           <div id="sections"></div>
