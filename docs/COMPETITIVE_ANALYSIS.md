@@ -2,18 +2,29 @@
 
 Researched 13 Nov 2026, the day before the hackathon. **Status: the team agreed a wider version of the proposed angle on 13 Nov 2026. The agreed scope is in `CLAUDE.md` section 1; the single-angle proposal below is kept as the reasoning behind it.**
 
-## Update, 14 Nov 2026: where the built product stands against the field
+## Update, end of 14 Nov 2026: where the built product stands against the field
 
-The first build added things the team asked for on the day: walking time, difficulty per section, hazards and a packing list. **Those four are also what most of the entries below already have**, usually in more depth. They make the product more complete; they do not make it different.
+**The product is no longer the narrow one this analysis recommended.** During the day the team widened the scope: a path search, a journey mode, a helmet visor view, daily missions, a Weather tab and an offline mode were all added. Several of these are things this analysis advised against because the field already has them.
 
-What still sets it apart, as built:
-- The verdict depends on the sol. The same walk is Go on a normal sol and Caution in the 2018 dust storm, using measured data. None of the entries we read does this.
-- Every number shows its basis, and the page separates what NASA measured from what we derived or assumed.
-- It uses the path a rover really drove, not a computed one.
+What we now share with most of the entries below:
+- A path search (A*) with a slope limit. Ours runs only over ground Curiosity drove.
+- A helmet visor view. Ours is a labelled browser simulation.
+- A simulated walk of the plan, with tasks at each stop.
+- Walking time, difficulty, hazards and a packing list.
 
-What the field has that we do not: route finding, 3D views, helmet displays, suit consumable models, more than one site. We chose not to build these.
+What still sets it apart, as built and checked in a browser:
+- **The verdict changes with the date, from real NASA data.** The same walk is Go on sol 4711, Caution on sol 2100 (the 2018 dust storm: colder than 99% of sols at that season), Caution on sol 1815 (a solar storm forecast to graze Mars) and No-go on sol 1947 (a forecast direct hit). No entry we read lets conditions decide.
+- **Space weather aimed at Mars.** It uses NASA's forecasts of solar storms arriving at Mars, not just events seen from Earth.
+- **Every limit is NASA's own, and labelled lunar**, with NASA's statement that the Mars figures are still to come.
+- **It only walks where a rover has driven**, and says why: our elevation data cannot judge slopes at a walker's scale.
+- **It works with no link to Earth**, from a copy stored with the site, and says how old that copy is.
+- Every number shows its basis.
 
-The pitch should lead with the first list and not dwell on the planner features.
+What the field has that we do not: 3D views, suit consumable models, more than one site, rock detection.
+
+**The risk this creates for judging:** a judge who sees a route planner with a helmet view may file it with the other dozen. The pitch must lead with the verdict and the evidence, and present the journey and visor as the way a crew would use the verdict, not as the product.
+
+Two things from the agreed plan are still not built: the orbit and ground photo comparison, and a guided storm replay.
 
 ## How far to trust this
 

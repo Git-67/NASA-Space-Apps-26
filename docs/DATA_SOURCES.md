@@ -21,7 +21,9 @@ Three figures differ and each is correct for what it measures: the path from the
 | MRO CTX mosaic `curiosity_ctx_mosaic` | Not stored; tiles from NASA Mars Trek | None | None | Shown under HiRISE so the map zooms out to the whole crater (zoom 8). Published to zoom 10 and enlarged beyond it, always under the HiRISE layer |
 | NASA DONKI space weather | `data/raw/donki/` (not committed: about 440 files, 6.5 MB; the script fetches them again) | `scripts/prepare_space_weather.py` | `data/processed/space_weather.json` | See "Space weather" below |
 
-The product does not yet use the raw image service or any radiation data.
+The product does not use the raw image service or any measured radiation data. How each service is called, and which ones a web page may call directly, is in `docs/API_NOTES.md`.
+
+**The Weather tab** (`src/pages/weather.js`) reads the same REMS feed and DONKI, live when online and from the stored files when offline. Its "usual / unusual" labels and its "dust watch" dates are **ours**: the dust watch is inferred from how narrow the daily temperature range was at each time of year across the Mars years in the feed. No dust measurement is used, because the feed's dust field is unusable.
 
 ### Online and offline (decided 14 Nov 2026)
 At start the page loads one 7 KB Mars Trek tile to see whether NASA is reachable (3 s limit). **Online**, map tiles come from Mars Trek and Curiosity's location map, space weather is extended live from DONKI, and the Weather tab reads the REMS feed live. **Offline** (no link, or chosen with the button in the top bar), everything comes from the copy stored with the site, and the button says how recent it is. The REMS feed answers browsers with CORS allowed, but returns 403 to headless test browsers, so automated tests must use a normal browser user agent. The Weather tab's second live source, MAAS2, is a community mirror (not NASA) and sends no CORS header, so browsers always reject it.
@@ -100,7 +102,7 @@ JPEG re-encoding changes no position and no data value; it softens fine texture 
 - **URL:** https://mars.nasa.gov/api/v1/raw_image_items/ (query by mission and sol)
 - **Contents:** per image: sol, instrument, image URL, local Mars time, mast azimuth and elevation, and the site and drive numbers, which match the waypoint file.
 - **Used for:** the ground view at each stop (angle 2).
-- **Limits found:** filtering by sol range works (181 images for sols 4700 to 4702). Filtering by instrument through the `search` parameter returned nothing, so the correct instrument filter is still unknown. Raw images are unprocessed and uncalibrated.
+- **Limits found:** raw images are unprocessed and uncalibrated. Navigation camera images can be tied to a stop by the rover's site and drive numbers (32 to 38 at each of the five curated stops, pointing all the way round); mast camera images carry no position and can only be tied by sol. How to query the service, including the camera filter, is in `docs/API_NOTES.md`.
 
 ### Orbital imagery and terrain (NASA Mars Trek)
 - **URL pattern:** `https://trek.nasa.gov/tiles/Mars/EQ/<layer>/1.0.0/default/default028mm/{z}/{row}/{col}.png`

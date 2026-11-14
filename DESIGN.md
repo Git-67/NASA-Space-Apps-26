@@ -1248,20 +1248,19 @@ Added with the first build of the briefing page. They are compositions of existi
 
 ## Known Gaps
 
-- The first build has been rendered in both themes at 1440px and at 390px in the dark theme. The light theme has not been checked on mobile.
+- Rendered and checked on 14 Nov 2026: the briefing in both themes at 1440px, the briefing at tablet size (1024px) in dark, and the journey and visor views at 1440px in dark. Not checked: the light theme at tablet or phone size, the Weather tab in the light theme, keyboard-only use, a screen reader.
+- **The Weather tab is not specified in this file.** It was built with its own stylesheet (`src/styles/tabs.css`) and its own cut-offs for "usual" and "unusual". Its components should be added here, or the tab restyled from existing ones.
 - The `map-layer-panel` is a single collapsible panel at every width, not the bottom sheet described under Collapsing strategy. There is no `map-legend`, `map-popup` or `map-timeline` yet.
 - The colour imagery option keeps the route, stops and contours (team decision, 14 Nov 2026).
 - The muted, dotted legs have no casing, so on bright dust they are fainter than DESIGN's casing rule intends. Accepted for now because they are deliberately secondary.
 - When two stops are closer than 30 m their map badges are nudged 14px apart so both stay visible; the stops' coordinates are unchanged.
 
-- The light theme's text and UI pairs were computed, but neither theme has been rendered and reviewed on a real page yet.
 - The light diverging ramp was chosen by eye from the sequential steps and has not been validated.
 - The route colour was checked against sample Mars tones only, not against the actual imagery.
-- Slope and hazard thresholds, walking-speed assumptions and the coordinate convention are not decided; each needs a cited source.
-- The study site is not chosen. The hero and telemetry examples use Jezero Crater as a placeholder.
+- The coordinate convention of the rover position files is still unconfirmed. Slope, walk length, distance and pace now come from NASA's lunar planning figures (see `docs/SCIENCE_BRIEF.md`).
+- The hero and telemetry-strip components are specified but not built: the site opens straight on the map. Their examples in this file name Jezero Crater; the product's site is the Mount Sharp boxwork in Gale Crater.
 - The logo was checked by web search on 13 Nov 2026: no product or brand named "Sol Stroll" was found, and no identical mark. This was a text search, not an image search or a trademark search, and other "Sol" brands do use a sun in place of the "o".
-- The project name and headline copy are not chosen yet.
-- The map uses Leaflet and one basemap, the MRO HiRISE mosaic from NASA Mars Trek. HiRISE images are public domain and the team asks for the credit "NASA/JPL/University of Arizona". Other layer names in this file are examples.
+- The map uses Leaflet with MRO HiRISE and CTX mosaics from NASA Mars Trek, the HiRISE colour mosaic from NASA's Curiosity location map, and contours from the Gale elevation model. HiRISE images are public domain and the team asks for the credit "NASA/JPL/University of Arizona".
 - Icon set: Google's Material Symbols, Outlined style (Apache License 2.0), drawn as inline SVG from paths bundled in `src/components/ui/icon-paths.js` (`scripts/vendor_icons.py`; add new icons there). Not an icon font: a ligature font shows icon names as plain text whenever it is missing, slow or an older cached copy, which happened on 14 Nov 2026. So far used in the layer panel, the stop list, the Present button and map callouts; the theme toggle still uses text symbols.
 - The diverging ramp's two warm steps were matched to the cool steps by lightness but have not been tested in a rendered map.
 - No texture or pattern fills are defined for print or forced-colours mode.
