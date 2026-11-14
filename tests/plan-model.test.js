@@ -1,12 +1,12 @@
 // @ts-check
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildPlan, listDangers, listKit, measureLeg, measurePath, rateDifficulty } from '../src/features/plan/plan-model.js';
+import { buildPlan, listDangers, listKit, measureLeg, measurePath, rateDifficulty, recommendedOrder } from '../src/features/plan/plan-model.js';
 import { walkProfile } from '../src/features/plan/elevation-profile.js';
 
 /** A tiny made-up route: three stops on a path that climbs 10 m then drops 4 m. Test data only. */
 const stop = (id, pointIndex, terrain, kit) => ({
-  id, name: id, summary: '', terrain, found: '', taskOurs: '', kitOurs: kit, workMinutesOurs: 30, sourceLabel: '', sourceUrl: '', pointIndex,
+  id, name: id, summary: '', terrain, found: '', tasksOurs: [], kitOurs: kit, workMinutesOurs: 30, sourceLabel: '', sourceUrl: '', pointIndex,
 });
 const route = {
   points: [
@@ -86,5 +86,11 @@ test('buildPlan keeps the start first and ignores unknown or repeated ids', () =
 test('walkProfile follows the visiting order, reading the path backwards where needed', () => {
   const { series, marks } = walkProfile(route, buildPlan(route, ['c', 'b'], 2));
   assert.deepEqual(series.map((point) => [point.walkedM, point.elevationM]), [[0, 100], [500, 110], [1000, 106], [1500, 110]]);
-  assert.deepEqual(marks.map((mark) => mark.number), [1, 3, 2]);
+  assert.deepEqual(marks.map((mark) => mark.number), [1, 2, 3]);
+});
+
+test('recommendedOrder visits every stop in path order, the shortest walk', () => {
+  assert.deepEqual(recommendedOrder(route), ['b', 'c']);
+  const best = buildPlan(route, recommendedOrder(route), 2).distanceM;
+  assert.ok(best <= buildPlan(route, ['c', 'b'], 2).distanceM);
 });

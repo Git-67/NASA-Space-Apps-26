@@ -76,7 +76,7 @@ const MARS_CRS = L.extend({}, L.CRS.EPSG4326, { R: MARS_RADIUS_M });
  * @param {{ places: Place[] | Error, calibration: DemCalibration | Error }} extras Data for the optional layers,
  *   or why each could not be loaded; a missing one only disables its own layer.
  * @param {(stopId: string) => void} onStopChosen Called when a visitor activates a stop marker.
- * @returns {{ showPlan: (plan: Plan, activeStopId: string | null) => void, highlightStop: (stopId: string) => void }}
+ * @returns {{ showPlan: (plan: Plan, activeStopId: string | null) => void, highlightStop: (stopId: string | null) => void }}
  */
 export function createMapView(container, route, extras, onStopChosen) {
   const map = L.map(container, {
@@ -138,8 +138,8 @@ export function createMapView(container, route, extras, onStopChosen) {
         iconSize: [HIT_AREA_PX, HIT_AREA_PX],
         iconAnchor: [HIT_AREA_PX / 2 - nudgeFor(index), HIT_AREA_PX / 2],
       }),
-      title: `Stop ${index + 1}: ${stop.name}`,
-      alt: `Stop ${index + 1}: ${stop.name}`,
+      title: stop.name,
+      alt: `Stop: ${stop.name}`,
       keyboard: true,
     }).addTo(routeLayer);
     marker.on('click keypress', () => onStopChosen(stop.id));
@@ -150,7 +150,7 @@ export function createMapView(container, route, extras, onStopChosen) {
   addLayerOptions(map, {
     stopLabels: route.stops.map((stop, index) => {
       const point = route.points[stop.pointIndex];
-      return { name: `${index + 1}. ${stop.name}`, lat: point.lat, lon: point.lon, hasMarker: false };
+      return { name: stop.name, lat: point.lat, lon: point.lon, hasMarker: false };
     }),
     places: extras.places,
     calibration: extras.calibration,
@@ -158,11 +158,18 @@ export function createMapView(container, route, extras, onStopChosen) {
   });
 
   return {
-    /** Draw the plan, with the leg leaving `activeStopId` brought forward, and dim the stops left out of it. */
+    /**
+     * Draw the plan, with the leg leaving `activeStopId` brought forward. Each badge
+     * shows the stop's place in the visiting order; stops left out show a dash.
+     */
     showPlan(plan, activeStopId) {
       planRoute.show(route, plan, activeStopId);
       const visited = plan.stops.map((stop) => stop.id);
-      for (const [id, badge] of markerElements) badge.classList.toggle('is-skipped', !visited.includes(id));
+      for (const [id, badge] of markerElements) {
+        const position = visited.indexOf(id);
+        badge.classList.toggle('is-skipped', position < 0);
+        badge.textContent = position < 0 ? '–' : String(position + 1);
+      }
     },
     /** Mark one stop as the one whose details are shown. */
     highlightStop(stopId) {

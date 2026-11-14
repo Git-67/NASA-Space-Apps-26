@@ -1,15 +1,16 @@
 // @ts-check
 /**
  * Page script for the briefing page. It loads the prepared data, keeps the
- * page's state (stops and their order, the chosen leg, the sol, walking
- * speed) and asks the feature modules to redraw. No planning logic lives here.
+ * page's state (the stops in visiting order, the chosen stop, the sol) and
+ * asks the feature modules to redraw. No planning logic lives here.
  */
 import { el, requireElement } from '../lib/dom.js';
 import { earthDateOfSol, solOnEarthDate } from '../lib/mars.js';
 import { initThemeToggle } from '../features/theme/theme-toggle.js';
 import { createMapView } from '../features/map/map-view.js';
-import { buildPlan, DEFAULT_WALKING_SPEED_KMH } from '../features/plan/plan-model.js';
-import { renderPlan, renderStopDetails, renderStopList } from '../features/plan/plan-view.js';
+import { buildPlan, DEFAULT_WALKING_SPEED_KMH, recommendedOrder } from '../features/plan/plan-model.js';
+import { renderPlan, renderTasks } from '../features/plan/plan-view.js';
+import { createStopPicker } from '../features/plan/stop-picker.js';
 import { compareWithSeason, decideVerdict } from '../features/conditions/conditions-model.js';
 import { renderConditions, renderSpaceWeather, renderVerdict } from '../features/conditions/conditions-view.js';
 import { assessSpaceWeather } from '../features/conditions/space-weather-model.js';
@@ -21,8 +22,6 @@ import { loadBriefingData } from './load-briefing-data.js';
 
 /** Sol the page opens on: the sol Curiosity reached the last stop, in the boxwork itself. */
 const DEFAULT_SOL = 4711;
-const MIN_SPEED_KMH = 0.5;
-const MAX_SPEED_KMH = 5;
 
 /**
  * Start the page once the data has loaded.
@@ -35,15 +34,13 @@ function start({ route, records, places, calibration, spaceWeather }) {
   const today = new Date();
   const presentSol = solOnEarthDate(today.toISOString().slice(0, 10), reference);
 
+  const recommended = recommendedOrder(route);
   const state = {
-    /** Every stop id in visiting order; the start stays first. */
-    stopOrder: route.stops.map((stop) => stop.id),
-    selectedStopIds: route.stops.map((stop) => stop.id),
-    /** The stop whose leg is brought forward on the map, or null to show the whole walk equally. */
+    /** Stops to visit after the start, in visiting order. Opens on the recommended plan. */
+    visitOrder: recommended,
+    /** The chosen stop: its leg is brought forward on the map and its tasks highlighted. Null shows the whole walk. */
     activeStopId: /** @type {string | null} */ (null),
-    detailStopId: route.stops[0].id,
     sol: DEFAULT_SOL,
-    walkingSpeedKmh: DEFAULT_WALKING_SPEED_KMH,
     /** Live space weather for the present sol: undefined until asked for, null while loading. */
     liveSpaceWeather: /** @type {SpaceWeather | Error | null | undefined} */ (undefined),
   };
@@ -52,26 +49,44 @@ function start({ route, records, places, calibration, spaceWeather }) {
   const solSlider = /** @type {HTMLInputElement} */ (requireElement('sol-slider'));
   const presentButton = requireElement('present-button');
   const presentNote = requireElement('present-note');
-  const speedInput = /** @type {HTMLInputElement} */ (requireElement('speed-input'));
   for (const input of [solInput, solSlider]) {
     input.min = String(firstSol);
     input.max = String(presentSol);
   }
-  speedInput.min = String(MIN_SPEED_KMH);
-  speedInput.max = String(MAX_SPEED_KMH);
-  speedInput.value = String(state.walkingSpeedKmh);
 
-  const mapView = createMapView(requireElement('map'), route, { places, calibration }, (stopId) => {
+  /** @param {string} stopId */
+  const focusStop = (stopId) => {
     state.activeStopId = state.activeStopId === stopId ? null : stopId;
-    state.detailStopId = stopId;
     redraw();
-    requireElement('stop-details').scrollIntoView({ block: 'nearest' });
+    document.getElementById(`tasks-${stopId}`)?.scrollIntoView({ block: 'nearest' });
+  };
+  const mapView = createMapView(requireElement('map'), route, { places, calibration }, focusStop);
+  const recommendedKm = (buildPlan(route, recommended, DEFAULT_WALKING_SPEED_KMH).distanceM / 1000).toFixed(1);
+  const picker = createStopPicker(requireElement('stop-picker'), route, `All ${route.stops.length} stops, shortest walk (${recommendedKm} km)`, {
+    onAdd: (stopId) => { state.visitOrder = [...state.visitOrder, stopId]; redraw(); },
+    onRecommended: () => { state.visitOrder = recommended; redraw(); },
+    onRemove: (stopId) => {
+      state.visitOrder = state.visitOrder.filter((id) => id !== stopId);
+      if (state.activeStopId === stopId) state.activeStopId = null;
+      redraw();
+    },
+    onMove: (stopId, step) => {
+      const from = state.visitOrder.indexOf(stopId);
+      const to = from + step;
+      if (from < 0 || to < 0 || to >= state.visitOrder.length) return;
+      const order = [...state.visitOrder];
+      [order[from], order[to]] = [order[to], order[from]];
+      state.visitOrder = order;
+      redraw();
+      const name = route.stops.find((stop) => stop.id === stopId)?.name;
+      /** @type {HTMLElement | null} */ (requireElement('stop-picker').querySelector(`[aria-label="${step < 0 ? 'Visit earlier' : 'Visit later'}: ${name}"]:not(:disabled)`))?.focus();
+    },
+    onFocus: focusStop,
   });
 
   /** Redraw everything that depends on the state. */
   function redraw() {
-    const visitOrder = state.stopOrder.filter((id) => state.selectedStopIds.includes(id));
-    const plan = buildPlan(route, visitOrder, state.walkingSpeedKmh);
+    const plan = buildPlan(route, state.visitOrder, DEFAULT_WALKING_SPEED_KMH);
     const record = recordBySol.get(state.sol);
     const comparison = record ? compareWithSeason(record, records) : null;
     const isPresent = state.sol === presentSol;
@@ -82,37 +97,17 @@ function start({ route, records, places, calibration, spaceWeather }) {
     solSlider.value = String(state.sol);
     presentButton.setAttribute('aria-pressed', String(isPresent));
     presentNote.hidden = !isPresent;
-    presentNote.textContent = `Present: ${date}, about sol ${presentSol} (counted from the date). Curiosity's weather feed ends at sol ${reference.sol}, so only space weather is read for today.`;
+    presentNote.textContent = `Today, ${date} (about sol ${presentSol}). No rover weather after sol ${reference.sol}, so only space weather is checked.`;
 
     renderVerdict(requireElement('verdict'), decideVerdict({
       planMinutes: plan.totalMinutes, record, comparison,
       spaceWeather: weatherForDate === null || weatherForDate === undefined
-        ? { level: 'unknown', text: "Reading today's space weather from NASA…", basis: 'NASA DONKI, read live.' }
+        ? { level: 'unknown', text: "Checking today's space weather…", basis: 'NASA DONKI, live.' }
         : assessSpaceWeather(weatherForDate, date),
     }));
     renderConditions(requireElement('conditions'), state.sol, record, comparison);
     renderSpaceWeather(requireElement('space-weather'), weatherForDate ?? null, date);
-    renderStopList(requireElement('stop-list'), route, { order: state.stopOrder, selectedIds: state.selectedStopIds }, {
-      onToggle: (stopId, isSelected) => {
-        state.selectedStopIds = isSelected ? [...state.selectedStopIds, stopId] : state.selectedStopIds.filter((id) => id !== stopId);
-        redraw();
-      },
-      onMove: (stopId, step) => {
-        const from = state.stopOrder.indexOf(stopId);
-        const to = from + step;
-        if (from < 1 || to < 1 || to >= state.stopOrder.length) return; // the start stays first
-        const order = [...state.stopOrder];
-        [order[from], order[to]] = [order[to], order[from]];
-        state.stopOrder = order;
-        redraw();
-        requireElement('stop-list').querySelector(`[aria-label$=": ${route.stops.find((stop) => stop.id === stopId)?.name}"]:not(:disabled)`)?.focus();
-      },
-      onShowDetails: (stopId) => {
-        state.detailStopId = stopId;
-        state.activeStopId = stopId;
-        redraw();
-      },
-    });
+    picker.update(state.visitOrder, state.activeStopId);
     renderPlan({
       sections: requireElement('sections'),
       totals: requireElement('totals'),
@@ -120,10 +115,9 @@ function start({ route, records, places, calibration, spaceWeather }) {
       dangers: requireElement('dangers'),
       kit: requireElement('kit'),
     }, route, plan);
-    const detailStop = route.stops.find((stop) => stop.id === state.detailStopId) ?? route.stops[0];
-    renderStopDetails(requireElement('stop-details'), route, detailStop);
+    renderTasks(requireElement('tasks'), plan, state.activeStopId);
     mapView.showPlan(plan, state.activeStopId);
-    mapView.highlightStop(detailStop.id);
+    mapView.highlightStop(state.activeStopId);
   }
 
   /** @param {string} value */
@@ -143,12 +137,6 @@ function start({ route, records, places, calibration, spaceWeather }) {
   solInput.addEventListener('change', () => setSol(solInput.value));
   solSlider.addEventListener('input', () => setSol(solSlider.value));
   presentButton.addEventListener('click', () => setSol(String(presentSol)));
-  speedInput.addEventListener('change', () => {
-    const speed = Number(speedInput.value);
-    if (Number.isFinite(speed) && speed >= MIN_SPEED_KMH && speed <= MAX_SPEED_KMH) state.walkingSpeedKmh = speed;
-    speedInput.value = String(state.walkingSpeedKmh);
-    redraw();
-  });
 
   redraw();
 }

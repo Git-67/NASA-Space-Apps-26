@@ -103,37 +103,37 @@ export function decideVerdict({ planMinutes, record, comparison, spaceWeather })
   const reasons = [spaceWeather];
 
   if (!record) {
-    reasons.push({ level: 'unknown', text: 'Curiosity recorded no weather on this sol.', basis: 'About 250 sols are absent from the weather feed, and it ends on 25 Aug 2026 (sol 4995).' });
+    reasons.push({ level: 'unknown', text: 'No rover weather for this sol.', basis: 'The feed has gaps and ends at sol 4995.' });
     return summarise(reasons);
   }
 
   const usable = usableDaylightMinutes(record);
-  const marginNote = `Daylight from the weather record, less ${DAYLIGHT_MARGIN_MINUTES} min after sunrise and before sunset (our assumption).`;
+  const marginNote = `Measured sunrise and sunset, minus a ${DAYLIGHT_MARGIN_MINUTES}-min safety margin each end (ours).`;
   if (usable === null) {
-    reasons.push({ level: 'unknown', text: 'Sunrise and sunset are missing for this sol.', basis: 'Gap in the weather record.' });
+    reasons.push({ level: 'unknown', text: 'No sunrise or sunset recorded.', basis: 'Gap in the weather data.' });
   } else if (planMinutes > usable) {
-    reasons.push({ level: 'no-go', text: `The plan needs ${Math.round(planMinutes)} min but only ${Math.round(usable)} min of daylight are usable.`, basis: marginNote });
+    reasons.push({ level: 'no-go', text: `Not enough daylight: the walk needs ${Math.round(planMinutes)} min, only ${Math.round(usable)} min available.`, basis: marginNote });
   } else if (planMinutes > usable * DAYLIGHT_CAUTION_SHARE) {
-    reasons.push({ level: 'caution', text: `The plan uses ${Math.round((planMinutes / usable) * 100)}% of the usable daylight. Little room for delay.`, basis: marginNote });
+    reasons.push({ level: 'caution', text: `Tight on daylight: uses ${Math.round((planMinutes / usable) * 100)}% of it.`, basis: marginNote });
   } else {
-    reasons.push({ level: 'go', text: `The plan fits in daylight, using ${Math.round((planMinutes / usable) * 100)}% of the ${Math.round(usable)} usable minutes.`, basis: marginNote });
+    reasons.push({ level: 'go', text: `Enough daylight: uses ${Math.round((planMinutes / usable) * 100)}% of it.`, basis: marginNote });
   }
 
   if (record.airMaxC === null) {
-    reasons.push({ level: 'unknown', text: 'No temperature was recorded on this sol.', basis: 'Gap in the weather record.' });
+    reasons.push({ level: 'unknown', text: 'No temperature recorded.', basis: 'Gap in the weather data.' });
   } else if (comparison === null) {
-    reasons.push({ level: 'unknown', text: 'Too few sols at this season to say whether this one is unusual.', basis: 'Fewer than 30 comparable sols.' });
+    reasons.push({ level: 'unknown', text: 'Not enough data for this season.', basis: 'Fewer than 30 sols to compare.' });
   } else {
-    const basis = `Daily high compared with ${comparison.sampleSize} other sols within ${SEASON_WINDOW_DEG}° of the same solar longitude.`;
+    const basis = `Compared with ${comparison.sampleSize} sols at the same season.`;
     if (comparison.shareColder < UNUSUAL_SHARE) {
       const share = Math.round((1 - comparison.shareColder) * 100);
       reasons.push({
         level: 'caution',
-        text: `Unusually cold for the season: a high of ${record.airMaxC} °C against a typical ${comparison.medianAirMaxC} °C. Colder than ${share}% of sols at this time of year, which can mean dust in the air.`,
+        text: `Unusually cold: high ${record.airMaxC} °C (usual ${comparison.medianAirMaxC} °C), colder than ${share}% of sols this season. May mean dust.`,
         basis,
       });
     } else {
-      reasons.push({ level: 'go', text: `Temperature is normal for the season: a high of ${record.airMaxC} °C against a typical ${comparison.medianAirMaxC} °C.`, basis });
+      reasons.push({ level: 'go', text: `Normal temperature: high ${record.airMaxC} °C (usual ${comparison.medianAirMaxC} °C).`, basis });
     }
   }
 

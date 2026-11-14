@@ -21,7 +21,6 @@ import { icon } from '../../components/ui/icon.js';
  * @typedef {object} LayerPanel
  * @property {L.Control} control The Leaflet control to add to the map.
  * @property {(id: string, message: string) => void} setStatus Show a loading or error line under an option; an empty message clears it.
- * @property {(id: string, isDisabled: boolean) => void} setDisabled Grey out an option while another choice makes it meaningless.
  */
 
 /**
@@ -88,10 +87,6 @@ export function createLayerPanel({ imagery, overlays, onImageryChange, onOverlay
     setStatus(id, message) {
       const row = rows.get(id);
       if (row) row.status.textContent = message;
-    },
-    setDisabled(id, isDisabled) {
-      const row = rows.get(id);
-      if (row) row.input.disabled = isDisabled;
     },
   };
 }

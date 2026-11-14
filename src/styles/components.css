@@ -155,7 +155,6 @@
 .stop-name { font: var(--type-body-sm-medium); }
 .stop-summary { font: var(--type-caption); color: var(--color-text-muted); }
 .stop-item .button-link { font: var(--type-body-sm-medium); min-height: var(--size-touch); }
-.stop-details { display: flex; flex-direction: column; gap: var(--space-xs); }
 
 /* stat-tile */
 .stat-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-xs); }
@@ -269,3 +268,72 @@
 
 /* "View as table" toggle under the plan. */
 .table-toggle summary { min-height: var(--size-touch); display: flex; align-items: center; cursor: pointer; }
+
+/* combobox: the stop search box and its dropdown. */
+.stop-picker { display: flex; flex-direction: column; gap: var(--space-sm); }
+.combobox { position: relative; }
+.combobox .text-input { width: 100%; }
+.combobox-options {
+  position: absolute;
+  z-index: 10;
+  left: 0;
+  right: 0;
+  top: calc(100% + var(--space-xxs));
+  max-height: var(--map-min-height);
+  overflow-y: auto;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-floating);
+}
+.combobox-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-height: var(--size-touch);
+  padding: var(--space-xs) var(--space-md);
+  cursor: pointer;
+}
+.combobox-option > span:last-child { display: flex; flex-direction: column; }
+.combobox-option:hover, .combobox-option.is-active { background: var(--color-surface); outline: 2px solid var(--color-link); outline-offset: -2px; }
+.combobox-option.is-recommended { border-bottom: 1px solid var(--color-hairline); }
+.combobox-option.is-recommended .icon { color: var(--color-accent); }
+.combobox-empty { padding: var(--space-sm) var(--space-md); color: var(--color-text-secondary); font: var(--type-body-sm); }
+
+/* The walk: numbered stops in visiting order. */
+.stop-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: var(--space-xl);
+  height: var(--space-xl);
+  border-radius: var(--radius-full);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-hairline-strong);
+  font: var(--type-caption-bold);
+}
+.stop-focus {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: var(--size-touch);
+  justify-content: center;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.stop-item.is-focused .stop-number { background: var(--color-ink); color: var(--color-void); }
+
+/* Tasks: one group per stop, in visiting order. */
+.task-groups { display: flex; flex-direction: column; gap: var(--space-lg); }
+.task-group { display: flex; flex-direction: column; gap: var(--space-xs); padding-left: var(--space-sm); border-left: 2px solid var(--color-hairline); }
+.task-group.is-focused { border-left-color: var(--color-link); }
+.task-why { font: var(--type-body-sm); color: var(--color-text-secondary); }
+.task-list { display: flex; flex-direction: column; gap: var(--space-xxs); font: var(--type-body-sm); }
+.task-list li { display: flex; gap: var(--space-xs); align-items: flex-start; }
+.task-list .icon { color: var(--color-text-muted); }

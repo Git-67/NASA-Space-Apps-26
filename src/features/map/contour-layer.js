@@ -28,6 +28,8 @@ const CASING_WIDTH_PX = 3;
 const LINE_WIDTH_PX = 1;
 /** Below this zoom the lines merge into a solid mass, so the layer is not drawn. */
 const CONTOUR_MIN_ZOOM = 12;
+/** Draw order among tile layers: above the basemaps and the colour view. */
+const CONTOUR_Z_INDEX = 10;
 /** Corner-cutting passes that round the traced lines. Two passes remove the pixel staircase. */
 const SMOOTHING_PASSES = 2;
 /** Data layers sit at 60 to 80 percent opacity so the terrain stays readable (DESIGN.md). */
@@ -130,5 +132,6 @@ export function createContourLayer(tileUrlTemplate) {
     },
   });
 
-  return new ContourLayer({ bounds: DEM_BOUNDS, minZoom: CONTOUR_MIN_ZOOM, opacity: LAYER_OPACITY, className: 'map-contour-layer' });
+  // zIndex above the imagery layers (Leaflet's default is 1), so lines sit on top of the colour view too.
+  return new ContourLayer({ bounds: DEM_BOUNDS, minZoom: CONTOUR_MIN_ZOOM, zIndex: CONTOUR_Z_INDEX, opacity: LAYER_OPACITY, className: 'map-contour-layer' });
 }

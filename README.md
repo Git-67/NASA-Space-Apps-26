@@ -9,9 +9,9 @@ Mars maps show where to walk. Sol Stroll tells a crew whether to go. It follows 
 ## What works today
 
 - A map of the boxwork on high-resolution orbital imagery, with the path Curiosity actually drove and five science stops. It zooms from the whole crater down to the rocks.
-- A plan built from the stops you tick, in the order you choose: each section's distance, climb, walking time and difficulty on hover or tap, the route coloured by difficulty, and callouts at steep ground, sand and the biggest climb.
+- A plan built from stops you search for and add, in the order you choose (or the recommended shortest order). Map numbers and arrows follow that order. For each leg: each section's distance, climb, walking time and difficulty on hover or tap, the route coloured by difficulty, and callouts at steep ground, sand and the biggest climb.
 - A verdict (go, caution, no-go) for any sol in Curiosity's weather record, or for today, including NASA's space weather for that date. Every reason shows its basis.
-- Hazards on the route, a packing list, and what Curiosity found at each stop.
+- A task list for each stop with why it matters, hazards on the route, and a packing list.
 - Map options: contour lines traced live from NASA's Gale elevation model, colour HiRISE imagery, names of places Curiosity explored, and a latitude/longitude grid.
 - Dark and light themes.
 

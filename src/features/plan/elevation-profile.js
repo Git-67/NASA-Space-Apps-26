@@ -49,8 +49,8 @@ export function walkProfile(route, plan) {
       if (i !== section.fromIndex) walkedM += Math.abs(route.points[i].alongM - route.points[i - step].alongM);
       if (series.length === 0 || i !== section.fromIndex) series.push({ walkedM, elevationM: route.points[i].elevationM });
     }
-    const stop = route.stops.find((item) => item.id === section.toId);
-    marks.push({ walkedM, elevationM: route.points[section.toIndex].elevationM, number: stop ? route.stops.indexOf(stop) + 1 : 0 });
+    // Numbered by visiting order, matching the badges on the map.
+    marks.push({ walkedM, elevationM: route.points[section.toIndex].elevationM, number: marks.length + 1 });
   }
   return { series, marks };
 }
@@ -65,7 +65,7 @@ export function renderElevationProfile(route, plan) {
   const { series, marks } = walkProfile(route, plan);
   const figure = el('figure', { className: 'profile' });
   if (series.length < 2) {
-    figure.append(el('p', { className: 'chart-state', text: 'Select a stop beyond the start to see the climb.' }));
+    figure.append(el('p', { className: 'chart-state', text: 'Add a stop to see the climb.' }));
     return figure;
   }
 
@@ -99,7 +99,7 @@ export function renderElevationProfile(route, plan) {
 
   figure.append(chart, el('figcaption', {
     className: 'data-source-caption',
-    text: 'Elevation on the way out, in visiting order, in metres as recorded in the waypoint file. Distance follows the rover\'s drives. Numbers mark the stops. Source: Curiosity waypoints, NASA/JPL-Caltech.',
+    text: 'Height on the way out, in visiting order. Source: Curiosity waypoints, NASA/JPL-Caltech.',
   }));
   return figure;
 }

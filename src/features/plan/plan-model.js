@@ -13,7 +13,7 @@
  * @typedef {{ sol: number, lat: number, lon: number, elevationM: number, tiltDeg: number, alongM: number,
  *   track: number[][] }} RoutePoint `track` is the path the rover drove from the previous point, as [lat, lon] pairs.
  * @typedef {{ id: string, name: string, summary: string, terrain: 'transition' | 'ridge' | 'hollow', found: string,
- *   taskOurs: string, kitOurs: string[], workMinutesOurs: number, sourceLabel: string, sourceUrl: string,
+ *   tasksOurs: string[], kitOurs: string[], workMinutesOurs: number, sourceLabel: string, sourceUrl: string,
  *   pointIndex: number }} Stop
  * @typedef {{ points: RoutePoint[], stops: Stop[] }} Route
  * @typedef {'easier' | 'moderate' | 'hard'} Difficulty
@@ -147,6 +147,21 @@ export function buildPlan(route, visitOrder, walkingSpeedKmh) {
 }
 
 /**
+ * The recommended visiting order: every stop, in the order they lie along the path.
+ * Walking out along a single path and back covers each stretch exactly twice in
+ * this order; any other order walks some stretch more often, so this is the
+ * shortest walk that visits every stop.
+ * @param {Route} route
+ * @returns {string[]} Stop ids after the start, nearest along the path first.
+ */
+export function recommendedOrder(route) {
+  const start = route.stops[0];
+  return route.stops.filter((stop) => stop !== start)
+    .sort((a, b) => Math.abs(a.pointIndex - start.pointIndex) - Math.abs(b.pointIndex - start.pointIndex))
+    .map((stop) => stop.id);
+}
+
+/**
  * @typedef {{ title: string, detail: string, basis: string }} Danger
  */
 
@@ -162,11 +177,11 @@ export function listDangers(plan) {
 
   const hollows = plan.stops.filter((stop) => stop.terrain === 'hollow');
   dangers.push({
-    title: 'Loose sand between the ridges',
+    title: 'Loose sand',
     detail: hollows.length > 0
-      ? `This plan enters a sandy hollow at ${hollows.map((stop) => stop.name).join(' and ')}. Keep to the ridgetops between stops.`
-      : 'The hollows beside this route are sandy. Keep to the ridgetops.',
-    basis: 'NASA/JPL-Caltech release 2026-013: ridgetops were easy to drive, and sand in the hollows could cause wheel slip.',
+      ? `You enter a sandy hollow at ${hollows.map((stop) => stop.name).join(' and ')}. Otherwise keep to the ridgetops.`
+      : 'The hollows are sandy. Keep to the ridgetops.',
+    basis: 'NASA/JPL release 2026-013: sand in the hollows made the rover slip.',
   });
 
   const steep = plan.sections.filter((section) => !section.isReturn && section.difficulty !== 'easier');
@@ -174,28 +189,28 @@ export function listDangers(plan) {
     const worst = Math.max(...steep.map((section) => section.maxRoverTiltDeg));
     dangers.push({
       title: 'Steep ground',
-      detail: `Curiosity was tilted by up to ${worst.toFixed(1)}° on ${steep.length === 1 ? 'one section' : `${steep.length} sections`} of this plan. Steep sections are marked on the map.`,
-      basis: 'Derived from the rover tilt recorded in the Curiosity waypoint file. Tilt hints at slope; it is not a slope measurement.',
+      detail: `The rover tilted up to ${worst.toFixed(1)}° on ${steep.length === 1 ? 'one leg' : `${steep.length} legs`}. Marked on the map.`,
+      basis: 'Derived from Curiosity\'s recorded tilt, a hint at slope, not a measurement.',
     });
   }
 
   dangers.push({
-    title: 'Ridges about as wide as the rover',
-    detail: 'The ridges stand 1 to 2 m above the hollows and are not much wider than Curiosity. Watch your footing near the edges.',
-    basis: 'NASA/JPL-Caltech release 2026-013.',
+    title: 'Narrow ridges',
+    detail: 'Ridges are 1 to 2 m high and about rover-wide. Watch the edges.',
+    basis: 'NASA/JPL release 2026-013.',
   });
 
   dangers.push({
-    title: 'Radiation during a solar storm',
-    detail: 'A normal walk adds little dose. A solar particle event is different: do not start a walk while an alert is in effect.',
-    basis: 'Published studies report surface dose rates two to three times background during the September 2017 event (Zeitlin et al. 2018; Hassler et al. 2018). Not yet verified by the team against the papers.',
+    title: 'Solar storms',
+    detail: 'A normal walk adds little radiation. During a solar storm, stay inside. The verdict checks this for you.',
+    basis: 'Studies report 2 to 3 times normal dose in the Sept 2017 storm (Zeitlin 2018; Hassler 2018). Not yet checked by the team.',
   });
 
   return dangers;
 }
 
 /** Items every walk needs, whatever the stops. Our own suggestion, not a NASA list. */
-const BASE_KIT = ['Printed copy of this briefing', 'Spare sample bags', 'Marker flags for the return route'];
+const BASE_KIT = ['This briefing, printed', 'Spare sample bags', 'Marker flags for the way back'];
 
 /**
  * Collect the kit suggested for the selected stops, without repeats.

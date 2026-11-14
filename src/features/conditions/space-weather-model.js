@@ -28,14 +28,14 @@
 
 /** Plain names for each event type, shown in the panel. */
 export const EVENT_TYPE_LABEL = {
-  'CME-MARS': 'Solar storm forecast at Mars (coronal mass ejection)',
-  SEP: 'Solar energetic particles (seen near Earth)',
+  'CME-MARS': 'Solar storm forecast at Mars',
+  SEP: 'Solar particles (near Earth)',
   FLR: 'Solar flare',
-  IPS: 'Interplanetary shock',
+  IPS: 'Shock wave in space',
 };
 
 const KNOWN_TYPES = Object.keys(EVENT_TYPE_LABEL);
-const BASIS = 'NASA DONKI space weather database. Our rule: a storm forecast to hit Mars directly means no walk; a glancing hit, or particles detected near Earth, means caution.';
+const BASIS = 'NASA DONKI. Our rule: direct hit = no-go; glancing hit or particles = caution.';
 
 /**
  * Check the prepared file's shape and turn it into typed data.
@@ -82,23 +82,23 @@ export function eventsOnDate(weather, date) {
  */
 export function assessSpaceWeather(weather, date) {
   if (weather instanceof Error) {
-    return { level: 'unknown', text: 'Space weather could not be checked.', basis: weather.message };
+    return { level: 'unknown', text: 'Could not check space weather.', basis: weather.message };
   }
   if (date === null || date < weather.coverageStart || date > weather.coverageEnd) {
-    return { level: 'unknown', text: 'No space weather record covers this date.', basis: `DONKI record held: ${weather.coverageStart} to ${weather.coverageEnd}.` };
+    return { level: 'unknown', text: 'No space weather data for this date.', basis: `Data covers ${weather.coverageStart} to ${weather.coverageEnd}.` };
   }
   const today = eventsOnDate(weather, date);
   const marsArrivals = today.filter((event) => event.type === 'CME-MARS');
   const direct = marsArrivals.find((event) => !event.isGlancingBlow);
   if (direct) {
-    return { level: 'no-go', text: `A solar storm was forecast to hit Mars directly at ${direct.time.slice(11, 16)} UTC. Stay under shelter.`, basis: BASIS };
+    return { level: 'no-go', text: `Solar storm forecast to hit Mars (${direct.time.slice(11, 16)} UTC). Stay inside.`, basis: BASIS };
   }
   if (marsArrivals.length > 0) {
-    return { level: 'caution', text: 'A solar storm was forecast to give Mars a glancing blow on this date. Stay close to shelter.', basis: BASIS };
+    return { level: 'caution', text: 'Solar storm forecast to graze Mars. Stay near shelter.', basis: BASIS };
   }
   const particles = today.filter((event) => event.type === 'SEP');
   if (particles.length > 0) {
-    return { level: 'caution', text: 'Solar energetic particles were detected near Earth on this date. Whether they reached Mars depends on where Mars was.', basis: BASIS };
+    return { level: 'caution', text: 'Solar particles seen near Earth. They may or may not reach Mars.', basis: BASIS };
   }
-  return { level: 'go', text: 'No solar storm was forecast to reach Mars on this date.', basis: BASIS };
+  return { level: 'go', text: 'No solar storm forecast for Mars.', basis: BASIS };
 }
