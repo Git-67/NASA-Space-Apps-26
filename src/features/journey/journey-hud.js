@@ -77,11 +77,19 @@ export function createJourneyHud(handlers) {
   return {
     dialogs,
     visor,
-    /** @param {boolean} isVisor Draw the visor over the map, in place of the panels. */
+    /** @param {boolean} isVisor Show the visor in place of the panels, with the map shrunk to its minimap. */
     setVisor(isVisor) {
       document.body.classList.toggle('is-visor', isVisor);
       visor.setShown(isVisor);
       visorButton.setAttribute('aria-pressed', String(isVisor));
+      this.placeMinimap();
+    },
+    /** Put the map into the visor's minimap circle (journey.css reads these), after the screen changes size too. */
+    placeMinimap() {
+      const { left, top, size } = visor.minimapRect();
+      document.body.style.setProperty('--minimap-left', `${left.toFixed(1)}px`);
+      document.body.style.setProperty('--minimap-top', `${top.toFixed(1)}px`);
+      document.body.style.setProperty('--minimap-size', `${size.toFixed(1)}px`);
     },
     /** @param {boolean} isShown */
     setShown(isShown) {
@@ -135,11 +143,8 @@ export function createJourneyHud(handlers) {
      * @returns {{ top: number, bottom: number }} Pixels from the top and bottom edges.
      */
     insets() {
-      // With the visor on, the walker sits low in it: the clear area is centred on that point.
-      if (visor.isShown()) {
-        const walkerY = visor.walkerY();
-        return { top: Math.max(0, 2 * walkerY - window.innerHeight), bottom: Math.max(0, window.innerHeight - 2 * walkerY) };
-      }
+      // With the visor on, the map is the minimap and nothing covers it: the walker sits at its centre.
+      if (visor.isShown()) return { top: 0, bottom: 0 };
       return { top: top.getBoundingClientRect().bottom, bottom: window.innerHeight - bottom.getBoundingClientRect().top };
     },
   };

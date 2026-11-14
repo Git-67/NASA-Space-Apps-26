@@ -1,30 +1,47 @@
 /*
- * journey-visor (DESIGN.md): a curved helmet visor drawn over the journey map
- * (src/features/journey/visor-view.js). A simulation. Drawn in the map
- * overlay colours, which are the same in both themes, because a visor is
- * always seen against the ground. Only tokens are used.
+ * journey-visor (DESIGN.md): a curved helmet visor with only the critical
+ * information, all in white (src/features/journey/visor-view.js). A
+ * simulation. Its clear middle is dark, standing in for the view of the
+ * ground; the journey map becomes a small round minimap on its left.
+ * Theme-independent, like the map overlays. Only tokens are used.
  */
 
 body.is-visor .journey-top,
 body.is-visor .journey-bottom { display: none; }
 
-.visor { position: fixed; inset: 0; pointer-events: none; }
+/* The view through the visor: dark and clear. Sits above the map, below the minimap. */
+.visor { position: fixed; inset: 0; pointer-events: none; background: var(--color-route-casing); }
 .visor[hidden] { display: none; }
 .visor-drawing { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 
-/* No helmet around it: the map stays visible. The visor is its rim, shading towards the edge, and a faint glare. */
+/* The minimap: the journey map itself, moved into the circle the visor draws for it. */
+body.is-visor .map-area {
+  inset: auto;
+  left: var(--minimap-left);
+  top: var(--minimap-top);
+  width: var(--minimap-size);
+  height: var(--minimap-size);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  z-index: 1700;
+}
+body.is-visor .map-label-anchor,
+body.is-visor .map-arrow-anchor { display: none; }
+/* Attribution stays on screen (DESIGN.md, map-attribution), centred under the visor. */
+body.is-visor .map-attribution { position: fixed; left: 50%; right: auto; bottom: var(--space-xs); translate: -50% 0; max-width: 50%; }
+
+/* Everything on the visor is white, with a dark outline so it reads over any ground. */
 .visor-shade-clear { stop-color: var(--color-route-casing); stop-opacity: 0; }
 .visor-shade-edge { stop-color: var(--color-route-casing); stop-opacity: 0.55; }
-.visor-glare { fill: none; stroke: var(--color-map-ink); stroke-opacity: 0.08; stroke-width: 14; stroke-linecap: round; }
 .visor-rim { fill: none; stroke: var(--color-map-ink); stroke-opacity: 0.6; stroke-width: 4; }
-.visor-rim.is-caution { stroke: var(--color-route-moderate); stroke-opacity: 1; stroke-width: 10; }
-.visor-rim.is-no-go { stroke: var(--color-route-hard); stroke-opacity: 1; stroke-width: 12; }
+.visor-rim.is-caution { stroke-opacity: 1; stroke-width: 10; }
+.visor-rim.is-no-go { stroke-opacity: 1; stroke-width: 14; }
 @media (prefers-reduced-motion: no-preference) {
   .visor-rim.is-no-go { animation: visor-pulse 1.2s ease-in-out infinite alternate; }
 }
-@keyframes visor-pulse { from { stroke-opacity: 1; } to { stroke-opacity: 0.4; } }
+@keyframes visor-pulse { from { stroke-opacity: 1; } to { stroke-opacity: 0.3; } }
+.visor-minimap-ring { fill: none; stroke: var(--color-map-ink); stroke-width: 3; }
 
-/* Every mark has a dark outline, so it reads over bright and dark ground alike. */
 .visor-drawing text {
   fill: var(--color-map-ink);
   paint-order: stroke;
@@ -32,34 +49,27 @@ body.is-visor .journey-bottom { display: none; }
   stroke-width: 4px;
   stroke-linejoin: round;
 }
-.visor-tape { fill: none; stroke: var(--color-route); stroke-width: 2; }
-.visor-tick { stroke: var(--color-route); stroke-width: 2; }
+.visor-tape { fill: none; stroke: var(--color-map-ink); stroke-width: 2; }
+.visor-tick { stroke: var(--color-map-ink); stroke-width: 2; }
 .visor-tick-label { font: var(--type-heading-4); }
 .visor-caret { fill: var(--color-map-ink); }
-.visor-next-marker { fill: var(--color-route); stroke: var(--color-route-casing); stroke-width: 2; }
-.visor-next-marker.is-off-tape { fill: var(--color-route-moderate); }
+.visor-next-marker { fill: var(--color-map-ink); stroke: var(--color-route-casing); stroke-width: 2; }
+/* Off the tape: hollow, held at the tape's end. */
+.visor-next-marker.is-off-tape { fill: var(--color-route-casing); stroke: var(--color-map-ink); stroke-width: 3; }
 .visor-heading { font: var(--type-heading-1); }
 
 .visor-label { font: var(--type-heading-4); letter-spacing: var(--tracking-eyebrow); }
-.visor-drawing .visor-label { fill: var(--color-route); }
 .visor-value { font: var(--type-heading-2); }
 .visor-value-sm { font: var(--type-heading-3); }
 .visor-text { font: var(--type-subtitle); }
-.visor-drawing .visor-value.is-go { fill: var(--color-route); }
-.visor-drawing .visor-value.is-caution { fill: var(--color-route-moderate); }
-.visor-drawing .visor-value.is-no-go,
-.visor-drawing .visor-alert-text { fill: var(--color-route-hard); }
-.visor-alert-text { font: var(--type-display-lg); letter-spacing: var(--tracking-eyebrow); }
+.visor-alert-text { font: var(--type-heading-1); letter-spacing: var(--tracking-eyebrow); }
 
-/* Gauges against NASA's limits along the chin: cyan, amber near the limit, pink at it. */
+/* Gauges against NASA's limits along the chin. The label says NEAR LIMIT or AT LIMIT in words. */
 .visor-guide { fill: none; stroke: none; }
 .visor-gauge-track { fill: none; stroke: var(--color-map-ink); stroke-opacity: 0.25; stroke-width: 10; stroke-linecap: round; }
-.visor-gauge-fill { fill: none; stroke: var(--color-route); stroke-width: 10; stroke-linecap: round; }
-.visor-gauge.is-near .visor-gauge-fill { stroke: var(--color-route-moderate); }
-.visor-gauge.is-over .visor-gauge-fill { stroke: var(--color-route-hard); }
+.visor-gauge-fill { fill: none; stroke: var(--color-map-ink); stroke-width: 10; stroke-linecap: round; }
 .visor-gauge-label { font: var(--type-heading-4); }
 .visor-sim { font: var(--type-heading-4); letter-spacing: var(--tracking-eyebrow); }
-.visor-drawing .visor-sim { fill: var(--color-route); }
 
 /* The few controls sit outside the visor, in the bottom corners. */
 .visor-controls { position: absolute; bottom: var(--space-md); display: flex; gap: var(--space-sm); pointer-events: auto; }
@@ -88,3 +98,6 @@ body.is-visor .journey-bottom { display: none; }
 }
 .journey-visor-toggle .icon { width: var(--space-xl); height: var(--space-xl); }
 .journey-visor-toggle[aria-pressed="true"] { background: var(--color-primary); color: var(--color-on-primary); border-color: var(--color-primary); }
+
+/* The walker's 88px marker would fill the minimap; it is drawn smaller there. */
+body.is-visor .map-astronaut { scale: 0.6; }

@@ -33,6 +33,8 @@ import { createJourneyHud } from './journey-hud.js';
 const SPEEDS = [60, 120, 30];
 /** Zoom while walking: one step past the sharpest real imagery (HiRISE, zoom 16), so the ground near the walker is large. */
 const WALK_ZOOM = 17;
+/** Zoom of the visor's minimap: about 200 m across, enough to see the way to the next stop. */
+const MINIMAP_ZOOM = 15;
 /** Under reduced motion, the walker moves in steps this far apart in time, in milliseconds. */
 const STEP_MS = 1000;
 /** Longest time one frame may advance the walk, in milliseconds: after the tab was hidden, the walker must not jump past stops. */
@@ -101,8 +103,14 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather, limits, onEnd
     onRecentre: () => { isFollowing = true; hud.setFollowing(true); render(0, true); },
     onDrill: () => startDrill(),
     onVisor: () => {
+      if (!journey) return;
       isVisor = !isVisor;
       hud.setVisor(isVisor);
+      map.resize();
+      const here = positionAt(journey, progress.walkedM);
+      map.follow(here.lat, here.lon, isVisor ? MINIMAP_ZOOM : WALK_ZOOM, false);
+      isFollowing = true;
+      hud.setFollowing(true);
       render(0, true);
     },
   });
@@ -253,6 +261,7 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather, limits, onEnd
   }
 
   function onResize() {
+    hud.placeMinimap();
     map.resize();
     render(0, true);
   }

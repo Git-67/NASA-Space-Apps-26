@@ -1,10 +1,11 @@
 // @ts-check
 /**
- * Visor view: a curved helmet visor drawn over the journey map, showing only
- * the critical information. A browser SIMULATION of what a helmet display
- * could show, toggled for demonstration; there is no helmet or headset. The
- * map stays visible all round: the visor is a rim and its readouts, and the
- * walker sits low in it so most of the visor shows the ground ahead.
+ * Visor view: a curved helmet visor showing only the critical information, in
+ * plain white. A browser SIMULATION of what a helmet display could show,
+ * toggled for demonstration; there is no helmet or headset. The middle of the
+ * visor is left clear, standing in for the wearer's view of the ground; the
+ * journey map shrinks to a small round minimap on the visor's left
+ * (journey.css moves it into the circle `minimapRect` gives).
  *
  * Shape: a wide visor, rounder on top and flatter at the chin, like the
  * curved polycarbonate visors of NASA's suits (NASA TechPort project 94571
@@ -13,12 +14,13 @@
  *
  * On the visor, following its curve:
  * - top: a compass tape with the heading, and a diamond where the next stop lies;
- * - left: the next stop, its distance and walking time;
+ * - left: the next stop, its distance and walking time, and the minimap;
  * - right: the space weather level, its source, and a drill's countdown;
  * - chin: two gauges along the bottom of the visor against NASA's limits (time
  *   out of 8 h, distance from base of 2 km; both lunar figures), and a
  *   "simulation" label;
- * - the visor's rim glows amber for caution and pink for no-go.
+ * - the visor's rim thickens for caution and pulses for no-go, and every level
+ *   is said in words, since everything is the same white.
  * Drawn in a fixed 1200 × 750 box, scaled to fit the screen.
  */
 import { el } from '../../lib/dom.js';
@@ -65,8 +67,12 @@ const LABEL_ELLIPSE = [VISOR_RX - 78, VISOR_CHIN_RY - 70];
 const SIM_LABEL_ELLIPSE = [VISOR_RX - 120, VISOR_CHIN_RY - 72];
 /** Space between text and the visor's edge, in box units: room for the side toggle on the right. */
 const EDGE_MARGIN = 110;
-/** Where the walker sits in the box: low in the visor, so most of it shows the ground ahead. */
-const WALKER_Y = 470;
+/** The minimap: a circle on the visor's left, under the next stop and clear of the time gauge. */
+const MINIMAP_X = 300;
+const MINIMAP_Y = 430;
+const MINIMAP_RADIUS = 78;
+/** Gauge labels add these words, so a level is never told by the fill alone. */
+const GAUGE_WORDS = { ok: '', near: ' · NEAR LIMIT', over: ' · AT LIMIT' };
 
 /**
  * @param {string} tag
@@ -181,19 +187,19 @@ export function createVisorView(container, handlers) {
   const nextMarker = svg('path', { d: `M ${CENTRE_X} ${TAPE_CENTRE_Y - TAPE_RADIUS - 14} l 12 14 l -12 14 l -12 -14 Z`, class: 'visor-next-marker' });
   const headingText = svg('text', { x: CENTRE_X, y: 210, class: 'visor-heading', 'text-anchor': 'middle' });
 
-  const nextLabel = edgeText('left', 280, 'visor-label');
+  const nextLabel = edgeText('left', 225, 'visor-label');
   nextLabel.textContent = 'NEXT STOP';
-  const nextName = edgeText('left', 322, 'visor-value-sm');
-  const nextDistance = edgeText('left', 378, 'visor-value');
-  const nextTime = edgeText('left', 416, 'visor-value-sm');
+  const nextName = edgeText('left', 262, 'visor-value-sm');
+  const nextDistance = edgeText('left', 310, 'visor-value');
+  const nextTime = edgeText('left', 344, 'visor-value-sm');
 
   const weatherLabel = edgeText('right', 280, 'visor-label');
   const weatherLevel = edgeText('right', 332, 'visor-value');
   const weatherText = edgeText('right', 372, 'visor-text');
   const weatherTime = edgeText('right', 406, 'visor-text');
 
-  const alertText = svg('text', { x: CENTRE_X, y: 290, class: 'visor-alert-text', 'text-anchor': 'middle' });
-  const outGauge = chinGauge('visor-out-guide', 162, 112);
+  const alertText = svg('text', { x: CENTRE_X, y: 490, class: 'visor-alert-text', 'text-anchor': 'middle' });
+  const outGauge = chinGauge('visor-out-guide', 150, 112);
   const baseGauge = chinGauge('visor-base-guide', 18, 68);
   const simulationPath = svg('path', { id: 'visor-sim-guide', d: chinArc(SIM_LABEL_ELLIPSE, 108, 72), class: 'visor-guide' });
   const simulationText = svg('textPath', { href: '#visor-sim-guide', startOffset: '50%', 'text-anchor': 'middle' }, ['SIMULATED VISOR']);
@@ -209,7 +215,7 @@ export function createVisorView(container, handlers) {
       ]),
     ]),
     svg('path', { d: VISOR_PATH, fill: 'url(#visor-shade)' }),
-    svg('path', { d: arc(VISOR_MID_Y + 100, 450, 205, 232), class: 'visor-glare' }),
+    svg('circle', { cx: MINIMAP_X, cy: MINIMAP_Y, r: MINIMAP_RADIUS, class: 'visor-minimap-ring' }),
     rim,
     svg('path', { d: arc(TAPE_CENTRE_Y, TAPE_RADIUS, -90 - TAPE_HALF_ARC_DEG, -90 + TAPE_HALF_ARC_DEG), class: 'visor-tape' }),
     ...ticks.map((tick) => tick.group),
@@ -246,12 +252,18 @@ export function createVisorView(container, handlers) {
     },
     isShown: () => !root.hidden,
     /**
-     * Where the walker should sit on screen: low in the visor, wherever the scaled box lands.
-     * @returns {number} Pixels from the top of the window.
+     * Where the minimap goes on screen, wherever the scaled box lands.
+     * @returns {{ left: number, top: number, size: number }} Pixels.
      */
-    walkerY() {
+    minimapRect() {
       const scale = Math.min(window.innerWidth / WIDTH, window.innerHeight / HEIGHT);
-      return (window.innerHeight - HEIGHT * scale) / 2 + WALKER_Y * scale;
+      const offsetX = (window.innerWidth - WIDTH * scale) / 2;
+      const offsetY = (window.innerHeight - HEIGHT * scale) / 2;
+      return {
+        left: offsetX + (MINIMAP_X - MINIMAP_RADIUS) * scale,
+        top: offsetY + (MINIMAP_Y - MINIMAP_RADIUS) * scale,
+        size: 2 * MINIMAP_RADIUS * scale,
+      };
     },
     /** @param {boolean} isPlaying */
     setPlaying(isPlaying) {
@@ -304,11 +316,11 @@ export function createVisorView(container, handlers) {
       const out = gauge(status.outMinutes, status.outLimitMinutes);
       outGauge.fill.style.strokeDasharray = `${out.share.toFixed(3)} 1`;
       outGauge.group.setAttribute('class', `visor-gauge is-${out.level}`);
-      outGauge.textPath.textContent = `OUT ${formatDuration(status.outMinutes)} / ${status.outLimitMinutes / 60} h`;
+      outGauge.textPath.textContent = `OUT ${formatDuration(status.outMinutes)} / ${status.outLimitMinutes / 60} h${GAUGE_WORDS[out.level]}`;
       const base = gauge(status.baseM, status.baseLimitM);
       baseGauge.fill.style.strokeDasharray = `${base.share.toFixed(3)} 1`;
       baseGauge.group.setAttribute('class', `visor-gauge is-${base.level}`);
-      baseGauge.textPath.textContent = `BASE ${Math.round(status.baseM)} m / ${status.baseLimitM / 1000} km`;
+      baseGauge.textPath.textContent = `BASE ${Math.round(status.baseM)} m / ${status.baseLimitM / 1000} km${GAUGE_WORDS[base.level]}`;
 
       const nextSummary = `${status.nextName ? `Next stop: ${status.nextName}.` : 'Walk complete.'} Space weather: ${weather.level}.`;
       if (nextSummary !== summaryText) { summaryText = nextSummary; summary.textContent = nextSummary; }
