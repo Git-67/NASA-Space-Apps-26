@@ -3,10 +3,9 @@
  * The map's optional layers and the panel that switches them: colour imagery,
  * contour lines, place names and a latitude/longitude grid.
  *
- * One rule from DESIGN.md shapes this: colour imagery is for looking at the
- * place, and no data is drawn over it, so that colour on the map always means
- * data. While the colour view is on, the route, the stops and the contours are
- * hidden and their options are greyed out; switching back restores them.
+ * The route and stops stay on top of both imagery choices. Contours are
+ * switched off in the colour view (DESIGN.md: no data layer over colour
+ * imagery); the route is the one exception, drawn with its dark casing.
  */
 import { createColourImageryLayer } from './colour-imagery-layer.js';
 import { createContourLayer } from './contour-layer.js';
@@ -42,13 +41,12 @@ function reportProgress(layer, setStatus, loadingMessage, failureMessage) {
  * Add the optional layers and their panel to a map.
  * @param {import('../../../public/vendor/leaflet/leaflet-src.esm.js').Map} map
  * @param {object} options
- * @param {import('../../../public/vendor/leaflet/leaflet-src.esm.js').Layer} options.routeLayer The route and stop markers.
  * @param {LabelledPlace[]} options.stopLabels Names of the walk's stops, at their positions.
  * @param {Place[] | Error} options.places Places Curiosity explored, or why they could not be loaded.
  * @param {DemCalibration | Error} options.calibration Scale of the elevation tiles, or why it could not be loaded.
  * @param {string} options.demTileUrl Mars Trek tile URL of the elevation model, with {z}, {y} and {x}.
  */
-export function addLayerOptions(map, { routeLayer, stopLabels, places, calibration, demTileUrl }) {
+export function addLayerOptions(map, { stopLabels, places, calibration, demTileUrl }) {
   const colourLayer = createColourImageryLayer();
   const contourLayer = calibration instanceof Error ? null : createContourLayer(demTileUrl);
   const stopLabelLayer = createPlaceLabelLayer(stopLabels);
@@ -63,9 +61,8 @@ export function addLayerOptions(map, { routeLayer, stopLabels, places, calibrati
     /** @type {[import('../../../public/vendor/leaflet/leaflet-src.esm.js').Layer | null, boolean][]} */
     const wanted = [
       [colourLayer, isColour],
-      [routeLayer, !isColour],
       [contourLayer, !isColour && shown.has(CONTOURS)],
-      [stopLabelLayer, !isColour && shown.has(NAMES)],
+      [stopLabelLayer, shown.has(NAMES)],
       [placeLabelLayer, shown.has(NAMES)],
       [gridLayer, shown.has(GRID)],
     ];
@@ -80,17 +77,18 @@ export function addLayerOptions(map, { routeLayer, stopLabels, places, calibrati
   const contourNote = calibration instanceof Error ? 'Elevation from NASA Mars Trek (MRO HiRISE Gale elevation model).'
     : `Derived. A line every ${calibration.metresPerLevel.toFixed(1)} m of height, traced in your browser from NASA Mars Trek's `
       + `Gale elevation model (MRO HiRISE) as the map loads. Trek serves it only as 8-bit images, so that step is the finest it allows; `
-      + `we matched the steps to ${calibration.waypointCount} Curiosity elevations (typical error ${calibration.rmsErrorM} m).`;
+      + `we matched the steps to ${calibration.waypointCount} Curiosity elevations (typical error ${calibration.rmsErrorM} m). `
+      + 'Corners are rounded for reading; that moves a line by less than one source pixel. Shown from zoom 12 inwards.';
 
   const panel = createLayerPanel({
     imagery: [
-      { id: GRAYSCALE, label: 'MRO HiRISE, grayscale', note: 'NASA Mars Trek mosaic. The route and data layers are drawn on this view.' },
-      { id: COLOUR, label: 'MRO HiRISE, colour', note: "From NASA's Curiosity location map. It covers only the area around Curiosity's drive. The route, stops and contours are hidden in this view so that colour never stands for data." },
+      { id: GRAYSCALE, label: 'MRO HiRISE, grayscale', icon: 'filter_b_and_w', note: 'NASA Mars Trek mosaic, with the MRO CTX mosaic around it when zoomed out. Every layer is drawn on this view.' },
+      { id: COLOUR, label: 'MRO HiRISE, colour', icon: 'palette', note: "From NASA's Curiosity location map. It covers only the area around Curiosity's drive. Contours are off in this view, so colour on the map is not mistaken for data." },
     ],
     overlays: [
-      { id: CONTOURS, label: 'Contour lines', note: contourNote, unavailableReason: calibration instanceof Error ? calibration.message : undefined },
-      { id: NAMES, label: 'Place names', note: "The stops, and places Curiosity explored as named by NASA's Curiosity location map. Those lie north of the boxwork, along the rover's earlier drive: zoom out and pan north to see them.", unavailableReason: places instanceof Error ? places.message : undefined },
-      { id: GRID, label: 'Latitude and longitude grid', note: 'Degrees as the sources give them. Their convention (planetocentric or planetographic) is not yet confirmed.' },
+      { id: CONTOURS, label: 'Contour lines', icon: 'landscape', note: contourNote, unavailableReason: calibration instanceof Error ? calibration.message : undefined },
+      { id: NAMES, label: 'Place names', icon: 'label', note: "The stops, and places Curiosity explored as named by NASA's Curiosity location map. Those lie north of the boxwork, along the rover's earlier drive: zoom out and pan north to see them.", unavailableReason: places instanceof Error ? places.message : undefined },
+      { id: GRID, label: 'Latitude and longitude grid', icon: 'grid_on', note: 'Degrees as the sources give them. Their convention (planetocentric or planetographic) is not yet confirmed.' },
     ],
     onImageryChange: (id) => { isColour = id === COLOUR; apply(); },
     onOverlayChange: (id, isShown) => { if (isShown) shown.add(id); else shown.delete(id); apply(); },

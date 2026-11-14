@@ -1,14 +1,16 @@
 // @ts-check
 /**
- * The "when" side of the panel: the verdict and the conditions on the chosen
- * sol. Presentation only; the logic is in conditions-model.js.
+ * The "when" side of the panel: the verdict, the conditions on the chosen
+ * sol and the space weather on its date. Presentation only; the logic is in conditions-model.js.
  */
 import { el } from '../../lib/dom.js';
 import { formatDuration, formatMarsClock, marsMinutesToEarthMinutes } from '../../lib/mars.js';
+import { EVENT_TYPE_LABEL, eventsOnDate } from './space-weather-model.js';
 
 /** @typedef {import('./conditions-model.js').Verdict} Verdict */
 /** @typedef {import('./conditions-model.js').WeatherRecord} WeatherRecord */
 /** @typedef {import('./conditions-model.js').SeasonComparison} SeasonComparison */
+/** @typedef {import('./space-weather-model.js').SpaceWeather} SpaceWeather */
 
 const VERDICT_LABEL = { go: 'Go', caution: 'Caution', 'no-go': 'No-go', unknown: 'No verdict' };
 /** A symbol beside each level, so the verdict never depends on colour alone. */
@@ -47,7 +49,7 @@ export function renderVerdict(container, verdict) {
  */
 export function renderConditions(container, sol, record, comparison) {
   if (!record) {
-    container.replaceChildren(el('p', { className: 'chart-state', text: `Curiosity recorded no weather on sol ${sol}. Try a nearby sol.` }));
+    container.replaceChildren(el('p', { className: 'chart-state', text: `Curiosity recorded no weather on sol ${sol}. The weather feed has gaps and ends at sol 4995 (25 Aug 2026).` }));
     return;
   }
   const degrees = (/** @type {number | null} */ value) => (value === null ? MISSING : `${value} °C`);
@@ -70,4 +72,34 @@ export function renderConditions(container, sol, record, comparison) {
       row('Pressure', record.pressurePa === null ? MISSING : `${record.pressurePa} Pa`),
     ]),
   );
+}
+
+/**
+ * List the space weather events on the chosen date, by type, with where each was seen.
+ * @param {HTMLElement} container
+ * @param {SpaceWeather | Error | null} weather Null while the live reading is loading.
+ * @param {string | null} date Earth date of the chosen sol.
+ */
+export function renderSpaceWeather(container, weather, date) {
+  if (weather === null) {
+    container.replaceChildren(el('p', { className: 'chart-state', text: "Reading today's space weather from NASA…" }));
+    return;
+  }
+  if (weather instanceof Error) {
+    container.replaceChildren(el('p', { className: 'chart-state', text: `Space weather unavailable: ${weather.message}` }));
+    return;
+  }
+  const events = date ? eventsOnDate(weather, date) : [];
+  const heading = el('h4', { text: `Space weather on ${date ?? 'this date'} (UTC)${weather.isLive ? ', live' : ''}` });
+  const missing = weather.unavailable.length > 0
+    ? [el('p', { className: 'basis', text: `Not available from NASA when this record was built: ${weather.unavailable.join(', ')}.` })]
+    : [];
+  if (events.length === 0) {
+    container.replaceChildren(heading, el('p', { className: 'chart-state', text: 'No solar storm, particle event or shock recorded for this date.' }), ...missing);
+    return;
+  }
+  container.replaceChildren(heading, el('ul', { className: 'event-list' }, events.map((event) => el('li', {}, [
+    el('span', { className: 'event-type', text: EVENT_TYPE_LABEL[event.type] }),
+    el('span', { className: 'telemetry', text: `${event.time.slice(11, 16)} UTC · ${event.detail}${event.observedAt ? ` · ${event.observedAt}` : ''}` }),
+  ]))), ...missing);
 }

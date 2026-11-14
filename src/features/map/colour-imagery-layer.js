@@ -17,6 +17,10 @@ const TILE_PX = 256;
 const COLOUR_TILES = 'https://mars.nasa.gov/mmgis-maps/MSL/Layers/MSL_Gale_HiRISE-LRGB_78quads';
 /** Deepest zoom the colour mosaic is published at. */
 const COLOUR_MAX_ZOOM = 18;
+/** Deepest map zoom drawn from the source: one Mercator zoom deeper is the mosaic's limit. Leaflet enlarges beyond it. */
+const COLOUR_MAX_MAP_ZOOM = COLOUR_MAX_ZOOM - 1;
+/** The mission map publishes the mosaic from Mercator zoom 10, so map zoom 9 is the widest drawn from source. */
+const COLOUR_MIN_MAP_ZOOM = 9;
 /** Extent of the colour mosaic, from the mission map's configuration. */
 const COLOUR_BOUNDS = L.latLngBounds([-4.87560429259321, 137.32672354505786], [-4.55506331169111, 137.4785574965306]);
 
@@ -50,7 +54,7 @@ export function createColourImageryLayer() {
       // On the map's grid a tile spans 180 / 2^z degrees; the Mercator tile one zoom deeper spans the same longitudes.
       const tileDeg = 180 / 2 ** coords.z;
       const north = 90 - coords.y * tileDeg;
-      const mercatorZoom = Math.min(coords.z + 1, COLOUR_MAX_ZOOM);
+      const mercatorZoom = coords.z + 1;
       const rows = mercatorRowsForBand(north, north - tileDeg, mercatorZoom, TILE_PX);
       Promise.all(rows.map(({ row }) => loadImage(`${COLOUR_TILES}/${mercatorZoom}/${coords.x}/${toTmsRow(row, mercatorZoom)}.png`)))
         .then((images) => {
@@ -68,5 +72,5 @@ export function createColourImageryLayer() {
     },
   });
 
-  return new ColourLayer({ bounds: COLOUR_BOUNDS, className: 'map-colour-layer' });
+  return new ColourLayer({ bounds: COLOUR_BOUNDS, minNativeZoom: COLOUR_MIN_MAP_ZOOM, maxNativeZoom: COLOUR_MAX_MAP_ZOOM, className: 'map-colour-layer' });
 }

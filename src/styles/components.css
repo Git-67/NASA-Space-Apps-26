@@ -199,3 +199,73 @@
 .chart-line { fill: none; stroke: var(--color-chart-1); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 .chart-point { fill: var(--color-chart-1); stroke: var(--color-surface); stroke-width: 2; }
 .chart-point-label { font: var(--type-chart-label); fill: var(--color-text-secondary); }
+
+/* Icons: Material Symbols Outlined (DESIGN.md, Icons). Sized to the text they sit beside. */
+.icon {
+  font-family: "Material Symbols Outlined";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 1.25em;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  vertical-align: middle;
+}
+.button-secondary { display: inline-flex; align-items: center; gap: var(--space-xs); }
+.button-secondary[aria-pressed="true"] { background: var(--color-surface-raised); border-color: var(--color-link); }
+
+/* button-icon: a 44px square ghost button holding one icon, with an accessible name. */
+.button-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-touch);
+  height: var(--size-touch);
+  padding: 0;
+  background: transparent;
+  color: var(--color-text-secondary);
+  border: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.button-icon:hover { background: var(--color-surface-raised); color: var(--color-ink); }
+.button-icon:disabled { color: var(--color-text-disabled); background: transparent; cursor: default; }
+.stop-move { display: flex; flex: none; }
+
+/* Sol slider with the Present button beside it. */
+.slider-row { display: flex; align-items: center; gap: var(--space-sm); }
+.slider-row .slider { flex: 1; min-width: 0; }
+
+/* card-carousel: cards in a row that scrolls sideways and snaps to each card. */
+.carousel {
+  display: flex;
+  gap: var(--space-sm);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: var(--space-xs);
+  overscroll-behavior-x: contain;
+}
+.carousel-card {
+  flex: 0 0 85%;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+  padding: var(--space-md);
+  background: var(--color-canvas);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-md);
+  font: var(--type-body-sm);
+}
+
+/* Space weather events on the chosen date. */
+.space-weather { display: flex; flex-direction: column; gap: var(--space-xs); }
+.event-list { display: flex; flex-direction: column; }
+.event-list li { display: flex; flex-direction: column; padding: var(--space-xs) 0; border-bottom: 1px solid var(--color-hairline); font: var(--type-body-sm); }
+.event-type { font: var(--type-body-sm-medium); }
+
+/* "View as table" toggle under the plan. */
+.table-toggle summary { min-height: var(--size-touch); display: flex; align-items: center; cursor: pointer; }

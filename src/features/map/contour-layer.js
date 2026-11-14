@@ -9,12 +9,14 @@
  *          recorded elevations (about 18.6 m per grey step). Each contour is
  *          the boundary between two grey steps, so the contour interval is one
  *          step, and its elevation is interceptM + metresPerLevel × (step + 0.5).
+ *          The traced lines are joined and their pixel corners rounded
+ *          (contour-model.js); rounding moves a line by under one source pixel.
  * Grid:    the same plain latitude/longitude tiles as the basemap. Beyond the
  *          model's deepest zoom the lines are traced on the deepest tile and
  *          scaled up, so they stay sharp but gain no detail.
  */
 import * as L from '../../../public/vendor/leaflet/leaflet-src.esm.js';
-import { traceStepContours } from './contour-model.js';
+import { chainSegments, smoothLine, traceStepContours } from './contour-model.js';
 
 const TILE_PX = 256;
 /** Deepest zoom Mars Trek publishes this elevation model at. */
@@ -24,6 +26,10 @@ const DEM_BOUNDS = L.latLngBounds([-4.9254743, 137.1224711], [-4.2489631, 137.72
 /** Dark casing under each line and the line itself, in pixels. */
 const CASING_WIDTH_PX = 3;
 const LINE_WIDTH_PX = 1;
+/** Below this zoom the lines merge into a solid mass, so the layer is not drawn. */
+const CONTOUR_MIN_ZOOM = 12;
+/** Corner-cutting passes that round the traced lines. Two passes remove the pixel staircase. */
+const SMOOTHING_PASSES = 2;
 /** Data layers sit at 60 to 80 percent opacity so the terrain stays readable (DESIGN.md). */
 const LAYER_OPACITY = 0.8;
 
@@ -71,7 +77,7 @@ function loadGreyLevels(url) {
  * @returns {L.GridLayer} A Leaflet layer; listen to its "loading", "load" and "tileerror" events for status.
  */
 export function createContourLayer(tileUrlTemplate) {
-  /** @type {Map<string, Promise<{ level: number, segments: number[] }[]>>} */
+  /** @type {Map<string, Promise<number[][]>>} */
   const contoursByTile = new Map();
 
   /** @param {number} z @param {number} row @param {number} column */
@@ -80,7 +86,8 @@ export function createContourLayer(tileUrlTemplate) {
     let contours = contoursByTile.get(key);
     if (!contours) {
       const url = tileUrlTemplate.replace('{z}', String(z)).replace('{y}', String(row)).replace('{x}', String(column));
-      contours = loadGreyLevels(url).then((levels) => traceStepContours(levels, TILE_PX, TILE_PX));
+      contours = loadGreyLevels(url).then((levels) => traceStepContours(levels, TILE_PX, TILE_PX)
+        .flatMap(({ segments }) => chainSegments(segments).map((line) => smoothLine(line, SMOOTHING_PASSES))));
       contours.catch(() => contoursByTile.delete(key)); // let a later view try again
       contoursByTile.set(key, contours);
     }
@@ -105,15 +112,14 @@ export function createContourLayer(tileUrlTemplate) {
           const context = tile.getContext('2d');
           if (!context) throw new Error('This browser cannot draw on a canvas.');
           context.lineCap = 'round';
+          context.lineJoin = 'round';
           for (const [colour, width] of [[token('--color-route-casing'), CASING_WIDTH_PX], [token('--color-map-ink'), LINE_WIDTH_PX]]) {
             context.strokeStyle = String(colour);
             context.lineWidth = Number(width);
             context.beginPath();
-            for (const { segments } of contours) {
-              for (let i = 0; i < segments.length; i += 4) {
-                context.moveTo((segments[i] - offsetX) * scale, (segments[i + 1] - offsetY) * scale);
-                context.lineTo((segments[i + 2] - offsetX) * scale, (segments[i + 3] - offsetY) * scale);
-              }
+            for (const line of contours) {
+              context.moveTo((line[0] - offsetX) * scale, (line[1] - offsetY) * scale);
+              for (let i = 2; i < line.length; i += 2) context.lineTo((line[i] - offsetX) * scale, (line[i + 1] - offsetY) * scale);
             }
             context.stroke();
           }
@@ -124,5 +130,5 @@ export function createContourLayer(tileUrlTemplate) {
     },
   });
 
-  return new ContourLayer({ bounds: DEM_BOUNDS, opacity: LAYER_OPACITY, className: 'map-contour-layer' });
+  return new ContourLayer({ bounds: DEM_BOUNDS, minZoom: CONTOUR_MIN_ZOOM, opacity: LAYER_OPACITY, className: 'map-contour-layer' });
 }

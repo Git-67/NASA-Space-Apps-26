@@ -15,8 +15,10 @@ import * as L from '../../../public/vendor/leaflet/leaflet-src.esm.js';
 import { MARS_RADIUS_M } from '../../lib/mars.js';
 import { el } from '../../lib/dom.js';
 import { addLayerOptions } from './map-layer-options.js';
+import { createRouteLayer } from './route-layer.js';
 
 /** @typedef {import('../plan/plan-model.js').Route} Route */
+/** @typedef {import('../plan/plan-model.js').Plan} Plan */
 /** @typedef {import('./map-layer-data.js').Place} Place */
 /** @typedef {import('./map-layer-data.js').DemCalibration} DemCalibration */
 
@@ -26,11 +28,18 @@ const TILE_PATH = '1.0.0/default/default028mm/{z}/{y}/{x}.png';
 const HIRISE_LAYER = 'curiosity_hirise_mosaic';
 /** MRO HiRISE elevation model of Gale Crater, the source of the contour lines. */
 const DEM_LAYER = 'Gale_DEM_SMG_1m';
-/** Deepest zoom the HiRISE mosaic is published at. The map never zooms past it, so imagery is never stretched. */
+/** Wider MRO CTX mosaic of Gale Crater, shown beneath HiRISE so the map can zoom out to the whole crater. */
+const CTX_LAYER = 'curiosity_ctx_mosaic';
+/** Deepest zoom each mosaic is published at. Beyond it, tiles are enlarged and the map says so. */
 const HIRISE_MAX_ZOOM = 16;
-const MIN_ZOOM = 12;
+const CTX_MAX_ZOOM = 10;
+/** Zoom range of the map: from the whole crater to two steps past HiRISE's own resolution. */
+const MIN_ZOOM = 8;
+const MAX_ZOOM = 18;
 /** Extent of the HiRISE mosaic, from its Mars Trek capabilities file: south-west and north-east corners. */
 const MOSAIC_BOUNDS = L.latLngBounds([-4.9254743, 137.1224669], [-4.2489588, 137.7298129]);
+/** Extent of the CTX mosaic, from its Mars Trek capabilities file. Panning stops at its edge. */
+const CTX_BOUNDS = L.latLngBounds([-7.2137273, 136.2768326], [-3.5804738, 139.3864225]);
 const ROUTE_PADDING_PX = 48;
 /** Side of the square hit area around each stop badge, in pixels (the 44px touch target). */
 const HIT_AREA_PX = 44;
@@ -38,6 +47,24 @@ const HIT_AREA_PX = 44;
 const CROWDED_STOPS_M = 30;
 /** How far each badge of a crowded pair is nudged sideways, in pixels, so both stay visible. */
 const CROWDED_NUDGE_PX = 14;
+
+/**
+ * Tell the visitor when the map is enlarged past the grayscale HiRISE mosaic's
+ * own resolution (DESIGN.md: never stretch imagery without saying so).
+ * @param {L.Map} map
+ */
+function addOverZoomNotice(map) {
+  const notice = el('p', { className: 'map-notice', attrs: { role: 'status' } });
+  const Notice = L.Control.extend({ onAdd: () => notice });
+  new Notice({ position: 'bottomleft' }).addTo(map);
+  const update = () => {
+    const isPast = map.getZoom() > HIRISE_MAX_ZOOM;
+    notice.hidden = !isPast;
+    notice.textContent = isPast ? `Enlarged ${2 ** (map.getZoom() - HIRISE_MAX_ZOOM)}× past the imagery's own resolution` : '';
+  };
+  map.on('zoomend', update);
+  update();
+}
 
 /** Leaflet's latitude/longitude grid, measured on Mars instead of Earth. */
 const MARS_CRS = L.extend({}, L.CRS.EPSG4326, { R: MARS_RADIUS_M });
@@ -49,34 +76,38 @@ const MARS_CRS = L.extend({}, L.CRS.EPSG4326, { R: MARS_RADIUS_M });
  * @param {{ places: Place[] | Error, calibration: DemCalibration | Error }} extras Data for the optional layers,
  *   or why each could not be loaded; a missing one only disables its own layer.
  * @param {(stopId: string) => void} onStopChosen Called when a visitor activates a stop marker.
- * @returns {{ setVisitedStops: (stopIds: string[]) => void, highlightStop: (stopId: string) => void }}
+ * @returns {{ showPlan: (plan: Plan, activeStopId: string | null) => void, highlightStop: (stopId: string) => void }}
  */
 export function createMapView(container, route, extras, onStopChosen) {
   const map = L.map(container, {
     crs: MARS_CRS,
     minZoom: MIN_ZOOM,
-    maxZoom: HIRISE_MAX_ZOOM,
-    maxBounds: MOSAIC_BOUNDS,
+    maxZoom: MAX_ZOOM,
+    maxBounds: CTX_BOUNDS,
     zoomControl: false,
     attributionControl: false,
   });
 
+  L.tileLayer(`${TREK_TILES}/${CTX_LAYER}/${TILE_PATH}`, {
+    bounds: CTX_BOUNDS,
+    maxNativeZoom: CTX_MAX_ZOOM,
+    maxZoom: MAX_ZOOM,
+  }).addTo(map);
   L.tileLayer(`${TREK_TILES}/${HIRISE_LAYER}/${TILE_PATH}`, {
     bounds: MOSAIC_BOUNDS,
-    minZoom: MIN_ZOOM,
-    maxZoom: HIRISE_MAX_ZOOM,
+    maxNativeZoom: HIRISE_MAX_ZOOM,
+    maxZoom: MAX_ZOOM,
   }).addTo(map);
 
   L.control.zoom({ position: 'topright', zoomInTitle: 'Zoom in', zoomOutTitle: 'Zoom out' }).addTo(map);
   // Metric only: SI units throughout (DESIGN.md, Mars conventions).
   L.control.scale({ position: 'bottomleft', imperial: false }).addTo(map);
+  addOverZoomNotice(map);
 
-  // The route and stops form one layer, so the colour view can hide them together.
-  const routeLayer = L.layerGroup();
+  const routeLayer = L.layerGroup().addTo(map);
+  const planRoute = createRouteLayer();
+  planRoute.layer.addTo(routeLayer);
   const path = route.points.map((point) => L.latLng(point.lat, point.lon));
-  // Two lines, dark under bright: the casing keeps the route readable on pale dust and dark rock alike.
-  L.polyline(path, { className: 'map-route-casing', interactive: false }).addTo(routeLayer);
-  L.polyline(path, { className: 'map-route', interactive: false }).addTo(routeLayer);
 
   /** @type {Map<string, HTMLElement>} */
   const markerElements = new Map();
@@ -117,7 +148,6 @@ export function createMapView(container, route, extras, onStopChosen) {
   map.fitBounds(L.latLngBounds(path), { padding: [ROUTE_PADDING_PX, ROUTE_PADDING_PX] });
 
   addLayerOptions(map, {
-    routeLayer,
     stopLabels: route.stops.map((stop, index) => {
       const point = route.points[stop.pointIndex];
       return { name: `${index + 1}. ${stop.name}`, lat: point.lat, lon: point.lon, hasMarker: false };
@@ -128,9 +158,11 @@ export function createMapView(container, route, extras, onStopChosen) {
   });
 
   return {
-    /** Dim the stops that are not part of the current plan. */
-    setVisitedStops(stopIds) {
-      for (const [id, badge] of markerElements) badge.classList.toggle('is-skipped', !stopIds.includes(id));
+    /** Draw the plan, with the leg leaving `activeStopId` brought forward, and dim the stops left out of it. */
+    showPlan(plan, activeStopId) {
+      planRoute.show(route, plan, activeStopId);
+      const visited = plan.stops.map((stop) => stop.id);
+      for (const [id, badge] of markerElements) badge.classList.toggle('is-skipped', !visited.includes(id));
     },
     /** Mark one stop as the one whose details are shown. */
     highlightStop(stopId) {

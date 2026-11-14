@@ -46,3 +46,31 @@ export function formatDuration(minutes) {
   const rest = total % 60;
   return hours === 0 ? `${rest} min` : `${hours} h ${String(rest).padStart(2, '0')} min`;
 }
+
+/** Length of one sol in Earth days (88,775.244 s; NASA reference value). */
+export const SOL_IN_EARTH_DAYS = 88_775.244 / 86_400;
+
+/**
+ * Curiosity's sol number on a given Earth date, counted from a known pair.
+ * Used where the weather record has no entry: the present day, and gaps.
+ * DERIVED: counts whole sols from the reference, so it can be off by one near a sol boundary.
+ * @param {string} date Earth date, "YYYY-MM-DD" (UTC).
+ * @param {{ sol: number, earthDate: string }} reference A sol whose Earth date is known.
+ * @returns {number}
+ */
+export function solOnEarthDate(date, reference) {
+  const days = (Date.parse(`${date}T12:00:00Z`) - Date.parse(`${reference.earthDate}T12:00:00Z`)) / 86_400_000;
+  return reference.sol + Math.floor(days / SOL_IN_EARTH_DAYS);
+}
+
+/**
+ * The Earth date (UTC) on which a sol falls, counted from a known pair.
+ * DERIVED, like solOnEarthDate.
+ * @param {number} sol
+ * @param {{ sol: number, earthDate: string }} reference A sol whose Earth date is known.
+ * @returns {string} "YYYY-MM-DD".
+ */
+export function earthDateOfSol(sol, reference) {
+  const time = Date.parse(`${reference.earthDate}T12:00:00Z`) + (sol - reference.sol) * SOL_IN_EARTH_DAYS * 86_400_000;
+  return new Date(time).toISOString().slice(0, 10);
+}

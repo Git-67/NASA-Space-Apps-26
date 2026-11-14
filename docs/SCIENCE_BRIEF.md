@@ -57,8 +57,8 @@ Sources for the stops:
 - Dates were converted to sols using the weather feed's own date and sol pairs.
 
 Route figures (Derived from the waypoint file's odometer and elevation fields):
-- Stop 1 to stop 5 along the rover's path: **929 m**, measured as straight lines between the 50 recorded waypoints. This is the figure the product uses. The rover's own odometer gives about 1.2 km for the same stretch, because it counts every turn and wheel movement.
-- Distance of each stop along the path from the start: nodule site 636 m, panorama viewpoint 811 m, Monte Grande hollow 917 m, Nevado Sajama ridge 929 m.
+- Stop 1 to stop 5 along the rover's path: **1,113 m**, measured along the drives the rover made (the mission's traverse file). This is the figure the product uses since 14 Nov 2026. Straight lines between the 50 waypoints give 929 m, which cut the rover's corners; the odometer gives about 1.2 km, because it also counts turns on the spot.
+- Distance of each stop along the path from the start: nodule site 746 m, panorama viewpoint 968 m, Monte Grande hollow 1,100 m, Nevado Sajama ridge 1,113 m.
 - Furthest point of the route from the start, in a straight line: 537 m.
 - Climb from stop 1 to stop 5: about 40 m.
 - Stops 4 and 5 are 10 m apart, so on the map they are one location with two samples. That pairing is the scientific heart of the walk.

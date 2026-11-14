@@ -8,6 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap">
+  <!-- Material Symbols (Apache 2.0): only the icons the page uses, listed alphabetically as Google Fonts requires. -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&amp;icon_names=arrow_downward,arrow_upward,filter_b_and_w,grain,grid_on,label,landscape,layers,palette,today,trending_up,warning&amp;display=block">
   <link rel="stylesheet" href="public/vendor/leaflet/leaflet.css">
   <link rel="stylesheet" href="src/styles/tokens.css">
   <link rel="stylesheet" href="src/styles/base.css">
@@ -58,23 +60,21 @@
               <input id="sol-input" class="text-input" type="number" step="1" inputmode="numeric">
             </div>
           </div>
-          <label class="visually-hidden" for="sol-slider">Sol, as a slider</label>
-          <input id="sol-slider" class="slider" type="range" step="1">
-          <div class="preset-row" role="group" aria-label="Jump to a sol">
-            <button class="pill-tab" type="button" data-sol="4711">In the boxwork</button>
-            <button class="pill-tab" type="button" data-sol="2100">2018 dust storm</button>
-            <button class="pill-tab" type="button" data-sol="2060">Before the storm</button>
+          <div class="slider-row">
+            <label class="visually-hidden" for="sol-slider">Sol, as a slider</label>
+            <input id="sol-slider" class="slider" type="range" step="1">
+            <button id="present-button" class="button-secondary" type="button" aria-pressed="false"><span class="icon" aria-hidden="true">today</span>Present</button>
           </div>
+          <p id="present-note" class="basis" hidden></p>
           <div id="conditions"></div>
-          <div class="check-row">
-            <input id="storm-input" type="checkbox">
-            <label for="storm-input">What if: a solar storm alert is in effect</label>
-          </div>
+          <div id="space-weather" class="space-weather" aria-live="polite"></div>
           <p class="data-source-caption">Source: <a class="button-link" href="https://mars.nasa.gov/rss/api/?feed=weather&amp;category=msl&amp;feedtype=json" rel="noopener">Curiosity REMS daily weather</a>, Centro de Astrobiología via NASA. The provider labels this feed “for outreach purposes only”. It is what Curiosity measured at its position on that sol, not a forecast.</p>
+          <p class="data-source-caption">Space weather: <a class="button-link" href="https://api.nasa.gov/" rel="noopener">NASA DONKI</a>, Community Coordinated Modeling Center. Solar storm arrivals at Mars are WSA-Enlil model forecasts; particle events were detected near Earth or by STEREO, not at Mars. Accessed 14 Nov 2026; the present day is read live.</p>
         </section>
 
         <section class="card" aria-labelledby="where-title">
           <h2 id="where-title" class="card-title">Where</h2>
+          <p class="basis">Tick the stops to visit and use the arrows to set their order. Choose a stop on the map to see the leg from it to the next stop; hover or tap a leg for its distance, climb, time and difficulty.</p>
           <div id="stop-list"></div>
           <div id="totals" class="stat-grid"></div>
           <div id="sections"></div>
