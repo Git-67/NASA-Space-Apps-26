@@ -67,7 +67,8 @@ export function createJourneyHud(handlers) {
   recentreButton.addEventListener('click', handlers.onRecentre);
   recentreButton.hidden = true;
   const next = el('p', { className: 'journey-next', attrs: { 'aria-live': 'polite' } });
-  const facing = el('p', { className: 'journey-facing' });
+  // Says it is a simulation, and that the imagery is enlarged when it is (the map's own notice is hidden here).
+  const sim = el('p', { className: 'journey-sim', text: 'Simulation' });
   // A hazard just ahead (steep ground, sand), in words with a warning icon; empty otherwise.
   const hazardText = el('span');
   const hazard = el('p', { className: 'journey-hazard', attrs: { role: 'status' } }, [icon('warning'), hazardText]);
@@ -76,10 +77,9 @@ export function createJourneyHud(handlers) {
 
   const top = el('div', { className: 'journey-top' }, [el('div', { className: 'journey-top-left' }, [endButton, north]), weather]);
   const bottom = el('div', { className: 'journey-bottom' }, [
-    el('p', { className: 'journey-sim', text: 'Simulation · not a real position' }),
+    sim,
     hazard,
     next,
-    facing,
     el('div', { className: 'journey-controls' }, [playButton, speedButton, drillButton, recentreButton]),
   ]);
   const root = el('div', { className: 'journey-hud' }, [top, bottom]);
@@ -121,13 +121,11 @@ export function createJourneyHud(handlers) {
     },
     /**
      * @param {{ nextName: string | null, metresToGo: number, minutesToGo: number,
-     *   facingFrom: 'compass' | 'travel', enlargement: number }} status enlargement: times the imagery is enlarged.
+     *   enlargement: number }} status enlargement: times the imagery is enlarged.
      */
-    setStatus({ nextName, metresToGo, minutesToGo, facingFrom, enlargement }) {
+    setStatus({ nextName, metresToGo, minutesToGo, enlargement }) {
       next.textContent = nextName === null ? 'Walk complete.' : `Next: ${nextName} · ${Math.round(metresToGo)} m · ${Math.ceil(minutesToGo)} min`;
-      const facingText = facingFrom === 'compass' ? 'Map turns with this device\'s compass' : 'Map turns to your direction of travel';
-      // Said here because the map's own notice is hidden in journey mode (DESIGN.md, map-notice).
-      facing.textContent = enlargement > 1 ? `${facingText} · imagery enlarged ${enlargement}×` : facingText;
+      sim.textContent = enlargement > 1 ? `Simulation · imagery enlarged ${enlargement}×` : 'Simulation';
     },
     /**
      * Warn of a hazard just ahead, in both views, or clear the warning.
@@ -156,7 +154,8 @@ export function createJourneyHud(handlers) {
           el('span', { className: 'reason-symbol', text: LEVEL_SYMBOL[summary.level], attrs: { 'aria-hidden': 'true' } }),
           LEVEL_LABEL[summary.level],
         ]),
-        el('p', { className: 'journey-weather-text', text: summary.text }),
+        // A clear sky needs no sentence; anything else says why.
+        ...(summary.level === 'go' ? [] : [el('p', { className: 'journey-weather-text', text: summary.text })]),
       );
     },
     /** @param {boolean} isFollowing Whether the map follows the walker; if not, offer "Re-centre". */

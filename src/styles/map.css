@@ -110,7 +110,7 @@
 .map-layer-body legend { font: var(--type-caption-bold); color: var(--color-text-secondary); padding: 0; }
 .map-layer-choice { padding-bottom: var(--space-xs); border-bottom: 1px solid var(--color-hairline); }
 .map-layer-choice:last-child { border-bottom: 0; }
-.map-layer-choice input { width: var(--space-lg); height: var(--space-lg); accent-color: var(--color-primary); flex: none; }
+.map-layer-choice input { width: var(--space-xl); height: var(--space-xl); accent-color: var(--color-primary); flex: none; }
 .map-layer-choice input:disabled + label { color: var(--color-text-disabled); }
 .map-layer-status { font: var(--type-caption); color: var(--color-text-secondary); }
 .map-layer-status:empty { display: none; }

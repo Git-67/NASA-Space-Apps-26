@@ -70,11 +70,25 @@
 }
 .text-input:focus-visible { outline: none; border: 2px solid var(--color-link); }
 
-.slider { width: 100%; height: var(--size-touch); accent-color: var(--color-accent); }
+/* slider: a 32px thumb on a 44px-tall control, big enough to grab with a glove. */
+.slider { width: 100%; height: var(--size-touch); margin: 0; background: transparent; -webkit-appearance: none; appearance: none; cursor: pointer; }
+.slider::-webkit-slider-runnable-track { height: var(--space-xs); background: var(--color-hairline-strong); border-radius: var(--radius-full); }
+.slider::-moz-range-track { height: var(--space-xs); background: var(--color-hairline-strong); border-radius: var(--radius-full); }
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: var(--space-xxl);
+  height: var(--space-xxl);
+  margin-top: calc((var(--space-xs) - var(--space-xxl)) / 2);
+  background: var(--color-accent);
+  border: 2px solid var(--color-void);
+  border-radius: var(--radius-full);
+}
+.slider::-moz-range-thumb { width: var(--space-xxl); height: var(--space-xxl); background: var(--color-accent); border: 2px solid var(--color-void); border-radius: var(--radius-full); }
 
 .check-row { display: flex; align-items: center; gap: var(--space-sm); min-height: var(--size-touch); }
-.check-row input, .stop-item input { width: var(--space-lg); height: var(--space-lg); accent-color: var(--color-primary); flex: none; }
-.check-row label { font: var(--type-body-sm-medium); }
+.check-row input, .stop-item input { width: var(--space-xl); height: var(--space-xl); accent-color: var(--color-primary); flex: none; }
+/* The label fills the row, so the whole 44px row ticks the box, not only the box itself. */
+.check-row label { flex: 1; align-self: stretch; display: flex; align-items: center; gap: var(--space-xs); font: var(--type-body-sm-medium); }
 
 /* pill-tab, used for the sol presets */
 .preset-row { display: flex; flex-wrap: wrap; gap: var(--space-xs); }
@@ -125,7 +139,9 @@
 .verdict[data-level="caution"] .verdict-symbol, [data-level="caution"] > .reason-symbol { background: var(--color-tint-amber); color: var(--color-semantic-warning); }
 .verdict[data-level="no-go"] .verdict-symbol, [data-level="no-go"] > .reason-symbol { background: var(--color-tint-red); color: var(--color-semantic-error-text); }
 .verdict[data-level="unknown"] .verdict-symbol, [data-level="unknown"] > .reason-symbol { background: var(--color-surface-raised); color: var(--color-text-secondary); }
-.reason-list { display: flex; flex-direction: column; gap: var(--space-sm); margin-top: var(--space-sm); }
+/* One line under the verdict: what passed, or what needs care. */
+.verdict-summary { font: var(--type-body-md); color: var(--color-text-secondary); margin-top: var(--space-xs); }
+.reason-list { display: flex; flex-direction: column; gap: var(--space-sm); margin-top: var(--space-xs); }
 .reason-list li { display: flex; gap: var(--space-sm); font: var(--type-body-sm); }
 
 /* Conditions readout */
@@ -153,11 +169,11 @@
 }
 .stop-item label { display: flex; flex-direction: column; flex: 1; min-width: 0; }
 .stop-name { font: var(--type-body-sm-medium); }
-.stop-summary { font: var(--type-caption); color: var(--color-text-muted); }
+.stop-summary { font: var(--type-body-sm); color: var(--color-text-muted); }
 .stop-item .button-link { font: var(--type-body-sm-medium); min-height: var(--size-touch); }
 
 /* stat-tile */
-.stat-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-xs); }
+.stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-xs); }
 .stat-tile {
   display: flex;
   flex-direction: column;
@@ -167,7 +183,7 @@
   border: 1px solid var(--color-hairline);
   border-radius: var(--radius-md);
 }
-.stat-label { font: var(--type-caption); color: var(--color-text-secondary); }
+.stat-label { font: var(--type-body-sm); color: var(--color-text-secondary); }
 .stat-value { font: var(--type-heading-4); font-variant-numeric: tabular-nums; }
 .stat-unit { font: var(--type-body-sm); color: var(--color-text-secondary); }
 
@@ -260,8 +276,43 @@
 .event-list li { display: flex; flex-direction: column; padding: var(--space-xs) 0; border-bottom: 1px solid var(--color-hairline); font: var(--type-body-sm); }
 .event-type { font: var(--type-body-sm-medium); }
 
-/* "View as table" toggle under the plan. */
-.table-toggle summary { min-height: var(--size-touch); display: flex; align-items: center; cursor: pointer; }
+/*
+ * disclosure: anything a walker does not need at a glance (reasons' basis, extra readings, rules,
+ * a stop's tasks, the packing list) folds behind a 48px row with a chevron. Tap anywhere on it.
+ */
+.disclosure > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-height: var(--size-touch-large);
+  padding: var(--space-xs) 0;
+  list-style: none;
+  font: var(--type-body-md-medium);
+  color: var(--color-link);
+  cursor: pointer;
+  user-select: none;
+}
+.disclosure > summary::-webkit-details-marker { display: none; }
+/* Chevron, drawn with borders: points right, turns down when open. */
+.disclosure > summary::after {
+  content: "";
+  flex: none;
+  width: var(--space-xs);
+  height: var(--space-xs);
+  margin-left: auto;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  rotate: -45deg;
+}
+.disclosure[open] > summary::after { rotate: 45deg; }
+.disclosure > summary:hover { text-decoration: underline; }
+.disclosure[open] { padding-bottom: var(--space-sm); }
+/* A whole card that folds: its title is the row. */
+.disclosure-card > summary { color: var(--color-ink); min-height: var(--size-touch); }
+.disclosure-card > summary .card-title { margin: 0; }
+
+/* Standalone links (sources) get a full touch target; links inside sentences stay inline. */
+.source-link { display: inline-flex; align-items: center; min-height: var(--size-touch); }
 
 /* combobox: the stop search box and its dropdown. */
 .stop-picker { display: flex; flex-direction: column; gap: var(--space-sm); }
@@ -323,14 +374,16 @@
 }
 .stop-item.is-focused .stop-number { background: var(--color-ink); color: var(--color-void); }
 
-/* Tasks: one group per stop, in visiting order. */
-.task-groups { display: flex; flex-direction: column; gap: var(--space-lg); }
-.task-group { display: flex; flex-direction: column; gap: var(--space-xs); padding-left: var(--space-sm); border-left: 2px solid var(--color-hairline); }
-.task-group.is-focused { border-left-color: var(--color-link); }
+/* Tasks: one folding row per stop, in visiting order. */
+.task-groups { display: flex; flex-direction: column; }
+.task-groups > li { border-bottom: 1px solid var(--color-hairline); }
+.task-group > summary { color: var(--color-ink); }
+.task-group[open] { display: flex; flex-direction: column; gap: var(--space-xs); }
+.task-group-name { flex: 1; min-width: 0; }
+.task-group-time { font: var(--type-body-sm); color: var(--color-text-secondary); }
+.task-groups > li.is-focused .stop-number { background: var(--color-ink); color: var(--color-void); }
 .task-why { font: var(--type-body-sm); color: var(--color-text-secondary); }
-.task-list { display: flex; flex-direction: column; gap: var(--space-xxs); font: var(--type-body-sm); }
-.task-list li { display: flex; gap: var(--space-xs); align-items: flex-start; }
-.task-list .icon { color: var(--color-text-muted); }
+.task-list { display: flex; flex-direction: column; gap: var(--space-xs); padding-left: var(--space-lg); list-style: disc; font: var(--type-body-md); }
 
 /* badge-live: connection status in the top bar. Says LIVE only when the data really is live. */
 .badge-live {
@@ -388,4 +441,5 @@
 /* button-large: any button in its large size, for journey mode (gloved hands, dusty visors). */
 .button-large { min-height: var(--size-touch-large); padding: 0 var(--space-xl); font: var(--type-body-md-medium); }
 .button-secondary:hover { background: var(--color-surface-raised); }
-.verdict-action { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-xs); padding-top: var(--space-sm); border-top: 1px solid var(--color-hairline); }
+.verdict-action { display: flex; flex-direction: column; align-items: stretch; gap: var(--space-xs); padding-top: var(--space-md); }
+.verdict-action .basis { text-align: center; }

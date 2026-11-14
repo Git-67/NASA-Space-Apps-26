@@ -117,7 +117,7 @@ function start({ route, records, places, calibration, spaceWeather: bundledSpace
       + (state.mode === 'online' && latest === date ? 'Space weather is live from NASA.' : `Space weather is the latest stored: ${latest ?? 'none'}.`);
     renderConnection(connection, { mode: state.mode, dataTo: latest, note: state.connectionNote });
 
-    renderVerdict(requireElement('verdict'), decideVerdict({
+    renderVerdict(requireElement('verdict'), requireElement('verdict-reasons'), decideVerdict({
       planMinutes: plan.totalMinutes, furthestM: plan.furthestM, record, comparison,
       spaceWeather: assessSpaceWeather(spaceWeather, weatherDate),
     }));

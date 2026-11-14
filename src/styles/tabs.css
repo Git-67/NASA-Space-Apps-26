@@ -47,7 +47,7 @@
 .subtab:focus-visible, .wx-plot svg:focus-visible {
   outline: 2px solid var(--link, currentColor); outline-offset: 2px;
 }
-.data-source-caption { margin: 0.4rem 0 0; font-size: 0.8rem; color: var(--text-muted, inherit); opacity: 0.9; }
+#tab-weather .data-source-caption { margin: 0.4rem 0 0; font-size: 0.8rem; color: var(--text-muted, inherit); opacity: 0.9; }
 .skeleton { height: 14rem; border-radius: 0.75rem; background: var(--surface-raised, color-mix(in srgb, currentColor 10%, transparent)); }
 
 /* Status badge: icon + label, never colour alone */
@@ -224,7 +224,7 @@
 .glance-value { font-size: 0.95rem; font-weight: 600; overflow-wrap: break-word; }
 .glance-more { font-size: 0.8rem; margin-block: 0.4rem; }
 .glance-more summary { cursor: pointer; min-height: 2.75rem; display: flex; align-items: center; }
-.basis { font-size: 0.8rem; color: var(--text-muted, inherit); }
+#tab-weather .basis { font-size: 0.8rem; color: var(--text-muted, inherit); }
 
 /* <details> arrow: points right, turns 90° clockwise when open */
 .glance-more summary { list-style: none; gap: 0.25rem; }

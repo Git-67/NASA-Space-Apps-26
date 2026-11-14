@@ -76,12 +76,12 @@ body.is-journey .map-container.is-turnable {
 .journey-bottom .button-secondary { background: var(--color-surface); }
 .journey-controls { display: flex; gap: var(--space-sm); flex-wrap: wrap; justify-content: center; }
 
-.journey-sim { font: var(--type-eyebrow); letter-spacing: var(--tracking-eyebrow); text-transform: uppercase; color: var(--color-accent); }
+/* Outdoors in glare: journey text is held to AAA contrast (7:1), so these use ink and secondary text, not accent or muted. */
+.journey-sim { font: var(--type-eyebrow); letter-spacing: var(--tracking-eyebrow); text-transform: uppercase; color: var(--color-ink); }
 .journey-next { font: var(--type-heading-4); text-align: center; }
 /* A hazard just ahead: icon and words, in the warning colour. */
 .journey-hazard { display: inline-flex; align-items: center; gap: var(--space-xs); font: var(--type-body-md-medium); color: var(--color-semantic-warning); }
 .journey-hazard[hidden] { display: none; }
-.journey-facing { font: var(--type-caption); color: var(--color-text-secondary); }
 
 /* Space weather, top right. */
 .journey-weather {
@@ -99,7 +99,7 @@ body.is-journey .map-container.is-turnable {
 .journey-weather .badge-live { align-self: flex-start; }
 .journey-weather-level { display: flex; align-items: center; gap: var(--space-xs); font: var(--type-heading-4); }
 .journey-weather-text { font: var(--type-body-sm); }
-.journey-weather-time { font: var(--type-caption); color: var(--color-text-muted); }
+.journey-weather-time { font: var(--type-body-sm); color: var(--color-text-secondary); }
 .journey-weather[data-level="go"] .reason-symbol { background: var(--color-tint-green); color: var(--color-on-tint-green); }
 .journey-weather[data-level="caution"] .reason-symbol { background: var(--color-tint-amber); color: var(--color-semantic-warning); }
 .journey-weather[data-level="no-go"] .reason-symbol { background: var(--color-tint-red); color: var(--color-semantic-error-text); }

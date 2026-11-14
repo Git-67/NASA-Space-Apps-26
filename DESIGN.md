@@ -1026,7 +1026,7 @@ The categorical palette was validated against `{colors.surface}`: all eight slot
 - **Zoom:** 17, one step past the HiRISE imagery's own resolution; the facing line says "imagery enlarged 2×" in place of the hidden `map-notice`.
 - **Following:** the walker stays at the centre of the clear area between the top and bottom panels, the map moving under them without animation. The map turns so the way the walker faces is up (heading-up), easing over about 0.6 s and looking 25 m ahead so it does not swing at every bend. A 56px round north arrow under End shows where north is. Text on the map stays upright. Dragging the map stops following and turning and shows "Re-centre".
 - **One leg at a time:** the leg being walked is solid with its callouts; every other leg is dotted and faint (`map-route` `is-muted`). The next leg becomes solid on arrival at the stop where it begins.
-- Top left: "End journey" and the north arrow. Top right: the space weather card (a `badge-live` that says LIVE only when read live, STORED otherwise, SIMULATED ALERT during a drill; the level in words and symbol, one line of text, and when it was read or when the drill ends). Bottom centre: an eyebrow "SIMULATION · NOT A REAL POSITION" in `{colors.accent}`, the next stop with distance and walking time in `{typography.heading-4}`, the facing line, and the buttons.
+- Top left: "End journey" and the north arrow. Top right: the space weather card (a `badge-live` that says LIVE only when read live, STORED otherwise, SIMULATED ALERT during a drill; the level in words and symbol, one line of text, and when it was read or when the drill ends). Bottom centre: an eyebrow "SIMULATION" (with "· IMAGERY ENLARGED 2×" when it is) in `{colors.ink}`, a hazard warning when there is one, the next stop with distance and walking time in `{typography.heading-4}`, and the buttons. The space weather card gives a sentence only when the level is not clear. Journey text is held to AAA contrast (7:1) for glare: no `{colors.accent}` or `{colors.text-muted}` text there.
 - Under reduced motion, the walker moves in one-second steps, the map turns at once rather than easing, and nothing animates.
 - **Speed on a tablet:** the walk is drawn about 30 times a second; the map turns only for changes of a degree or more; its layers redraw at most every 0.4 s while following. The walker's cone eases to its heading and never spins the long way round.
 - **Route details:** with a mouse, hovering a leg shows its details; on a touch screen only a tap does (no hover box).
@@ -1134,12 +1134,13 @@ Added with the first build of the briefing page. They are compositions of existi
 
 **`verdict`**: the page's main message: Go, Caution, No-go or No verdict.
 - The level is set in `{typography.stat-value}` beside a round symbol (a tick, an exclamation mark, a cross or a question mark). The symbol uses the matching badge colours: `badge-success` for go, `badge-warning` for caution, `badge-error` for no-go, and `{colors.surface-raised}` with `{colors.text-secondary}` for no verdict.
-- Below it, every reason is listed with its own symbol, a sentence in `{typography.body-sm}`, and its basis in `{typography.caption}` and `{colors.text-muted}`.
+- Read at a glance: the level, then one line in `{typography.body-md}` and `{colors.text-secondary}`: "All 5 checks pass." or the sentences of the checks that do not. Then "Begin journey" (`button-primary`, `button-large`, full width) and "Simulated walk of your plan."
+- The reasons sit in a `disclosure`, "Why (5 checks)", under the button: each with its own symbol, a sentence in `{typography.body-sm}`, and its basis in `{typography.body-sm}` and `{colors.text-muted}`. The card's "Verdict" heading is for screen readers only.
 - The level is always given in words and by symbol, never by colour alone. The region is announced to screen readers when it changes.
 - The overall level is the worst of its reasons.
 
-**`sol-slider`**: a range input for choosing a sol, always paired with a labelled number input showing the same value.
-- Thumb and filled track in `{colors.accent}` (`light-accent` in the light theme), 44px tall hit area.
+**`sol-slider`**: a range input for choosing a sol, always paired with a labelled number input showing the same value, and a "Today" button (`button-secondary`) beside the number.
+- A 32px round thumb in `{colors.accent}` with a 2px `{colors.void}` ring on an 8px `{colors.hairline-strong}` track, 44px tall hit area: big enough for a glove.
 
 **`button-icon`**: a 44px square ghost button holding one Material Symbols icon, for example the arrows that move a stop earlier or later. Text `{colors.text-secondary}`, hover `{colors.surface-raised}` and `{colors.ink}`, disabled `{colors.text-disabled}`. Always has an accessible name that says the action and its object ("Visit earlier: Nevado Sajama ridge").
 
@@ -1149,15 +1150,19 @@ Added with the first build of the briefing page. They are compositions of existi
 
 **`stop-number`**: a 24px circle holding a stop's place in the visiting order, `{colors.surface-raised}` with a `{colors.hairline-strong}` border and `{typography.caption-bold}`. The chosen stop's circle inverts to `{colors.ink}` on `{colors.void}`. Map badges show the same number, so list and map agree.
 
-**`task-group`**: the tasks at one stop. An eyebrow ("Stop 2 · Ridge · 30 min"), the name in `{typography.heading-4}`, one "Why:" line with a source link, then the tasks as a list with an empty checkbox icon. A 2px `{colors.hairline}` rule on the left, `{colors.link}` for the chosen stop.
+**`task-group`**: the tasks at one stop, as a `disclosure` row: the `stop-number`, the name in `{typography.body-md-medium}` and `{colors.ink}`, and the time there on the right. Open, it shows the terrain as an eyebrow, one "Why:" line, the tasks as a plain bulleted list in `{typography.body-md}` (no checkboxes: nothing is ticked while planning), and a 44px "Source: …" link. The stop chosen on the map opens by itself, and its number inverts. Rows are divided by `{colors.hairline}`.
 
-**`check-row`**: a checkbox with its label, at least 44px tall. The checkbox is filled with `{colors.primary}` when ticked.
+**`disclosure`**: anything a walker does not need at a glance folds behind a 56px row: the verdict's reasons, extra readings, data gaps, the legs table, the safety rules, each stop's tasks, the packing list. The row is `{typography.body-md-medium}` in `{colors.link}` with a chevron on the right that points right when closed and down when open; tap anywhere on the row. A whole card can fold (`disclosure-card`): its title is the row, in `{colors.ink}`.
+
+**`check-row`**: a 24px checkbox with its label, at least 44px tall. The label fills the row, so tapping anywhere on the row ticks the box. The checkbox is filled with `{colors.primary}` when ticked.
 
 **`stop-list`**: the checklist of stops. Each row has a checkbox, the stop's number and name in `{typography.body-sm-medium}`, a one-line summary in `{typography.caption}`, and a `button-link` to its details. Rows are divided by `{colors.hairline}`. The starting stop is ticked and cannot be unticked.
 
 **`reading-list`**: label and value pairs for measured conditions. Label in `{colors.text-secondary}`, value right-aligned with tabular figures, rows divided by `{colors.hairline}`.
 
-**Basis lines**: any derived or assumed number is followed by a line starting "Basis:" or "Our own", in `{typography.caption}` and `{colors.text-muted}`.
+**Basis lines**: any derived or assumed number is followed by a line starting "Basis:" or "Our own", in `{typography.body-sm}` and `{colors.text-muted}` (14px: the smallest supporting text on a tablet held at arm's length).
+
+**Briefing order (tablet):** the panel answers "can we go?" first and keeps everything else a tap away. Title (no lede), tabs, then the verdict card with "Begin journey" on the first screen; When (Today, sol, slider, daylight and air temperature, space weather, one sources line; more readings and data gaps fold away); Where (stops, three totals in one row: time, round trip, climb; the height profile; legs table and safety rules fold away); Tasks (one row per stop); Dangers; What to pack (folded).
 
 ### Navigation
 
@@ -1211,7 +1216,8 @@ Added with the first build of the briefing page. They are compositions of existi
 | Wide desktop | ≥ 1280px | Full 72px hero headline. |
 
 ### Touch targets
-- Buttons, inputs, map controls and tab hit areas are at least 44px tall.
+- Buttons, inputs, map controls and tab hit areas are at least 44px tall. Links that stand alone (sources, "Data sources") are 44px tall too; links inside a sentence stay inline.
+- Built for a tablet in gloves and dust: no control the walker needs is smaller than 44px, sliders have a 32px thumb, and journey mode uses 56px buttons. Stress tested with hundreds of random taps, double taps and stray swipes: a walk never ended by accident, and nothing broke.
 - Map markers and chart marks have hit areas larger than the visible mark.
 
 ### Collapsing strategy

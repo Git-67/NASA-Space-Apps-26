@@ -5,7 +5,6 @@
  * come from plan-model.js.
  */
 import { el } from '../../lib/dom.js';
-import { icon } from '../../components/ui/icon.js';
 import { formatDuration } from '../../lib/mars.js';
 import { listDangers, listKit } from './plan-model.js';
 import { renderElevationProfile } from './elevation-profile.js';
@@ -59,8 +58,8 @@ export function renderPlan(targets, route, plan) {
   } else {
     // The sections are read on the map (hover, tap or focus a section). The table stays
     // as the accessible view DESIGN.md requires for every map, closed by default.
-    targets.sections.replaceChildren(el('details', { className: 'table-toggle' }, [
-      el('summary', { className: 'button-link', text: 'Show legs as a table' }),
+    targets.sections.replaceChildren(el('details', { className: 'disclosure' }, [
+      el('summary', { text: 'Legs as a table' }),
       renderSectionTable(plan),
     ]));
   }
@@ -73,7 +72,6 @@ export function renderPlan(targets, route, plan) {
     tile('Total time (est.)', formatDuration(plan.totalMinutes), ''),
     tile('Round trip', String(Math.round(plan.distanceM)), ' m'),
     tile('Climb', String(Math.round(plan.ascentM)), ' m'),
-    tile('At stops', formatDuration(plan.workMinutes), ''),
   );
 
   targets.profile.replaceChildren(renderElevationProfile(plan));
@@ -94,22 +92,27 @@ export function renderPlan(targets, route, plan) {
 }
 
 /**
- * The tasks for the walk, stop by stop in visiting order: time there, one line
- * on why it matters (with its source), and the tasks themselves.
+ * The tasks for the walk, stop by stop in visiting order. Each stop is one tappable row
+ * (number, name, time there) that opens to why it matters (with its source) and its tasks;
+ * the stop chosen on the map opens by itself. Only one screen of rows, however many stops.
  * @param {HTMLElement} container
  * @param {Plan} plan
- * @param {string | null} focusedId Stop to highlight, for example one chosen on the map.
+ * @param {string | null} focusedId Stop to open, for example one chosen on the map.
  */
 export function renderTasks(container, plan, focusedId) {
-  container.replaceChildren(el('ol', { className: 'task-groups' }, plan.stops.map((stop, index) => el('li', {
-    className: `task-group${stop.id === focusedId ? ' is-focused' : ''}`, attrs: { id: `tasks-${stop.id}` },
-  }, [
-    el('p', { className: 'eyebrow', text: `Stop ${index + 1} · ${TERRAIN_LABEL[stop.terrain]} · ${stop.workMinutesOurs} min` }),
-    el('h3', { text: stop.name }),
-    el('p', { className: 'task-why' }, [
-      el('strong', { text: 'Why: ' }), `${stop.found} `,
-      el('a', { className: 'button-link', text: 'Source', attrs: { href: stop.sourceUrl, rel: 'noopener', 'aria-label': `Source: ${stop.sourceLabel}` } }),
-    ]),
-    el('ul', { className: 'task-list' }, stop.tasksOurs.map((task) => el('li', {}, [icon('check_box_outline_blank'), task]))),
-  ]))));
+  container.replaceChildren(el('ol', { className: 'task-groups' }, plan.stops.map((stop, index) => {
+    const details = el('details', { className: 'disclosure task-group' }, [
+      el('summary', {}, [
+        el('span', { className: 'stop-number', text: String(index + 1), attrs: { 'aria-hidden': 'true' } }),
+        el('span', { className: 'task-group-name', text: stop.name }),
+        el('span', { className: 'task-group-time', text: `${stop.workMinutesOurs} min` }),
+      ]),
+      el('p', { className: 'eyebrow', text: TERRAIN_LABEL[stop.terrain] }),
+      el('p', { className: 'task-why' }, [el('strong', { text: 'Why: ' }), stop.found]),
+      el('ul', { className: 'task-list' }, stop.tasksOurs.map((task) => el('li', { text: task }))),
+      el('a', { className: 'button-link source-link', text: `Source: ${stop.sourceLabel}`, attrs: { href: stop.sourceUrl, rel: 'noopener' } }),
+    ]);
+    if (stop.id === focusedId) details.setAttribute('open', '');
+    return el('li', { className: stop.id === focusedId ? 'is-focused' : '', attrs: { id: `tasks-${stop.id}` } }, [details]);
+  })));
 }
