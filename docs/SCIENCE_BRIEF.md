@@ -59,7 +59,8 @@ Sources for the stops:
 Route figures (Derived from the waypoint file's odometer and elevation fields):
 - Stop 1 to stop 5 along the rover's path: **1,113 m**, measured along the drives the rover made (the mission's traverse file). This is the figure the product uses since 14 Nov 2026. Straight lines between the 50 waypoints give 929 m, which cut the rover's corners; the odometer gives about 1.2 km, because it also counts turns on the spot.
 - Distance of each stop along the path from the start: nodule site 746 m, panorama viewpoint 968 m, Monte Grande hollow 1,100 m, Nevado Sajama ridge 1,113 m.
-- Furthest point of the route from the start, in a straight line: 537 m.
+- Furthest point from the start, in a straight line: 520 m for the safest walk through all five stops (537 m along the rover's own single path).
+- **The product no longer walks the rover's single path.** It finds the shortest path over all ground Curiosity drove that stays within NASA's 20° figure. All five stops in the safest order is 1,757 m round trip.
 - Climb from stop 1 to stop 5: about 40 m.
 - Stops 4 and 5 are 10 m apart, so on the map they are one location with two samples. That pairing is the scientific heart of the walk.
 
@@ -98,11 +99,12 @@ Also named by the mission, not yet placed on the map: Volcán Peña Blanca, Los 
 
 ### What this means for the go / no-go verdict
 
+0. **As built on 14 Nov, the verdict has five checks:** space weather from NASA DONKI for that date, NASA's 8-hour walk limit, NASA's 2 km walk-back limit, daylight, and how unusual the sol's temperature is for its season. The first is a forecast or a near-Earth detection, never a measurement at Mars; the next two are lunar figures.
 1. **Radiation is not a limit on a single normal walk.** At roughly 0.2 milligrays a day, eight hours outside is a tiny fraction of a career limit. Radiation matters over the whole mission, and during a solar storm. So the honest radiation rule is: **no walk during a solar particle event.** Do not build a dose meter that implies precision we do not have.
 2. **Slope is not the main hazard here; sand is.** The cited terrain risk is loose sand in the hollows.
 3. **Temperature and ultraviolet have no citable threshold.** The product shows the measured values and how unusual the chosen sol is compared with the same season in other years. "Colder than 9 in 10 sols at this season" is defensible. "Too cold for the suit" is not.
 4. **Daylight is the firmest constraint we have**, and it comes straight from the data.
-5. **The walk sits well inside NASA's lunar planning figures**: under 1 km of path, never more than 537 m from the start, against a 2 km limit on foot. That is worth saying in the pitch, with the word "lunar" attached.
+5. **The walk sits well inside NASA's lunar planning figures**: about 1.8 km round trip for all five stops, never more than 520 m from the start, against a 2 km limit on foot. That is worth saying in the pitch, with the word "lunar" attached.
 6. Every threshold in the product carries its source, or the word "assumption".
 
 ## 6. To do for the science and data lead
@@ -115,7 +117,10 @@ Also named by the mission, not yet placed on the map: Volcán Peña Blanca, Los 
 - [ ] Confirm or drop the two inferences in section 3.
 - [ ] Confirm the coordinate convention and elevation datum of the waypoint file.
 - [ ] Decide whether the 60-minute daylight margin and the time at each stop are reasonable, and write down why.
-- [ ] Review the packing list in `data/stops.json`. It is entirely ours.
+- [ ] Review the packing list and the task lists (`kitOurs`, `tasksOurs`) in `data/stops.json`. They are entirely ours.
+- [ ] Review the space weather rule (direct hit forecast at Mars is no-go; glancing hit, or particles near Earth, is caution). It is ours, and it now decides the verdict on about one sol in seven.
+- [ ] Review the five daily missions and the tasks at the ten extra rover stops. They are ours; nothing is known about those places beyond the sol and position NASA published.
+- [ ] Review the Weather tab's "dust watch" and its "usual / unusual" cut-offs. They are our inference, not NASA's.
 
 ## Sources
 

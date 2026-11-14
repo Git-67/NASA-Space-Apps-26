@@ -15,7 +15,9 @@ If a rule here conflicts with a request, say so before proceeding instead of qui
 
 Every piece of work should move at least one judging criterion. If it moves none, it is not a priority this weekend.
 
-### What we are building (agreed 13 Nov 2026)
+### What we are building (agreed 13 Nov 2026, widened by the team on 14 Nov 2026)
+
+**Status at the end of 14 Nov:** questions 1, 2 and 3 are built, along with a journey mode, a visor view, a Weather tab and an offline mode. Question 4 (the photo comparison) and the guided replay in question 5 are **not built**. `README.md` lists what works; `SUMMARY.md` lists what is left.
 
 A briefing for **one real Marswalk** in the boxwork region of Mount Sharp, Gale Crater, that answers five questions on one map:
 
@@ -23,9 +25,9 @@ A briefing for **one real Marswalk** in the boxwork region of Mount Sharp, Gale 
 2. **Where:** the safest path between the chosen stops, over ground Curiosity actually drove, with distance, climb, time and difficulty for each section. **Changed 14 Nov 2026 by the team:** a pathfinder (A* search) is now in scope, but only over rover-driven ground (`scripts/safe_paths.py`); never across ground no rover crossed, because our offline elevation data (18.6 m steps) cannot judge walker-scale slopes. **Also 14 Nov 2026:** daily missions (our objectives, rotating by sol) pick from a larger pool of stops (the five curated stops plus places Curiosity parked, `scripts/prepare_rover_stops.py`), and the crew can add custom points, which snap to the rover tracks; their paths are found in the browser with the same A* (`src/features/plan/track-network.js`), which is light enough for a modest computer.
 3. **When:** a go / caution / no-go verdict for any sol in Curiosity's weather record, judged against other sols at the same season.
 4. **How sure:** the orbital view beside the rover's ground photo at each stop. Stretch: a data confidence layer.
-5. **What if:** replay a real bad day (the 2018 dust storm, the 2017 solar storm) against the plan.
+5. **What if:** replay a real bad day (the 2018 dust storm, the 2017 solar storm) against the plan. Built so far: any past sol can be typed in and judged with that date's weather and NASA space weather, and journey mode has a "Simulate alert" drill. A guided replay is not built.
 
-The verdict rests on daylight, how unusual the chosen sol is for its season, and whether a solar storm is under way. It does **not** use invented temperature, ultraviolet or dose thresholds; no citable Mars suit limits exist.
+The verdict rests on five checks: NASA DONKI space weather for that date, NASA's 8-hour walk limit, NASA's 2 km walk-back limit (both lunar figures), daylight, and how unusual the chosen sol is for its season. It does **not** use invented temperature, ultraviolet or dose thresholds; no citable Mars suit limits exist.
 
 **Changed 14 Nov 2026 by the team:** a **visor view** is in scope, as a demo: during "Begin journey", the screen can show a curved helmet visor with only the critical information on it (heading, next stop, space weather, time out and distance from base against NASA's limits). It is a browser simulation of what a helmet display could show, labelled as such; there is no helmet, headset or AR hardware. NASA TechPort project 94571 (Giner, Inc., 2018 to 2019, completed) developed a curved, self-darkening visor; it is a tinting project, not a display, so cite it only for the visor's shape and tint.
 
@@ -47,6 +49,7 @@ Changes to data, limits or scientific claims go through the science and data lea
 - **Problem statement (draft, in `docs/PITCH.md`):** Mars maps show where to walk. Sol Stroll tells a crew whether to go: one briefing for one real Marswalk.
 - **Science question, stops and safety limits:** `docs/SCIENCE_BRIEF.md`. Facts in it are marked Read, Snippet, Derived or Ours. Only "Read" facts, or facts the science lead has since verified, may appear in the product or the pitch without a caveat.
 - **Pitch outline:** `docs/PITCH.md`. It lists which numbers may be used, how to phrase them, and which claims to avoid.
+- **How each NASA service is called:** `docs/API_NOTES.md`.
 
 ## 2. Stack and commands
 
@@ -74,27 +77,33 @@ All paths in the site are relative, because Pages serves the project from a sub-
 
 ## 3. Repository layout
 
-Organise by feature, not by file type. Target shape (adapt names to the framework's conventions):
+Organise by feature, not by file type. The layout as it stands:
 
 ```
-index.html           Entry page at the root, as GitHub Pages expects.
-scripts/             Python data preparation. One script per dataset.
+index.html             The one page (Briefing and Weather tabs), at the root as GitHub Pages expects.
+scripts/               Python data preparation, one script per dataset, plus shared modules and their tests.
 src/
-  pages/             Page scripts and shells only. No business logic.
-  features/<name>/   One folder per feature: its components, hooks, logic, tests.
-  components/ui/     Shared, presentational primitives built from DESIGN.md tokens.
-  lib/               Framework-agnostic helpers, API clients, data parsing.
-  styles/            Design tokens and global styles. The only home for raw values.
-  types/             Shared types.
-data/raw/            Untouched downloads (or a note on where to fetch them). Never edited by hand.
-data/processed/      Output of scripts/. The only data the site loads.
-docs/                DATA_SOURCES.md, pitch material, architecture notes.
-public/              Static assets.
+  pages/               Page scripts: home.js and load-briefing-data.js (Briefing), weather.js (Weather tab).
+  features/map/        The map, its layers and layer panel.
+  features/plan/       Stops, daily missions, custom points, path search, sections, hazards, elevation profile.
+  features/conditions/ The sol's conditions, NASA's limits, space weather, the verdict.
+  features/journey/    Begin journey: the simulated walk, its pop-ups, the visor view.
+  features/connection/ The online and offline switch.
+  features/theme/      Dark and light switching.
+  components/ui/       Shared presentational pieces (icons).
+  lib/                 Framework-free helpers: Mars constants, data loading, DOM building, compass, sound.
+  styles/              Design tokens and styles. The only home for raw values.
+data/stops.json        The five curated stops, written by hand with sources.
+data/raw/              Untouched downloads. Never edited by hand.
+data/processed/        Output of scripts/, including the offline map tiles. The only data the site loads.
+docs/                  Data sources, API notes, science brief, pitch, competitive analysis, screenshots.
+public/                Static assets: logo, fonts, the vendored map library.
+tests/                 Node tests for the logic in src/.
 ```
 
 - A feature may import from `components/ui`, `lib`, `styles`, `types`. Features do not import from each other; lift shared code up instead.
-- One component or module per file. Split a file when it passes roughly 250 lines or does two jobs.
-- No dumping grounds: no `utils.ts`, `helpers.ts` or `misc/` that collect unrelated functions. Name files after what they do.
+- One component or module per file. Split a file when it passes roughly 250 lines or does two jobs. **Known breaches, to split when time allows:** `src/pages/weather.js` (about 800 lines, and it holds logic that belongs in a feature folder), `journey-mode.js`, `visor-view.js`, `plan-model.js`.
+- No dumping grounds: no `utils.js`, `helpers.js` or `misc/` that collect unrelated functions. Name files after what they do.
 - New top-level folders need a reason stated in the PR or commit.
 
 ## 4. Code standards
