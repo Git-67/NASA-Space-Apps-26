@@ -1,16 +1,14 @@
 """Copy the site's fonts and icons into the repository, so it needs no network.
 
-Fonts:  Inter, Space Grotesk, JetBrains Mono (SIL Open Font License) and
-        Material Symbols Outlined (Apache License 2.0), from Google Fonts.
-        Only the Latin subset of each text font is kept, and only the icons
-        the page uses (ICON_NAMES), to keep the download small.
+Fonts:  Inter, Space Grotesk, JetBrains Mono (SIL Open Font License), from
+        Google Fonts. Only the Latin subset is kept, to keep the download small.
+        Icons are not a font: see scripts/vendor_icons.py.
 Output: public/fonts/*.woff2 and src/styles/fonts.css (generated; do not edit).
 
-Run:  python3 scripts/vendor_fonts.py   (after adding an icon to the page, add it to ICON_NAMES)
+Run:  python3 scripts/vendor_fonts.py
 """
 from __future__ import annotations
 
-import hashlib
 import re
 import urllib.request
 
@@ -19,19 +17,6 @@ from mars_data import REPO_ROOT
 FONT_DIR = REPO_ROOT / "public" / "fonts"
 CSS_FILE = REPO_ROOT / "src" / "styles" / "fonts.css"
 TEXT_FONTS = "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap"
-# Every icon the page uses, in alphabetical order as Google Fonts requires.
-ICON_NAMES = [
-    "add_location", "air", "arrow_downward", "arrow_forward", "arrow_upward", "blur_on",
-    "calendar_month", "check_box_outline_blank", "check_circle", "chevron_right", "close",
-    "close_fullscreen", "cloud", "compress", "cyclone", "dashboard", "directions_walk", "error",
-    "event", "fast_forward", "filter_b_and_w", "flag", "flare", "grain", "grid_on", "height",
-    "help", "info", "label", "landscape", "layers", "light_mode", "open_in_full", "palette",
-    "partly_cloudy_day", "pause", "play_arrow", "refresh", "scatter_plot", "schedule",
-    "show_chart", "star", "storm", "table_chart", "thermostat", "today", "trending_down",
-    "trending_flat", "trending_up", "visibility", "warning", "water_drop", "wb_twilight",
-]
-ICON_FONT = ("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
-             "&icon_names={names}&display=block")
 # Google serves WOFF2 only to browsers it recognises.
 _USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
 FACE = re.compile(r"(/\* (?P<subset>[a-z-]+) \*/\s*)?@font-face \{(?P<body>[^}]*)\}")
@@ -44,14 +29,8 @@ def get(url: str) -> bytes:
         return response.read()
 
 
-def localise(css: str, keep_subsets: set[str] | None, hashed: bool = False) -> list[str]:
-    """Download each font file in a stylesheet and point the rules at the local copies.
-
-    Text fonts already have a hash in their file name, so an existing file is the right one.
-    The icon font (hashed=True) changes with ICON_NAMES, so it is downloaded every run and
-    saved under a name containing a hash of its contents. A new icon list therefore gets a new
-    URL that no browser or dev server can have cached. Older copies are deleted.
-    """
+def localise(css: str, keep_subsets: set[str] | None) -> list[str]:
+    """Download each font file in a stylesheet and point the rules at the local copies."""
     faces = []
     for match in FACE.finditer(css):
         subset = match.group("subset")
@@ -62,19 +41,12 @@ def localise(css: str, keep_subsets: set[str] | None, hashed: bool = False) -> l
         if not url:
             continue
         family = re.search(r"font-family: '([^']+)'", body).group(1).lower().replace(" ", "-")
-        if hashed:
-            data = get(url.group("url"))
-            name = f"{family}-{hashlib.sha1(data).hexdigest()[:10]}.woff2"
-            for old in list(FONT_DIR.glob(f"{family}-*.woff2")) + list(FONT_DIR.glob(f"{family}.woff2")):
-                if old.name != name:
-                    old.unlink()
-            (FONT_DIR / name).write_bytes(data)
-        else:
-            tail = url.group("url").rsplit("/", 1)[1]
-            name = f"{family}-{tail}"
-            target = FONT_DIR / name
-            if not target.exists():
-                target.write_bytes(get(url.group("url")))
+        # Text fonts have a file name in their URL; the icon subset is a query, so it gets a fixed name.
+        tail = url.group("url").rsplit("/", 1)[1]
+        name = f"{family}-{tail}" if tail.endswith(".woff2") else f"{family}.woff2"
+        target = FONT_DIR / name
+        if not target.exists():
+            target.write_bytes(get(url.group("url")))
         faces.append("@font-face {" + body.replace(url.group(0), f"url('../../public/fonts/{name}') format('woff2')") + "}")
     return faces
 
@@ -82,13 +54,9 @@ def localise(css: str, keep_subsets: set[str] | None, hashed: bool = False) -> l
 def main() -> None:
     FONT_DIR.mkdir(parents=True, exist_ok=True)
     faces = localise(get(TEXT_FONTS).decode(), {"latin"})
-    icon_faces = localise(get(ICON_FONT.format(names=",".join(ICON_NAMES))).decode(), None, hashed=True)
-    if not icon_faces:
-        raise SystemExit("No icon font came back from Google Fonts. Check ICON_NAMES is alphabetical and every name exists.")
-    faces += icon_faces
     CSS_FILE.write_text(
         "/* GENERATED by scripts/vendor_fonts.py. Do not edit by hand.\n"
-        "   Inter, Space Grotesk, JetBrains Mono: SIL Open Font License. Material Symbols: Apache License 2.0. */\n"
+        "   Inter, Space Grotesk, JetBrains Mono: SIL Open Font License. */\n"
         + "\n".join(faces) + "\n",
         encoding="utf-8",
     )

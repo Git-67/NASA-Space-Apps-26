@@ -2,6 +2,7 @@
 // (data/processed/weather.json, the same feed prepared by scripts/prepare_weather.py).
 import { fromColumns } from "../lib/columns.js";
 import { formatMarsClock } from "../lib/mars.js";
+import { icon as svgIcon } from "../components/ui/icon.js";
 
 /** Rename the prepared weather records to the feed's field names, which the charts below read. */
 const fromBundle = (j) => fromColumns(j?.records).map((r) => ({
@@ -14,7 +15,7 @@ const fromBundle = (j) => fromColumns(j?.records).map((r) => ({
 // UNVERIFIED: field names (sol, terrestrial_date, ls, min_temp, max_temp, min_gts_temp,
 // max_gts_temp, pressure, wind_speed, atmo_opacity, season, sunrise, sunset, abs_humidity)
 // and CORS were written from memory and could not be tested against the live feed.
-// Icons: Material Symbols Outlined, loaded by the page (see the icon_names list in the HTML head).
+// Icons: Material Symbols Outlined, drawn as inline SVG (see icon() below).
 
 const SOURCES = [
   {
@@ -116,11 +117,12 @@ const svgEl = (tag, attrs = {}, text) => {
   if (text !== undefined) n.textContent = text;
   return n;
 };
-// Icons: Material Symbols (already loaded by the page). Some keys are renamed to icons that exist there.
+// Icons: Material Symbols as inline SVG (src/components/ui/icon.js; add new names to scripts/vendor_icons.py).
+// Some keys are renamed to icons that exist there.
 const ALIAS = { narrower: "close_fullscreen", wider: "open_in_full", radiation: "scatter_plot" };
 const icon = (name, cls = "") => {
-  const s = el("span", `icon ${cls}`.trim(), ALIAS[name] || name);
-  s.setAttribute("aria-hidden", "true");
+  const s = svgIcon(ALIAS[name] || name);
+  if (cls) s.classList.add(...cls.split(" "));
   return s;
 };
 const note = (ic, text) => {

@@ -5,6 +5,7 @@
  * asks the feature modules to redraw. No planning logic lives here.
  */
 import { el, requireElement } from '../lib/dom.js';
+import { drawPageIcons } from '../components/ui/icon.js';
 import { earthDateOfSol, solOnEarthDate } from '../lib/mars.js';
 import { initThemeToggle } from '../features/theme/theme-toggle.js';
 import { createMapView } from '../features/map/map-view.js';
@@ -211,6 +212,7 @@ function start({ route, records, places, calibration, spaceWeather: bundledSpace
 
 /** Load the data, then start the page or show why it could not start. */
 async function main() {
+  drawPageIcons(document);
   initThemeToggle(requireElement('theme-toggle'));
   const status = requireElement('load-status');
   try {

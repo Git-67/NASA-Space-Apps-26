@@ -93,6 +93,10 @@ python3 scripts/build_offline_tiles.py
 python3 scripts/vendor_fonts.py
 ```
 
+```bash
+python3 scripts/vendor_icons.py
+```
+
 The space weather script needs a free key from https://api.nasa.gov in `NASA_API_KEY` (see `.env.example`):
 
 ```bash
@@ -126,7 +130,8 @@ python3 scripts/build_tokens.py
 | `data/raw/`, `data/processed/` | Untouched downloads, and the scripts' output |
 | `tests/` | Tests for the planning and verdict logic |
 | `public/vendor/leaflet/` | Leaflet 1.9.4 (BSD 2-Clause), minified, the map library |
-| `public/fonts/` | Bundled fonts and icons (OFL, Apache 2.0) |
+| `public/fonts/` | Bundled text fonts (OFL), from `scripts/vendor_fonts.py` |
+| `src/components/ui/icon-paths.js` | Bundled icons as SVG paths (Material Symbols, Apache 2.0), from `scripts/vendor_icons.py` |
 | `data/processed/tiles/` | Bundled map imagery (about 4 MB), from `scripts/build_offline_tiles.py` |
 | `docs/` | Data sources, science brief, pitch, competitive analysis |
 

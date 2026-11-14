@@ -229,16 +229,15 @@
 /* <details> arrow: points right, turns 90° clockwise when open */
 .glance-more summary { list-style: none; gap: 0.25rem; }
 .glance-more summary::-webkit-details-marker { display: none; }
+/* A chevron drawn with two borders (no icon font, so it can never show as text). */
 .glance-more summary::before {
-  content: "chevron_right";
-  font-family: "Material Symbols Outlined";
-  font-size: 1.25rem; font-weight: normal; font-style: normal; line-height: 1;
-  letter-spacing: normal; text-transform: none; white-space: nowrap;
-  font-feature-settings: "liga"; -webkit-font-smoothing: antialiased;
+  content: "";
   display: inline-block; flex: none;
-  transform: rotate(0deg);
+  width: 0.45em; height: 0.45em; margin: 0 0.35em 0 0.15em;
+  border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
 }
-.glance-more[open] > summary::before { transform: rotate(90deg); }
+.glance-more[open] > summary::before { transform: rotate(45deg); }
 
 @media (prefers-reduced-motion: no-preference) {
   .wx-toggle, .subtab { transition: background-color 150ms ease; }
