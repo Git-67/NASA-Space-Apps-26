@@ -82,7 +82,7 @@ def main() -> None:
     path = write_processed(OUTPUT_FILE, {
         "about": "Safest walking path between each pair of stops, over ground Curiosity drove. Built by scripts/prepare_safe_paths.py. "
                  f"Tracks within {JOIN_M:g} m (the rover's width) are joined; ground steeper than NASA's {HARD_TILT_DEG:g} degree suit limit is excluded; "
-                 "the shortest remaining path is used. Entries run from the first id to the second.",
+                 "the shortest remaining path is used (A* search). Entries run from the first id to the second.",
         "pairs": pairs,
     })
     print(f"Wrote {path}: {len(pairs)} pairs, network of {len(network.places)} places")

@@ -20,7 +20,7 @@ Every piece of work should move at least one judging criterion. If it moves none
 A briefing for **one real Marswalk** in the boxwork region of Mount Sharp, Gale Crater, that answers five questions on one map:
 
 1. **Why go:** one science question, and what a human can do at each stop that the rover could not.
-2. **Where:** the safest path between the chosen stops, over ground Curiosity actually drove, with distance, climb, time and difficulty for each section. **Changed 14 Nov 2026 by the team:** a pathfinder is now in scope, but only over rover-driven ground (`scripts/safe_paths.py`); never across ground no rover crossed, because our offline elevation data (18.6 m steps) cannot judge walker-scale slopes.
+2. **Where:** the safest path between the chosen stops, over ground Curiosity actually drove, with distance, climb, time and difficulty for each section. **Changed 14 Nov 2026 by the team:** a pathfinder (A* search) is now in scope, but only over rover-driven ground (`scripts/safe_paths.py`); never across ground no rover crossed, because our offline elevation data (18.6 m steps) cannot judge walker-scale slopes.
 3. **When:** a go / caution / no-go verdict for any sol in Curiosity's weather record, judged against other sols at the same season.
 4. **How sure:** the orbital view beside the rover's ground photo at each stop. Stretch: a data confidence layer.
 5. **What if:** replay a real bad day (the 2018 dust storm, the 2017 solar storm) against the plan.
@@ -66,6 +66,7 @@ Chosen for a team that knows Python, HTML, CSS and basic JavaScript, and for fre
 | Prepare data | `python3 scripts/<name>.py` (each script documents its inputs and outputs) |
 | Python dependencies | `pip install -r requirements.txt` (pinned versions) |
 | Test | `node --test tests/*.test.js` |
+| Test the path search | `python3 -m unittest discover scripts` (A* in `scripts/safe_paths.py`) |
 | Rebuild style tokens | `python3 scripts/build_tokens.py` after any change to `DESIGN.md`. Never edit `src/styles/tokens.css` by hand |
 | Lint, format, type check | _Not set up. There is no automated check that `// @ts-check` passes_ |
 
