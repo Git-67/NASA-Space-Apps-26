@@ -10,7 +10,8 @@
  *
  * The verdict deliberately avoids temperature, ultraviolet and dose
  * thresholds: no citable limit exists for a Mars surface suit. It uses
- * daylight, how unusual the sol is for its season, and a solar storm alert.
+ * daylight, how unusual the sol is for its season, and NASA DONKI space
+ * weather for the sol's date (see space-weather-model.js).
  */
 import { marsMinutesToEarthMinutes } from '../../lib/mars.js';
 
@@ -94,23 +95,15 @@ export function usableDaylightMinutes(record) {
 /**
  * Decide go, caution or no-go for a plan on a given sol.
  * @param {{ planMinutes: number, record: WeatherRecord | undefined, comparison: SeasonComparison | null,
- *   isSolarStormAlert: boolean }} input
+ *   spaceWeather: Reason }} input `spaceWeather` is the solar storm reason from assessSpaceWeather().
  * @returns {Verdict} The overall level (the worst of the reasons) and every reason behind it.
  */
-export function decideVerdict({ planMinutes, record, comparison, isSolarStormAlert }) {
+export function decideVerdict({ planMinutes, record, comparison, spaceWeather }) {
   /** @type {Reason[]} */
-  const reasons = [];
-
-  if (isSolarStormAlert) {
-    reasons.push({
-      level: 'no-go',
-      text: 'A solar storm alert is in effect. Stay under shelter.',
-      basis: 'Rule: no walk during a solar particle event. Surface dose rates rose two to three times in September 2017 (published studies, not yet verified by the team).',
-    });
-  }
+  const reasons = [spaceWeather];
 
   if (!record) {
-    reasons.push({ level: 'unknown', text: 'Curiosity recorded no weather on this sol.', basis: 'About 250 sols are absent from the weather feed.' });
+    reasons.push({ level: 'unknown', text: 'Curiosity recorded no weather on this sol.', basis: 'About 250 sols are absent from the weather feed, and it ends on 25 Aug 2026 (sol 4995).' });
     return summarise(reasons);
   }
 

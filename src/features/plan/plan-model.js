@@ -10,14 +10,16 @@
  */
 
 /**
- * @typedef {{ sol: number, lat: number, lon: number, elevationM: number, tiltDeg: number, alongM: number }} RoutePoint
+ * @typedef {{ sol: number, lat: number, lon: number, elevationM: number, tiltDeg: number, alongM: number,
+ *   track: number[][] }} RoutePoint `track` is the path the rover drove from the previous point, as [lat, lon] pairs.
  * @typedef {{ id: string, name: string, summary: string, terrain: 'transition' | 'ridge' | 'hollow', found: string,
  *   taskOurs: string, kitOurs: string[], workMinutesOurs: number, sourceLabel: string, sourceUrl: string,
  *   pointIndex: number }} Stop
  * @typedef {{ points: RoutePoint[], stops: Stop[] }} Route
  * @typedef {'easier' | 'moderate' | 'hard'} Difficulty
- * @typedef {{ fromName: string, toName: string, distanceM: number, ascentM: number, descentM: number,
- *   maxRoverTiltDeg: number, difficulty: Difficulty, walkMinutes: number, isReturn: boolean }} Section
+ * @typedef {{ fromId: string, toId: string, fromName: string, toName: string, fromIndex: number, toIndex: number,
+ *   distanceM: number, ascentM: number, descentM: number, maxRoverTiltDeg: number, difficulty: Difficulty,
+ *   walkMinutes: number, isReturn: boolean }} Section `fromIndex` and `toIndex` are route point indexes, in walking direction.
  * @typedef {{ stops: Stop[], sections: Section[], walkMinutes: number, workMinutes: number, totalMinutes: number,
  *   distanceM: number, ascentM: number }} Plan
  */
@@ -76,51 +78,62 @@ export function measurePath(points, fromIndex, toIndex) {
 }
 
 /**
- * Build an out-and-back walk along the rover's path.
- * The walk starts at the first stop on the route (assumed to be where the
- * crew parks), visits the selected stops in order, then returns the same way.
+ * Measure one section in walking direction, which may run against the rover's direction.
+ * Walking the rover's path backwards turns every climb into a descent and the reverse.
+ * @param {RoutePoint[]} points The whole path.
+ * @param {number} fromIndex Point the walker starts from.
+ * @param {number} toIndex Point the walker walks to.
+ * @returns {{ distanceM: number, ascentM: number, descentM: number, maxRoverTiltDeg: number }}
+ */
+export function measureLeg(points, fromIndex, toIndex) {
+  if (fromIndex <= toIndex) return measurePath(points, fromIndex, toIndex);
+  const forward = measurePath(points, toIndex, fromIndex);
+  return { ...forward, ascentM: forward.descentM, descentM: forward.ascentM };
+}
+
+/**
+ * Build a walk along the rover's path that visits the chosen stops in the chosen order.
+ * There is no route finding: every section follows Curiosity's own path between
+ * two stops, forwards or backwards. The walk starts at the first stop on the
+ * route (assumed to be where the crew parks) and returns there at the end.
  * @param {Route} route The prepared route.
- * @param {string[]} selectedStopIds Ids of the stops to visit. The first stop is always included.
+ * @param {string[]} visitOrder Ids of the stops to visit, in visiting order. The start is added if missing and always comes first.
  * @param {number} walkingSpeedKmh Walking speed in km/h. Must be greater than zero.
  * @returns {Plan}
  */
-export function buildPlan(route, selectedStopIds, walkingSpeedKmh) {
+export function buildPlan(route, visitOrder, walkingSpeedKmh) {
   const start = route.stops[0];
-  const stops = route.stops.filter((stop) => stop === start || selectedStopIds.includes(stop.id));
+  const byId = new Map(route.stops.map((stop) => [stop.id, stop]));
+  /** @type {Stop[]} */
+  const stops = [start];
+  for (const id of visitOrder) {
+    const stop = byId.get(id);
+    if (stop && !stops.includes(stop)) stops.push(stop);
+  }
   const metresPerMinute = (walkingSpeedKmh * 1000) / 60;
 
-  /** @type {Section[]} */
-  const sections = [];
-  for (let i = 1; i < stops.length; i += 1) {
-    const measured = measurePath(route.points, stops[i - 1].pointIndex, stops[i].pointIndex);
-    sections.push({
+  /** @type {(from: Stop, to: Stop, isReturn: boolean) => Section} */
+  const section = (from, to, isReturn) => {
+    const measured = measureLeg(route.points, from.pointIndex, to.pointIndex);
+    return {
       ...measured,
-      fromName: stops[i - 1].name,
-      toName: stops[i].name,
+      fromId: from.id,
+      toId: to.id,
+      fromName: from.name,
+      toName: to.name,
+      fromIndex: from.pointIndex,
+      toIndex: to.pointIndex,
       difficulty: rateDifficulty(measured.maxRoverTiltDeg),
       walkMinutes: measured.distanceM / metresPerMinute,
-      isReturn: false,
-    });
-  }
+      isReturn,
+    };
+  };
 
+  const sections = stops.slice(1).map((stop, index) => section(stops[index], stop, false));
   const last = stops[stops.length - 1];
-  if (last !== start) {
-    const out = measurePath(route.points, start.pointIndex, last.pointIndex);
-    sections.push({
-      distanceM: out.distanceM,
-      // Walking back, every climb becomes a descent and the reverse.
-      ascentM: out.descentM,
-      descentM: out.ascentM,
-      maxRoverTiltDeg: out.maxRoverTiltDeg,
-      fromName: last.name,
-      toName: start.name,
-      difficulty: rateDifficulty(out.maxRoverTiltDeg),
-      walkMinutes: out.distanceM / metresPerMinute,
-      isReturn: true,
-    });
-  }
+  if (last !== start) sections.push(section(last, start, true));
 
-  const walkMinutes = sections.reduce((sum, section) => sum + section.walkMinutes, 0);
+  const walkMinutes = sections.reduce((sum, item) => sum + item.walkMinutes, 0);
   const workMinutes = stops.reduce((sum, stop) => sum + stop.workMinutesOurs, 0);
   return {
     stops,
@@ -128,8 +141,8 @@ export function buildPlan(route, selectedStopIds, walkingSpeedKmh) {
     walkMinutes,
     workMinutes,
     totalMinutes: walkMinutes + workMinutes,
-    distanceM: sections.reduce((sum, section) => sum + section.distanceM, 0),
-    ascentM: sections.reduce((sum, section) => sum + section.ascentM, 0),
+    distanceM: sections.reduce((sum, item) => sum + item.distanceM, 0),
+    ascentM: sections.reduce((sum, item) => sum + item.ascentM, 0),
   };
 }
 
@@ -161,7 +174,7 @@ export function listDangers(plan) {
     const worst = Math.max(...steep.map((section) => section.maxRoverTiltDeg));
     dangers.push({
       title: 'Steep ground',
-      detail: `Curiosity was tilted by up to ${worst.toFixed(1)}° on ${steep.length === 1 ? 'one section' : `${steep.length} sections`} of this plan. You climb it going out and descend it coming back.`,
+      detail: `Curiosity was tilted by up to ${worst.toFixed(1)}° on ${steep.length === 1 ? 'one section' : `${steep.length} sections`} of this plan. Steep sections are marked on the map.`,
       basis: 'Derived from the rover tilt recorded in the Curiosity waypoint file. Tilt hints at slope; it is not a slope measurement.',
     });
   }

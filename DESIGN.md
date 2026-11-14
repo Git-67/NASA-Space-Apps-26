@@ -68,6 +68,8 @@ colors:
   no-data: "#1c2438"
   # Map overlays (theme-independent: they sit on Mars imagery, not on a UI surface)
   route: "#4de1f5"
+  route-moderate: "#fab219"
+  route-hard: "#f472d0"
   route-casing: "#04060c"
   map-ink: "#f2f5fa"
   # Light theme. Each token replaces the dark token of the same name without the "light-" prefix.
@@ -1006,6 +1008,11 @@ The categorical palette was validated against `{colors.surface}`: all eight slot
 - A 1px dashed line (4px dash, 4px gap) in `{colors.map-ink}` at 50 percent opacity, quieter than contours and route.
 - Labels sit along the left and top edges of the map, clear of the map controls, and give degrees with the sign the sources use until their convention is confirmed.
 
+**`map-callout`**: a hazard note beside the route ("Steep: rover tilt 17.5°", "Sand: risk of slipping", "Biggest climb: +46 m").
+- A `map-label` panel with a Material Symbols icon in `{colors.text-secondary}` before the text. Stacked downwards when two would overlap. Hidden below zoom 13, where the walk is too small for callouts to sit beside their section.
+
+**`map-notice`**: a one-line status on the map, for example "Enlarged 4× past the imagery's own resolution". A `map-label`-style panel above the scale bar, in `{typography.caption}`. Shown only while it is true.
+
 **`map-attribution`**: required on every map.
 - Bottom-right. Text `{colors.text-muted}` on `{colors.void}` at 80 percent opacity. Credits the basemap provider and every data layer. The full citation also goes in the `data-source-caption` below the map.
 
@@ -1014,7 +1021,8 @@ The categorical palette was validated against `{colors.surface}`: all eight slot
 These apply on top of the map components above. They exist because Mars is an orange planet and this is a planning tool.
 
 **Basemap**
-- **Use a grayscale basemap whenever a data layer or a route is shown** (for example shaded relief, or grayscale orbital imagery). Colour imagery is for looking at the place with no data on top. This keeps one rule true everywhere: on the map, colour means data.
+- **Use a grayscale basemap whenever a data layer is shown** (for example shaded relief, or grayscale orbital imagery). Colour imagery is for looking at the place; data layers such as contours are switched off over it. This keeps one rule true everywhere: on the map, colour means data.
+- **Exception, decided by the team on 14 Nov 2026: the route and its stops stay on over colour imagery.** They keep their dark casing and their difficulty colours, which were chosen to stand apart from Mars' tans and browns.
 - The layer panel names each basemap and data layer by **mission and instrument**, not by a nickname: "MGS MOLA elevation", "MRO HiRISE imagery", "MRO CTX mosaic".
 - Never stretch imagery beyond its real resolution without showing the visitor that it is zoomed past its limit.
 
@@ -1032,8 +1040,10 @@ These apply on top of the map components above. They exist because Mars is an or
 - Semi-transparent data layers sit at 60 to 80 percent opacity over the basemap, so terrain stays readable.
 
 **`map-route`**: the planned walk.
-- A 4px line in `{colors.route}` with a 2px `{colors.route-casing}` casing on each side. The casing is what keeps the route readable on both pale dust and dark basalt; never draw a route without it.
-- Segments that cross "caution" or "impassable" terrain are dashed, and flagged in the `route-summary`. Colour alone never marks a hazard.
+- A 4px line with a 2px `{colors.route-casing}` casing on each side. The casing is what keeps the route readable on both pale dust and dark basalt.
+- **Coloured by difficulty, drive by drive:** `{colors.route}` for easier, `{colors.route-moderate}` for moderate, `{colors.route-hard}` for hard (the classes and their sources are in the briefing). These three are map overlay colours, the same in both themes. Colour alone never marks a hazard: every section has a popup that names its difficulty, and `map-callout` labels mark the steep and sandy places.
+- **One leg at a time:** when a stop is chosen, the section leaving it is drawn solid with its casing; every other section is drawn 3px, dotted (1px dash, 7px gap), at 55 percent opacity and without casing. With no stop chosen, the whole walk is solid. The return leg retraces the way out, so it is drawn only when it is the chosen leg.
+- Each section has an invisible 24px-wide hit line: hover shows its `map-popup` as a tooltip, tap or click opens it.
 - A draft route (being drawn) is the same line at 60 percent opacity.
 
 **`map-waypoint`**: a numbered stop on the route.
@@ -1071,6 +1081,10 @@ Added with the first build of the briefing page. They are compositions of existi
 
 **`sol-slider`**: a range input for choosing a sol, always paired with a labelled number input showing the same value.
 - Thumb and filled track in `{colors.accent}` (`light-accent` in the light theme), 44px tall hit area.
+
+**`button-icon`**: a 44px square ghost button holding one Material Symbols icon, for example the arrows that move a stop earlier or later. Text `{colors.text-secondary}`, hover `{colors.surface-raised}` and `{colors.ink}`, disabled `{colors.text-disabled}`. Always has an accessible name that says the action and its object ("Visit earlier: Nevado Sajama ridge").
+
+**`card-carousel`**: a row of cards that scrolls sideways and snaps to each card, used for the dangers on the route. Each card is 85 percent of the row's width so the next one peeks in, on `{colors.canvas}` with a `{colors.hairline}` border and `{rounded.md}`. Each card shows "n / total" as an eyebrow, so the count is never carried by the peek alone.
 
 **`check-row`**: a checkbox with its label, at least 44px tall. The checkbox is filled with `{colors.primary}` when ticked.
 
@@ -1157,7 +1171,8 @@ Added with the first build of the briefing page. They are compositions of existi
 
 - The first build has been rendered in both themes at 1440px and at 390px in the dark theme. The light theme has not been checked on mobile.
 - The `map-layer-panel` is a single collapsible panel at every width, not the bottom sheet described under Collapsing strategy. There is no `map-legend`, `map-popup` or `map-timeline` yet.
-- The colour imagery option hides the route, stops and contours while it is on, following the rule that no data is drawn over colour imagery.
+- The colour imagery option keeps the route and stops (team decision, 14 Nov 2026) and switches contours off.
+- The muted, dotted legs have no casing, so on bright dust they are fainter than DESIGN's casing rule intends. Accepted for now because they are deliberately secondary.
 - When two stops are closer than 30 m their map badges are nudged 14px apart so both stay visible; the stops' coordinates are unchanged.
 
 - The light theme's text and UI pairs were computed, but neither theme has been rendered and reviewed on a real page yet.
@@ -1168,6 +1183,6 @@ Added with the first build of the briefing page. They are compositions of existi
 - The logo was checked by web search on 13 Nov 2026: no product or brand named "Sol Stroll" was found, and no identical mark. This was a text search, not an image search or a trademark search, and other "Sol" brands do use a sun in place of the "o".
 - The project name and headline copy are not chosen yet.
 - The map uses Leaflet and one basemap, the MRO HiRISE mosaic from NASA Mars Trek. HiRISE images are public domain and the team asks for the credit "NASA/JPL/University of Arizona". Other layer names in this file are examples.
-- Icon set not chosen. Pick one open-licensed set and use it throughout.
+- Icon set: Google's Material Symbols, Outlined style (Apache License 2.0), loaded from Google Fonts with only the icons the page uses. So far used in the layer panel, the stop list, the Present button and map callouts; the theme toggle still uses text symbols.
 - The diverging ramp's two warm steps were matched to the cool steps by lightness but have not been tested in a rendered map.
 - No texture or pattern fills are defined for print or forced-colours mode.

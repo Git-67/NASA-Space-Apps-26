@@ -16,8 +16,8 @@ Updated 14 Nov 2026 (hackathon day one), after the documents were rechecked agai
 | Product | Sol Stroll, "Know before you go." A go / no-go briefing for one Marswalk |
 | Site | Mount Sharp boxwork, Gale Crater. One site only |
 | Route | Curiosity's recorded path, out and back from the first stop. No pathfinding |
-| Stops | Altadena, nodule site, panorama viewpoint, Monte Grande hollow, Nevado Sajama ridge. The route is 929 m one way |
-| Verdict | Daylight, how unusual the sol is for its season, and a solar storm alert. No invented thresholds |
+| Stops | Altadena, nodule site, panorama viewpoint, Monte Grande hollow, Nevado Sajama ridge. The route is 1,113 m one way along the rover's drives (929 m was the straight-line figure) |
+| Verdict | Daylight, how unusual the sol is for its season, and NASA DONKI space weather (forecast storms at Mars, particles near Earth). No invented thresholds |
 | Stack | Static HTML, CSS and JavaScript, no build step. Leaflet vendored. Python for data |
 | Design | `DESIGN.md` is binding. `src/styles/tokens.css` is generated from it |
 | Pitch | Seven slides. Opening ends: "Your map tells you where. Sol Stroll tells you when, and when not to." |

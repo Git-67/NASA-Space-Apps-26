@@ -56,6 +56,8 @@
   --color-chart-axis: #3a4666;
   --color-no-data: #1c2438;
   --color-route: #4de1f5;
+  --color-route-moderate: #fab219;
+  --color-route-hard: #f472d0;
   --color-route-casing: #04060c;
   --color-map-ink: #f2f5fa;
   --radius-xs: 4px;

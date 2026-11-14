@@ -1,0 +1,104 @@
+// @ts-check
+/**
+ * Pure logic for the verdict's solar storm check, from NASA DONKI.
+ *
+ * Dataset: data/processed/space_weather.json (scripts/prepare_space_weather.py),
+ *          or, for the present day, DONKI read live (space-weather-live.js).
+ * Times:   UTC. A sol is matched to the UTC Earth date it falls on.
+ *
+ * Event types, and what each can and cannot say about Mars:
+ * - CME-MARS: NASA's WSA-Enlil model forecast a solar storm (coronal mass
+ *   ejection) arriving at Mars. A forecast, not a measurement at Mars.
+ * - SEP: solar energetic particles, detected by spacecraft near Earth or by
+ *   STEREO. Whether they reached Mars depends on where Mars was.
+ * - FLR: a class M or X solar flare.
+ * - IPS: an interplanetary shock, with where it was detected.
+ *
+ * The rule is OUR OWN, in the spirit of the science brief's "no walk during a
+ * solar particle event": a forecast direct arrival at Mars is no-go; a
+ * glancing arrival, or particles detected near Earth, is caution.
+ */
+
+/** @typedef {import('./conditions-model.js').Reason} Reason */
+/**
+ * @typedef {'CME-MARS' | 'SEP' | 'FLR' | 'IPS'} SpaceEventType
+ * @typedef {{ type: SpaceEventType, time: string, detail: string, observedAt: string, link: string, isGlancingBlow: boolean }} SpaceEvent
+ * @typedef {{ coverageStart: string, coverageEnd: string, unavailable: string[], events: SpaceEvent[], isLive: boolean }} SpaceWeather
+ */
+
+/** Plain names for each event type, shown in the panel. */
+export const EVENT_TYPE_LABEL = {
+  'CME-MARS': 'Solar storm forecast at Mars (coronal mass ejection)',
+  SEP: 'Solar energetic particles (seen near Earth)',
+  FLR: 'Solar flare',
+  IPS: 'Interplanetary shock',
+};
+
+const KNOWN_TYPES = Object.keys(EVENT_TYPE_LABEL);
+const BASIS = 'NASA DONKI space weather database. Our rule: a storm forecast to hit Mars directly means no walk; a glancing hit, or particles detected near Earth, means caution.';
+
+/**
+ * Check the prepared file's shape and turn it into typed data.
+ * @param {any} data Parsed data/processed/space_weather.json.
+ * @returns {SpaceWeather}
+ * @throws {Error} When the file is damaged.
+ */
+export function parseSpaceWeather(data) {
+  const { coverage, events, unavailable } = data ?? {};
+  if (typeof coverage?.start !== 'string' || typeof coverage?.end !== 'string' || !Array.isArray(events)) {
+    throw new Error('The space weather file is empty or damaged.');
+  }
+  return {
+    coverageStart: coverage.start,
+    coverageEnd: coverage.end,
+    unavailable: Array.isArray(unavailable) ? unavailable.map(String) : [],
+    events: events.filter((event) => KNOWN_TYPES.includes(event?.type) && typeof event.time === 'string').map((event) => ({
+      type: event.type,
+      time: event.time,
+      detail: String(event.detail ?? ''),
+      observedAt: String(event.observedAt ?? ''),
+      link: String(event.link ?? ''),
+      isGlancingBlow: Boolean(event.isGlancingBlow),
+    })),
+    isLive: false,
+  };
+}
+
+/**
+ * Events on one UTC Earth date.
+ * @param {SpaceWeather} weather
+ * @param {string} date Earth date, "YYYY-MM-DD".
+ * @returns {SpaceEvent[]}
+ */
+export function eventsOnDate(weather, date) {
+  return weather.events.filter((event) => event.time.startsWith(date));
+}
+
+/**
+ * The verdict's solar storm reason for one Earth date.
+ * @param {SpaceWeather | Error} weather The record, or why it could not be loaded.
+ * @param {string | null} date Earth date of the chosen sol, "YYYY-MM-DD", or null if unknown.
+ * @returns {Reason}
+ */
+export function assessSpaceWeather(weather, date) {
+  if (weather instanceof Error) {
+    return { level: 'unknown', text: 'Space weather could not be checked.', basis: weather.message };
+  }
+  if (date === null || date < weather.coverageStart || date > weather.coverageEnd) {
+    return { level: 'unknown', text: 'No space weather record covers this date.', basis: `DONKI record held: ${weather.coverageStart} to ${weather.coverageEnd}.` };
+  }
+  const today = eventsOnDate(weather, date);
+  const marsArrivals = today.filter((event) => event.type === 'CME-MARS');
+  const direct = marsArrivals.find((event) => !event.isGlancingBlow);
+  if (direct) {
+    return { level: 'no-go', text: `A solar storm was forecast to hit Mars directly at ${direct.time.slice(11, 16)} UTC. Stay under shelter.`, basis: BASIS };
+  }
+  if (marsArrivals.length > 0) {
+    return { level: 'caution', text: 'A solar storm was forecast to give Mars a glancing blow on this date. Stay close to shelter.', basis: BASIS };
+  }
+  const particles = today.filter((event) => event.type === 'SEP');
+  if (particles.length > 0) {
+    return { level: 'caution', text: 'Solar energetic particles were detected near Earth on this date. Whether they reached Mars depends on where Mars was.', basis: BASIS };
+  }
+  return { level: 'go', text: 'No solar storm was forecast to reach Mars on this date.', basis: BASIS };
+}

@@ -15,7 +15,7 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 const WIDTH = 360;
 const HEIGHT = 150;
 /** Room around the plot for axis labels, in SVG units. */
-const PAD = { top: 18, right: 14, bottom: 26, left: 46 };
+const PAD = { top: 18, right: 14, bottom: 26, left: 58 };
 
 /**
  * Create an SVG element with attributes.
@@ -32,20 +32,44 @@ function svg(tag, attrs, text) {
 }
 
 /**
- * Draw the profile from the start to the furthest stop in the plan.
+ * Heights along the outward walk, in visiting order, with each stop's position.
+ * A section walked against the rover's direction is read backwards.
+ * @param {Route} route
+ * @param {Plan} plan
+ * @returns {{ series: { walkedM: number, elevationM: number }[], marks: { walkedM: number, elevationM: number, number: number }[] }}
+ */
+export function walkProfile(route, plan) {
+  const series = [];
+  const start = route.points[plan.stops[0].pointIndex];
+  const marks = [{ walkedM: 0, elevationM: start.elevationM, number: 1 }];
+  let walkedM = 0;
+  for (const section of plan.sections.filter((item) => !item.isReturn)) {
+    const step = section.toIndex >= section.fromIndex ? 1 : -1;
+    for (let i = section.fromIndex; i !== section.toIndex + step; i += step) {
+      if (i !== section.fromIndex) walkedM += Math.abs(route.points[i].alongM - route.points[i - step].alongM);
+      if (series.length === 0 || i !== section.fromIndex) series.push({ walkedM, elevationM: route.points[i].elevationM });
+    }
+    const stop = route.stops.find((item) => item.id === section.toId);
+    marks.push({ walkedM, elevationM: route.points[section.toIndex].elevationM, number: stop ? route.stops.indexOf(stop) + 1 : 0 });
+  }
+  return { series, marks };
+}
+
+/**
+ * Draw the profile of the outward walk, in visiting order.
  * @param {Route} route The prepared route.
  * @param {Plan} plan The current plan.
  * @returns {HTMLElement} A figure holding the chart and its text alternative.
  */
 export function renderElevationProfile(route, plan) {
-  const lastStop = plan.stops[plan.stops.length - 1];
-  const points = route.points.slice(0, lastStop.pointIndex + 1);
+  const { series, marks } = walkProfile(route, plan);
   const figure = el('figure', { className: 'profile' });
-  if (points.length < 2) {
+  if (series.length < 2) {
     figure.append(el('p', { className: 'chart-state', text: 'Select a stop beyond the start to see the climb.' }));
     return figure;
   }
 
+  const points = series.map((item) => ({ alongM: item.walkedM, elevationM: item.elevationM }));
   const heights = points.map((point) => point.elevationM);
   const low = Math.min(...heights);
   const high = Math.max(...heights);
@@ -53,7 +77,7 @@ export function renderElevationProfile(route, plan) {
   const x = (/** @type {number} */ along) => PAD.left + (along / length) * (WIDTH - PAD.left - PAD.right);
   const y = (/** @type {number} */ height) => HEIGHT - PAD.bottom - ((height - low) / (high - low || 1)) * (HEIGHT - PAD.top - PAD.bottom);
 
-  const summary = `Elevation along the route: from ${Math.round(heights[0])} m to ${Math.round(heights[heights.length - 1])} m over ${Math.round(length)} m, lowest ${Math.round(low)} m, highest ${Math.round(high)} m.`;
+  const summary = `Elevation on the way out: from ${Math.round(heights[0])} m to ${Math.round(heights[heights.length - 1])} m over ${Math.round(length)} m, lowest ${Math.round(low)} m, highest ${Math.round(high)} m.`;
   const chart = svg('svg', { viewBox: `0 0 ${WIDTH} ${HEIGHT}`, role: 'img', 'aria-label': summary, class: 'profile-chart' });
 
   for (const height of [low, high]) {
@@ -68,16 +92,14 @@ export function renderElevationProfile(route, plan) {
     class: 'chart-line',
   }));
 
-  for (const stop of plan.stops) {
-    const point = route.points[stop.pointIndex];
-    const number = route.stops.indexOf(stop) + 1;
-    chart.append(svg('circle', { cx: x(point.alongM), cy: y(point.elevationM), r: 4, class: 'chart-point' }));
-    chart.append(svg('text', { x: x(point.alongM), y: y(point.elevationM) - 8, 'text-anchor': 'middle', class: 'chart-point-label' }, String(number)));
+  for (const mark of marks) {
+    chart.append(svg('circle', { cx: x(mark.walkedM), cy: y(mark.elevationM), r: 4, class: 'chart-point' }));
+    chart.append(svg('text', { x: x(mark.walkedM), y: y(mark.elevationM) - 8, 'text-anchor': 'middle', class: 'chart-point-label' }, String(mark.number)));
   }
 
   figure.append(chart, el('figcaption', {
     className: 'data-source-caption',
-    text: 'Elevation along Curiosity\'s path, in metres as recorded in the waypoint file. Numbers mark the stops. Source: Curiosity waypoints, NASA/JPL-Caltech.',
+    text: 'Elevation on the way out, in visiting order, in metres as recorded in the waypoint file. Distance follows the rover\'s drives. Numbers mark the stops. Source: Curiosity waypoints, NASA/JPL-Caltech.',
   }));
   return figure;
 }

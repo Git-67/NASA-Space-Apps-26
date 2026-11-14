@@ -8,9 +8,9 @@ Mars maps show where to walk. Sol Stroll tells a crew whether to go. It follows 
 
 ## What works today
 
-- A map of the boxwork on high-resolution orbital imagery, with Curiosity's recorded path and five science stops.
-- A plan built from the stops you tick: each section's distance, climb, walking time and difficulty, plus the return leg.
-- A verdict (go, caution, no-go) for any sol in Curiosity's weather record, with every reason and its basis shown.
+- A map of the boxwork on high-resolution orbital imagery, with the path Curiosity actually drove and five science stops. It zooms from the whole crater down to the rocks.
+- A plan built from the stops you tick, in the order you choose: each section's distance, climb, walking time and difficulty on hover or tap, the route coloured by difficulty, and callouts at steep ground, sand and the biggest climb.
+- A verdict (go, caution, no-go) for any sol in Curiosity's weather record, or for today, including NASA's space weather for that date. Every reason shows its basis.
 - Hazards on the route, a packing list, and what Curiosity found at each stop.
 - Map options: contour lines traced live from NASA's Gale elevation model, colour HiRISE imagery, names of places Curiosity explored, and a latitude/longitude grid.
 - Dark and light themes.
@@ -27,6 +27,8 @@ Not built yet: the orbit and ground photo comparison at each stop, and a guided 
 | Place names | Mars Science Laboratory (Curiosity) location map | Names of places the rover explored |
 | Rover waypoints | Mars Science Laboratory (Curiosity) | The route, stops, distances and climb |
 | Daily weather | Curiosity REMS, provided by Centro de Astrobiología | Daylight and the seasonal comparison behind the verdict |
+| Space weather | NASA DONKI (CCMC): WSA-Enlil forecasts of solar storms at Mars, solar particle events, shocks | The solar storm check in the verdict |
+| Wider orbital imagery | Mars Reconnaissance Orbiter, CTX, via NASA Mars Trek | The map when zoomed out to the crater |
 | Science findings | NASA/JPL-Caltech releases and the Curiosity mission blog | What is at each stop |
 
 Full details, limits and usage terms are in [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md). The weather feed is labelled by its provider as intended for outreach purposes only.
@@ -72,6 +74,12 @@ python3 scripts/prepare_landmarks.py --refresh
 
 ```bash
 python3 scripts/calibrate_dem.py --refresh
+```
+
+The space weather script needs a free key from https://api.nasa.gov in `NASA_API_KEY` (see `.env.example`):
+
+```bash
+NASA_API_KEY=your-key python3 scripts/prepare_space_weather.py
 ```
 
 Regenerate the style tokens after changing `DESIGN.md`:

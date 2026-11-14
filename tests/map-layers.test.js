@@ -1,7 +1,8 @@
 // @ts-check
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { traceLevel, traceStepContours } from '../src/features/map/contour-model.js';
+import { chainSegments, smoothLine, traceLevel, traceStepContours } from '../src/features/map/contour-model.js';
+import { activeSection, difficultyRuns, sectionPath } from '../src/features/map/route-geometry.js';
 import { chooseGridStep, formatGridDegrees, gridValues } from '../src/features/map/graticule-model.js';
 import { latitudeOfMercatorRow, mercatorRowFraction, mercatorRowsForBand, toTmsRow } from '../src/features/map/mercator-tiles.js';
 import { stackLabels } from '../src/features/map/label-stacking.js';
@@ -91,4 +92,43 @@ test('parseDemCalibration rejects a missing or non-positive scale', () => {
   assert.equal(parseDemCalibration(good).metresPerLevel, 18.6);
   assert.throws(() => parseDemCalibration({ ...good, metresPerLevel: 0 }));
   assert.throws(() => parseDemCalibration(null));
+});
+
+test('chainSegments joins touching segments into one line, whatever their direction', () => {
+  const lines = chainSegments([0, 0, 1, 0, 2, 0, 1, 0, 2, 0, 3, 1]);
+  assert.equal(lines.length, 1);
+  assert.deepEqual(lines[0], [3, 1, 2, 0, 1, 0, 0, 0]);
+});
+
+test('smoothLine keeps the ends of an open line and rounds its corner', () => {
+  const smooth = smoothLine([0, 0, 1, 0, 1, 1], 1);
+  assert.deepEqual(smooth.slice(0, 2), [0, 0]);
+  assert.deepEqual(smooth.slice(-2), [1, 1]);
+  assert.equal(smooth.length / 2, 6);
+});
+
+/** Three route points joined by drives with a bend in each. Test data only. */
+const routePoints = [
+  { sol: 1, lat: 0, lon: 0, elevationM: 0, tiltDeg: 1, alongM: 0, track: [] },
+  { sol: 2, lat: 0, lon: 2, elevationM: 0, tiltDeg: 12, alongM: 2, track: [[0, 0], [1, 1], [0, 2]] },
+  { sol: 3, lat: 0, lon: 4, elevationM: 0, tiltDeg: 3, alongM: 4, track: [[0, 2], [-1, 3], [0, 4]] },
+];
+
+test('sectionPath follows the drives and reverses for a walk back', () => {
+  assert.deepEqual(sectionPath(routePoints, 0, 2), [[0, 0], [1, 1], [0, 2], [-1, 3], [0, 4]]);
+  assert.deepEqual(sectionPath(routePoints, 2, 1), [[0, 4], [-1, 3], [0, 2]]);
+});
+
+test('activeSection picks the section leaving the chosen stop', () => {
+  const sections = [{ fromId: 'a', toId: 'b' }, { fromId: 'b', toId: 'a' }];
+  assert.equal(activeSection(/** @type {any} */ (sections), 'b'), sections[1]);
+  assert.equal(activeSection(/** @type {any} */ (sections), null), null);
+});
+
+test('difficultyRuns colours each drive by its own tilt and merges equal neighbours', () => {
+  const rate = (/** @type {number} */ tilt) => (tilt >= 10 ? 'moderate' : 'easier');
+  const runs = difficultyRuns(routePoints, 0, 2, rate);
+  // Both drives touch the 12 degree waypoint, so both are moderate and merge into one run.
+  assert.deepEqual(runs.map((run) => run.difficulty), ['moderate']);
+  assert.equal(runs[0].path.length, 5);
 });

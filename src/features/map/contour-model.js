@@ -112,3 +112,80 @@ export function traceStepContours(values, width, height) {
   }
   return contours;
 }
+
+/**
+ * Join loose segments that share end points into continuous lines.
+ * Neighbouring cells compute a shared crossing with the same arithmetic, so
+ * matching end points are equal and can be matched exactly.
+ * @param {number[]} segments Flat list: x1, y1, x2, y2, then the next segment.
+ * @returns {number[][]} Lines as flat lists of x, y pairs.
+ */
+export function chainSegments(segments) {
+  const count = segments.length / 4;
+  const key = (/** @type {number} */ x, /** @type {number} */ y) => `${x.toFixed(4)},${y.toFixed(4)}`;
+  /** @type {Map<string, number[]>} */
+  const byEnd = new Map();
+  for (let i = 0; i < count; i += 1) {
+    for (const end of [0, 1]) {
+      const k = key(segments[i * 4 + end * 2], segments[i * 4 + end * 2 + 1]);
+      byEnd.set(k, [...(byEnd.get(k) ?? []), i]);
+    }
+  }
+  const used = new Uint8Array(count);
+  /** @type {number[][]} */
+  const lines = [];
+  /**
+   * Walk from a point along unused segments, appending points.
+   * @param {number[]} line Line being built; its last pair is the current end.
+   */
+  const extend = (line) => {
+    for (;;) {
+      const next = (byEnd.get(key(line[line.length - 2], line[line.length - 1])) ?? []).find((i) => !used[i]);
+      if (next === undefined) return;
+      used[next] = 1;
+      const [x1, y1, x2, y2] = segments.slice(next * 4, next * 4 + 4);
+      const isForward = key(x1, y1) === key(line[line.length - 2], line[line.length - 1]);
+      line.push(...(isForward ? [x2, y2] : [x1, y1]));
+    }
+  };
+  for (let i = 0; i < count; i += 1) {
+    if (used[i]) continue;
+    used[i] = 1;
+    const line = segments.slice(i * 4, i * 4 + 4);
+    extend(line);
+    // Then grow the other end, by reversing, extending and reversing back.
+    const reversed = [];
+    for (let j = line.length - 2; j >= 0; j -= 2) reversed.push(line[j], line[j + 1]);
+    extend(reversed);
+    lines.push(reversed);
+  }
+  return lines;
+}
+
+/**
+ * Round the corners of a line by Chaikin's corner cutting. Each pass replaces
+ * every corner with two points a quarter of the way along its sides, so the
+ * line never moves more than half a grid step from where it was traced.
+ * Open lines keep their end points; closed loops stay closed.
+ * @param {number[]} line Flat list of x, y pairs.
+ * @param {number} passes How many times to cut the corners.
+ * @returns {number[]} The rounded line.
+ */
+export function smoothLine(line, passes) {
+  let current = line;
+  for (let pass = 0; pass < passes; pass += 1) {
+    const n = current.length / 2;
+    if (n < 3) return current;
+    const isClosed = current[0] === current[current.length - 2] && current[1] === current[current.length - 1];
+    /** @type {number[]} */
+    const next = isClosed ? [] : [current[0], current[1]];
+    for (let i = 0; i < n - 1; i += 1) {
+      const [ax, ay, bx, by] = current.slice(i * 2, i * 2 + 4);
+      next.push(0.75 * ax + 0.25 * bx, 0.75 * ay + 0.25 * by, 0.25 * ax + 0.75 * bx, 0.25 * ay + 0.75 * by);
+    }
+    if (isClosed) next.push(next[0], next[1]);
+    else next.push(current[current.length - 2], current[current.length - 1]);
+    current = next;
+  }
+  return current;
+}

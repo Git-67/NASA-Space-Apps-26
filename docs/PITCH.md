@@ -41,7 +41,7 @@ Each slide names the judging criterion it is there to win.
 | 1 | **Do you go?** | The opening, over the logo. Nothing else on the slide | Presentation |
 | 2 | **The problem** | Orbital maps are static. Mars is not: in the 2018 dust storm the daily high at Curiosity's site fell from 4 °C to −29 °C in six weeks. And a crew cannot wait for Earth: a signal takes from about 3 to about 22 minutes each way | Impact |
 | 3 | **What we built** | One real walk in the Mount Sharp boxwork, answering five questions: why, where, when, how sure, what if. Use `docs/screenshots/briefing-dark.png` | Relevance |
-| 4 | **Why this walk** | The boxwork: groundwater that outlasted the lakes. Curiosity needed nine months and four drill holes to work through it. At NASA's planning pace the whole route is under half an hour's walk each way | Impact, Creativity |
+| 4 | **Why this walk** | The boxwork: groundwater that outlasted the lakes. Curiosity needed nine months and four drill holes to work through it. At NASA's planning pace the whole route is about half an hour's walk each way | Impact, Creativity |
 | 5 | **The evidence** | The data table: which mission, which instrument, what it gives us. Then the honesty: what is measured, what is derived, what is our assumption | Validity |
 | 6 | **What makes it different** | The entries we reviewed plan a route. Ours gives a verdict, and it changes with the sol. Use `docs/screenshots/briefing-dust-storm.png`: the same walk turns to Caution in the 2018 storm | Creativity |
 | 7 | **Know before you go** | What a crew gets, what comes next, the link, the team, the non-endorsement line | Presentation |
@@ -60,7 +60,7 @@ An optional picture for slide 4: NASA's 2019 animation of Curiosity's *proposed*
 |---|---|
 | 0 to 8 | The opening, shortened: "You're on Mars. Your target is five hundred metres away. The route is clear. Do you go?" |
 | 8 to 20 | Screen recording: the map, ticking stops, the plan and the verdict updating |
-| 20 to 27 | Press "2018 dust storm": the verdict turns to Caution. Tick the solar storm alert: it turns to No-go |
+| 20 to 27 | Type sol 1815 (13 Sep 2017): NASA forecast a solar storm at Mars and the verdict turns to Caution by itself. Type sol 1947: a forecast direct hit, No-go. Then press Present for today's live reading |
 | 27 to 30 | Logo and tagline |
 
 A 30-second video cannot carry the evidence slide. **The slides are the safer choice for this project**, because its strength is Validity.
@@ -69,9 +69,9 @@ A 30-second video cannot carry the evidence slide. **The slides are the safer ch
 
 | Claim | Status |
 |---|---|
-| The route is 929 m long, start to last stop | Derived from Curiosity's waypoints. Say "about 900 metres" |
+| The route is 1,113 m long, start to last stop | Derived from Curiosity's drives (traverse file). Say "about 1.1 kilometres". The old 929 m figure joined waypoints with straight lines; do not use it |
 | Never more than 537 m from the start | Derived. Say "about 500 metres" |
-| The full walk with all five stops takes about 3 h 40 min | Estimate from the product: 56 minutes of walking at 2 km/h plus 2 h 45 min of work at the stops. **The work time is our assumption** |
+| The full walk with all five stops takes about 3 h 50 min | Estimate from the product: 67 minutes of walking (2.2 km out and back) at 2 km/h plus 2 h 45 min of work at the stops. **The work time is our assumption** |
 | 2 km/h walking pace | Read from NASA EVA-EXP-0042, section 4.2.1.3.1. **It is NASA's lunar planning figure.** Always say "the pace NASA plans lunar walks at" |
 | Slopes up to 20° | Read from the same document, section 4.2.1.3. Lunar |
 | Spacewalks of up to 8 hours | Read from the same document, section 4.1.4 |

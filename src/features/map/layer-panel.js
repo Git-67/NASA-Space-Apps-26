@@ -6,11 +6,13 @@
  */
 import * as L from '../../../public/vendor/leaflet/leaflet-src.esm.js';
 import { el } from '../../lib/dom.js';
+import { icon } from '../../components/ui/icon.js';
 
 /**
  * @typedef {object} LayerChoice
  * @property {string} id Stable identifier, used in element IDs.
  * @property {string} label Name shown to the visitor: mission and instrument, per DESIGN.md.
+ * @property {string} icon Material Symbols name shown before the label.
  * @property {string} note One or two sentences: the source and what the visitor should know.
  * @property {string} [unavailableReason] When set, the option is disabled and this says why.
  */
@@ -38,7 +40,7 @@ function choiceRow(type, choice, isChecked, onChange) {
   input.addEventListener('change', () => onChange(input.checked));
   const status = el('p', { className: 'map-layer-status', attrs: { 'aria-live': 'polite' }, text: choice.unavailableReason ?? '' });
   const row = el('div', { className: 'map-layer-choice' }, [
-    el('div', { className: 'check-row' }, [input, el('label', { text: choice.label, attrs: { for: inputId } })]),
+    el('div', { className: 'check-row' }, [input, el('label', { attrs: { for: inputId } }, [icon(choice.icon), choice.label])]),
     el('p', { className: 'basis', text: choice.note }),
     status,
   ]);
@@ -69,7 +71,7 @@ export function createLayerPanel({ imagery, overlays, onImageryChange, onOverlay
   });
 
   const panel = el('details', { className: 'map-layer-panel' }, [
-    el('summary', { className: 'map-layer-toggle', text: 'Layers' }),
+    el('summary', { className: 'map-layer-toggle' }, [icon('layers'), 'Layers']),
     el('div', { className: 'map-layer-body' }, [
       el('fieldset', {}, [el('legend', { text: 'Imagery' }), ...imageryRows]),
       el('fieldset', {}, [el('legend', { text: 'Show on the map' }), ...overlayRows]),
