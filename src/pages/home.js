@@ -8,6 +8,7 @@ import { loadJson } from '../lib/load-json.js';
 import { el, requireElement } from '../lib/dom.js';
 import { initThemeToggle } from '../features/theme/theme-toggle.js';
 import { createMapView } from '../features/map/map-view.js';
+import { parseDemCalibration, parseLandmarks } from '../features/map/map-layer-data.js';
 import { buildPlan, DEFAULT_WALKING_SPEED_KMH } from '../features/plan/plan-model.js';
 import { renderPlan, renderStopDetails, renderStopList } from '../features/plan/plan-view.js';
 import { compareWithSeason, decideVerdict } from '../features/conditions/conditions-model.js';
@@ -18,6 +19,8 @@ import { renderConditions, renderVerdict } from '../features/conditions/conditio
 
 const ROUTE_FILE = 'data/processed/route.json';
 const WEATHER_FILE = 'data/processed/weather.json';
+const LANDMARKS_FILE = 'data/processed/landmarks.json';
+const DEM_CALIBRATION_FILE = 'data/processed/dem_calibration.json';
 /** Sol the page opens on: the sol Curiosity reached the last stop, in the boxwork itself. */
 const DEFAULT_SOL = 4711;
 const MIN_SPEED_KMH = 0.5;
@@ -48,11 +51,28 @@ function parseWeather(data) {
 }
 
 /**
+ * Load and check an optional file. Failure is returned, not thrown, so that
+ * one missing map layer never stops the briefing from opening.
+ * @template T
+ * @param {string} path File to load.
+ * @param {(data: any) => T} parse Checks the file's shape and returns typed data.
+ * @returns {Promise<T | Error>}
+ */
+async function loadOptional(path, parse) {
+  try {
+    return parse(await loadJson(path));
+  } catch (error) {
+    return error instanceof Error ? error : new Error(String(error));
+  }
+}
+
+/**
  * Start the page once the data has loaded.
  * @param {Route} route
  * @param {WeatherRecord[]} records
+ * @param {{ places: import('../features/map/map-layer-data.js').Place[] | Error, calibration: import('../features/map/map-layer-data.js').DemCalibration | Error }} mapExtras
  */
-function start(route, records) {
+function start(route, records, mapExtras) {
   const recordBySol = new Map(records.map((record) => [record.sol, record]));
   const firstSol = records[0].sol;
   const lastSol = records[records.length - 1].sol;
@@ -77,7 +97,7 @@ function start(route, records) {
   speedInput.max = String(MAX_SPEED_KMH);
   speedInput.value = String(state.walkingSpeedKmh);
 
-  const mapView = createMapView(requireElement('map'), route, (stopId) => {
+  const mapView = createMapView(requireElement('map'), route, mapExtras, (stopId) => {
     state.detailStopId = stopId;
     redraw();
     requireElement('stop-details').scrollIntoView({ block: 'nearest' });
@@ -148,12 +168,17 @@ async function main() {
   initThemeToggle(requireElement('theme-toggle'));
   const status = requireElement('load-status');
   try {
-    const [routeData, weatherData] = await Promise.all([loadJson(ROUTE_FILE), loadJson(WEATHER_FILE)]);
+    const [routeData, weatherData, places, calibration] = await Promise.all([
+      loadJson(ROUTE_FILE),
+      loadJson(WEATHER_FILE),
+      loadOptional(LANDMARKS_FILE, parseLandmarks),
+      loadOptional(DEM_CALIBRATION_FILE, parseDemCalibration),
+    ]);
     const route = parseRoute(routeData);
     const records = parseWeather(weatherData);
     status.remove();
     requireElement('briefing').hidden = false;
-    start(route, records);
+    start(route, records, { places, calibration });
   } catch (error) {
     const retry = el('button', { className: 'button-secondary', text: 'Try again', attrs: { type: 'button' } });
     retry.addEventListener('click', () => window.location.reload());

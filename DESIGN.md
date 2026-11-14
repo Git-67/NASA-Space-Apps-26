@@ -558,6 +558,20 @@ components:
     rounded: "{rounded.md}"
     padding: "{spacing.sm} {spacing.md}"
     border: "1px solid {colors.hairline-strong}"
+  map-label:
+    backgroundColor: "{colors.surface-raised}"
+    textColor: "{colors.ink}"
+    typography: "{typography.caption-bold}"
+    rounded: "{rounded.sm}"
+    padding: "2px 8px"
+    border: "1px solid {colors.hairline-strong}"
+  map-contour:
+    backgroundColor: "{colors.map-ink}"
+    height: 1px
+    border: "1px solid {colors.route-casing}"
+  map-graticule:
+    backgroundColor: "{colors.map-ink}"
+    height: 1px
   map-attribution:
     backgroundColor: "{colors.void}"
     textColor: "{colors.text-muted}"
@@ -978,6 +992,20 @@ The categorical palette was validated against `{colors.surface}`: all eight slot
 - The slider thumb and the filled track are `{colors.accent}`; the unfilled track is `{colors.hairline-strong}`.
 - Paused by default. Works with arrow keys. Under reduced motion, playback steps frame by frame instead of animating.
 
+**`map-label`**: the name of a place on the map.
+- A solid `{colors.surface-raised}` panel with a `{colors.hairline-strong}` border, text in `{typography.caption-bold}` and `{colors.ink}`, so a name is never bare text on imagery. Placed to the right of its point.
+- A named place without its own marker gets a `map-marker` under the name; the stops keep their numbered `map-waypoint` badge.
+- Labels that would overlap are stacked downwards rather than hidden.
+- Grid labels use the same panel with `{typography.telemetry}` in `{colors.text-secondary}`.
+
+**`map-contour`**: elevation contour lines.
+- A 1px line in `{colors.map-ink}` over a 3px `{colors.route-casing}` casing, the layer at 80 percent opacity. No colour ramp: position carries the meaning, and the route stays the brightest line on the map.
+- The contour interval and its source are stated in the `map-layer-panel`, next to the option.
+
+**`map-graticule`**: the latitude and longitude grid.
+- A 1px dashed line (4px dash, 4px gap) in `{colors.map-ink}` at 50 percent opacity, quieter than contours and route.
+- Labels sit along the left and top edges of the map, clear of the map controls, and give degrees with the sign the sources use until their convention is confirmed.
+
 **`map-attribution`**: required on every map.
 - Bottom-right. Text `{colors.text-muted}` on `{colors.void}` at 80 percent opacity. Credits the basemap provider and every data layer. The full citation also goes in the `data-source-caption` below the map.
 
@@ -1128,7 +1156,8 @@ Added with the first build of the briefing page. They are compositions of existi
 ## Known Gaps
 
 - The first build has been rendered in both themes at 1440px and at 390px in the dark theme. The light theme has not been checked on mobile.
-- The first build uses a single basemap. There is no `map-layer-panel`, `map-legend`, `map-popup` or `map-timeline` yet.
+- The `map-layer-panel` is a single collapsible panel at every width, not the bottom sheet described under Collapsing strategy. There is no `map-legend`, `map-popup` or `map-timeline` yet.
+- The colour imagery option hides the route, stops and contours while it is on, following the rule that no data is drawn over colour imagery.
 - When two stops are closer than 30 m their map badges are nudged 14px apart so both stay visible; the stops' coordinates are unchanged.
 
 - The light theme's text and UI pairs were computed, but neither theme has been rendered and reviewed on a real page yet.

@@ -10,6 +10,8 @@
   --size-logo: 28px;             /* Logo height in the nav. */
   --size-focus: 2px;             /* Focus outline width and offset. */
   --map-min-height: 360px;       /* Smallest map height on mobile. */
+  --size-layer-panel: 320px;     /* Widest the map layer panel grows (DESIGN.md, map-popup width). */
+  --layer-panel-max-height: 40vh; /* Open layer panel leaves most of a small map visible. */
   --shadow-floating-dark: rgba(0, 0, 0, 0.5) 0px 8px 24px -4px;
   --shadow-raised-light: rgba(20, 22, 28, 0.06) 0px 2px 8px 0px;
   --shadow-floating-light: rgba(20, 22, 28, 0.14) 0px 12px 32px -4px;

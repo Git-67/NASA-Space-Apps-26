@@ -12,6 +12,7 @@ Mars maps show where to walk. Sol Stroll tells a crew whether to go. It follows 
 - A plan built from the stops you tick: each section's distance, climb, walking time and difficulty, plus the return leg.
 - A verdict (go, caution, no-go) for any sol in Curiosity's weather record, with every reason and its basis shown.
 - Hazards on the route, a packing list, and what Curiosity found at each stop.
+- Map options: contour lines traced live from NASA's Gale elevation model, colour HiRISE imagery, names of places Curiosity explored, and a latitude/longitude grid.
 - Dark and light themes.
 
 Not built yet: the orbit and ground photo comparison at each stop, and a guided replay of the 2018 dust storm.
@@ -21,6 +22,9 @@ Not built yet: the orbit and ground photo comparison at each stop, and a guided 
 | Data | Mission and instrument | Used for |
 |---|---|---|
 | Orbital imagery | Mars Reconnaissance Orbiter, HiRISE, via NASA Mars Trek | The map |
+| Colour orbital imagery | Mars Reconnaissance Orbiter, HiRISE colour mosaic, via NASA's Curiosity location map | The colour view |
+| Elevation model | Mars Reconnaissance Orbiter, HiRISE Gale DEM, via NASA Mars Trek | Contour lines (one line per 18.6 m, see the data sources) |
+| Place names | Mars Science Laboratory (Curiosity) location map | Names of places the rover explored |
 | Rover waypoints | Mars Science Laboratory (Curiosity) | The route, stops, distances and climb |
 | Daily weather | Curiosity REMS, provided by Centro de Astrobiología | Daylight and the seasonal comparison behind the verdict |
 | Science findings | NASA/JPL-Caltech releases and the Curiosity mission blog | What is at each stop |
@@ -30,7 +34,7 @@ Full details, limits and usage terms are in [`docs/DATA_SOURCES.md`](docs/DATA_S
 ## What is measured, derived and assumed
 
 - **Measured by NASA missions:** imagery, rover positions and elevations, daily temperatures, sunrise and sunset.
-- **Derived by us:** distances along the path, climb, how unusual a sol is for its season.
+- **Derived by us:** distances along the path, climb, how unusual a sol is for its season, and the elevation scale behind the contour lines.
 - **Taken from NASA's lunar planning, because none exists for Mars:** the 2 km/h walking pace and the 20° slope mark (NASA EVA-EXP-0042).
 - **Assumed by us, and labelled in the page:** time spent at each stop, the daylight safety margin, the 10° "moderate" mark, the packing list, and what a person could do at each stop.
 
@@ -62,6 +66,14 @@ python3 scripts/prepare_route.py --refresh
 python3 scripts/prepare_weather.py --refresh
 ```
 
+```bash
+python3 scripts/prepare_landmarks.py --refresh
+```
+
+```bash
+python3 scripts/calibrate_dem.py --refresh
+```
+
 Regenerate the style tokens after changing `DESIGN.md`:
 
 ```bash
@@ -78,7 +90,7 @@ python3 scripts/build_tokens.py
 |---|---|
 | `index.html` | The one page |
 | `src/pages/home.js` | Loads the data, holds the page state, asks the features to redraw |
-| `src/features/map/` | The map |
+| `src/features/map/` | The map, its layer panel, and the optional layers (colour imagery, contours, place names, grid) |
 | `src/features/plan/` | Sections, time, difficulty, hazards, packing list, elevation profile |
 | `src/features/conditions/` | The sol's conditions and the verdict |
 | `src/features/theme/` | Dark and light switching |
