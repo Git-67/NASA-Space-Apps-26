@@ -52,7 +52,7 @@ Chosen for a team that knows Python, HTML, CSS and basic JavaScript, and for fre
 
 - **Site:** static HTML, CSS and JavaScript (ES modules). **No framework and no build step**, so what is in the repo is what Pages serves.
 - **Types:** plain JavaScript with JSDoc types and `// @ts-check` at the top of each file. This replaces TypeScript, which would need a build step.
-- **Map:** Leaflet. **Charts:** one small charting library, to be chosen with the first chart. Both are vendored or loaded from a pinned CDN version.
+- **Map:** Leaflet 1.9.4, vendored in `public/vendor/leaflet/`. **Charts:** hand-drawn inline SVG so far; add a charting library only if a chart needs more than that.
 - **Data preparation:** Python scripts in `scripts/` turn raw NASA data into small JSON, GeoJSON or image files in `data/processed/`. The browser never parses raw mission files.
 - **Hosting:** GitHub Pages, served from `main`. The repository must be public for this on a free plan.
 
@@ -61,7 +61,9 @@ Chosen for a team that knows Python, HTML, CSS and basic JavaScript, and for fre
 | Dev server | `python3 -m http.server 8000` then open http://localhost:8000 |
 | Prepare data | `python3 scripts/<name>.py` (each script documents its inputs and outputs) |
 | Python dependencies | `pip install -r requirements.txt` (pinned versions) |
-| Lint, format, test | _TBD with the first code_ |
+| Test | `node --test tests/*.test.js` |
+| Rebuild style tokens | `python3 scripts/build_tokens.py` after any change to `DESIGN.md`. Never edit `src/styles/tokens.css` by hand |
+| Lint, format, type check | _Not set up. There is no automated check that `// @ts-check` passes_ |
 
 All paths in the site are relative, because Pages serves the project from a sub-path, not from the domain root.
 

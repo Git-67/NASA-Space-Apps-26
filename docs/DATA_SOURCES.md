@@ -2,7 +2,20 @@
 
 Every dataset the project uses or plans to use. Update this file in the same change that adds, removes or reprocesses data.
 
-**Status key:** *Reachable* means the endpoint answered and the content was inspected on the date shown. It does not mean the data has been processed or validated. Nothing here is in the product yet.
+**Status key:** *Reachable* means the endpoint answered and the content was inspected on the date shown. It does not mean the data has been validated.
+
+## In the product (as of 14 Nov 2026)
+
+| Data | Raw copy | Prepared by | Output the site loads | Processing |
+|---|---|---|---|---|
+| MRO HiRISE mosaic `curiosity_hirise_mosaic` | Not stored; tiles are requested from NASA Mars Trek as the map is viewed | None | None | None. Shown at its published zoom levels 12 to 16, never stretched |
+| Curiosity waypoints | `data/raw/msl_waypoints.json`, downloaded 14 Nov 2026 | `scripts/prepare_route.py` | `data/processed/route.json` | Cut to the path between the first and last stop (50 waypoints, sols 4560 to 4711). Elevation rounded to 0.1 m. Distance along the path added: great-circle distance between consecutive waypoints on a sphere of radius 3,389,500 m |
+| Curiosity REMS daily weather | `data/raw/msl_weather.json`, downloaded 14 Nov 2026 | `scripts/prepare_weather.py` | `data/processed/weather.json` | Text converted to numbers. Sunrise and sunset converted to minutes after local midnight. Dust opacity, wind and humidity dropped as unusable. Sols with missing values kept, with nulls |
+| The five stops | `data/stops.json`, written by hand | None | Merged into `route.json` | Each stop is tied to a Curiosity waypoint by its site and drive number |
+
+Two figures differ and both are correct for what they measure: the path from the first stop to the last is **929 m** as straight lines between waypoints (used in the product), and about **1.2 km** by the rover's own odometer, which counts every turn and wheel movement.
+
+The product does not yet use the raw image service, the CTX mosaics or any radiation data.
 
 **Study site:** the boxwork region on Mount Sharp, Gale Crater. Curiosity's waypoints for sols 4500 to 4840 fall within about latitude -4.793 to -4.810, longitude 137.379 to 137.390, at elevations of about -3,690 m to -3,598 m. The campaign ran from the Altadena drill (sol 4564, 8 Jun 2025) to the rover's exit in March 2026 (about sol 4836). Stops and their sources are in `docs/SCIENCE_BRIEF.md`.
 

@@ -1031,6 +1031,27 @@ These apply on top of the map components above. They exist because Mars is an or
 - Every map has a text summary of what it shows, and its underlying data is available through `data-table`.
 - State the projection or the caveat when area or distance matters to the claim being made.
 
+### Briefing components
+
+Added with the first build of the briefing page. They are compositions of existing tokens, with no new colours.
+
+**`verdict`**: the page's main message: Go, Caution, No-go or No verdict.
+- The level is set in `{typography.stat-value}` beside a round symbol (a tick, an exclamation mark, a cross or a question mark). The symbol uses the matching badge colours: `badge-success` for go, `badge-warning` for caution, `badge-error` for no-go, and `{colors.surface-raised}` with `{colors.text-secondary}` for no verdict.
+- Below it, every reason is listed with its own symbol, a sentence in `{typography.body-sm}`, and its basis in `{typography.caption}` and `{colors.text-muted}`.
+- The level is always given in words and by symbol, never by colour alone. The region is announced to screen readers when it changes.
+- The overall level is the worst of its reasons.
+
+**`sol-slider`**: a range input for choosing a sol, always paired with a labelled number input showing the same value.
+- Thumb and filled track in `{colors.accent}` (`light-accent` in the light theme), 44px tall hit area.
+
+**`check-row`**: a checkbox with its label, at least 44px tall. The checkbox is filled with `{colors.primary}` when ticked.
+
+**`stop-list`**: the checklist of stops. Each row has a checkbox, the stop's number and name in `{typography.body-sm-medium}`, a one-line summary in `{typography.caption}`, and a `button-link` to its details. Rows are divided by `{colors.hairline}`. The starting stop is ticked and cannot be unticked.
+
+**`reading-list`**: label and value pairs for measured conditions. Label in `{colors.text-secondary}`, value right-aligned with tabular figures, rows divided by `{colors.hairline}`.
+
+**Basis lines**: any derived or assumed number is followed by a line starting "Basis:" or "Our own", in `{typography.caption}` and `{colors.text-muted}`.
+
 ### Navigation
 
 **`top-nav`**: sticky bar, height 64px, background `{colors.canvas}`, bottom border `1px solid {colors.hairline}`.
@@ -1090,7 +1111,7 @@ These apply on top of the map components above. They exist because Mars is an or
 - **Top nav**: collapses to a menu button below 1024px.
 - **Hero**: `hero-data-card` moves below the text and buttons; `telemetry-strip` wraps to a two-by-two grid; orbital arcs are simplified or hidden below 480px.
 - **Charts**: full width. Reduce axis tick count rather than shrinking text. Legends wrap above the plot. Direct labels are dropped before the legend is.
-- **Map page**: on desktop the map fills the viewport height below the nav with `route-summary` in a side panel about 360px wide; below 1024px the summary becomes a bottom sheet over the map.
+- **Map page**: on desktop the map fills the viewport height below the nav with the briefing in a side panel 400px wide; below 1024px the briefing sits below the map and the page scrolls.
 - **Maps**: full width. `map-layer-panel` and `map-legend` collapse into toggle buttons that open a bottom sheet. `map-timeline` stays docked at the bottom.
 - **Tables**: scroll horizontally inside their own container with the first column pinned. The page itself never scrolls sideways.
 - **Card grids**: 3-up desktop, 2-up tablet, 1-up mobile.
@@ -1105,6 +1126,10 @@ These apply on top of the map components above. They exist because Mars is an or
 6. Mirror the tokens once in the code (`src/styles/`) and keep that file in step with this one.
 
 ## Known Gaps
+
+- The first build has been rendered in both themes at 1440px and at 390px in the dark theme. The light theme has not been checked on mobile.
+- The first build uses a single basemap. There is no `map-layer-panel`, `map-legend`, `map-popup` or `map-timeline` yet.
+- When two stops are closer than 30 m their map badges are nudged 14px apart so both stay visible; the stops' coordinates are unchanged.
 
 - The light theme's text and UI pairs were computed, but neither theme has been rendered and reviewed on a real page yet.
 - The light diverging ramp was chosen by eye from the sequential steps and has not been validated.
