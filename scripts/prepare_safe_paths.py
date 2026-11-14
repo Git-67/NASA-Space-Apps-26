@@ -18,10 +18,11 @@ import json
 from typing import Any
 
 from mars_data import PROCESSED_DIR, distance_m, load_raw, write_processed
-from safe_paths import HARD_TILT_DEG, JOIN_M, Network, build_network
+from safe_paths import HARD_TILT_DEG, JOIN_M, STEP_M, Network, build_network
 from traverse import simplify
 
 OUTPUT_FILE = "safe_paths.json"
+NETWORK_FILE = "track_network.json"
 # Spacing of the elevation profile points, in metres.
 PROFILE_STEP_M = 10.0
 COORD_DECIMALS = 7
@@ -86,6 +87,31 @@ def main() -> None:
         "pairs": pairs,
     })
     print(f"Wrote {path}: {len(pairs)} pairs, network of {len(network.places)} places")
+    write_network(network)
+
+
+def write_network(network: Network) -> None:
+    """The usable track network itself, so the browser can find paths to points chosen on the spot.
+
+    Places as [lat, lon, elevation m]; edges as [place, place, rover tilt degrees, 1 if harder else 0],
+    each written once. Edge lengths are not stored: they are the great-circle distance between places.
+    """
+    # Elevation to the centimetre: rounded to 0.1 m, the error added up to 0.3 m of climb over a long leg.
+    places = [[round(p[1], COORD_DECIMALS), round(p[0], COORD_DECIMALS), round(p[2], 2)] for p in network.places]
+    edges = []
+    for a, neighbours in network.edges.items():
+        for b, _, tilt, difficulty in neighbours:
+            if a < b:
+                edges.append([a, b, round(tilt, 2), 1 if difficulty == "moderate" else 0])
+    path = write_processed(NETWORK_FILE, {
+        "about": "Ground Curiosity drove in the boxwork, as a network for finding paths in the browser (A*). "
+                 f"Built by scripts/prepare_safe_paths.py: drives resampled every {STEP_M:g} m, tracks within {JOIN_M:g} m joined, "
+                 f"ground steeper than NASA's {HARD_TILT_DEG:g} degree suit limit left out. "
+                 "places: [lat, lon, elevation m]; edges: [place, place, rover tilt deg, harder (1) or easier (0)].",
+        "places": places,
+        "edges": edges,
+    })
+    print(f"Wrote {path}: {len(places)} places, {len(edges)} edges")
 
 
 if __name__ == "__main__":

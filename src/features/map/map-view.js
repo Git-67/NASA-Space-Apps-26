@@ -20,6 +20,7 @@ import { createRouteLayer } from './route-layer.js';
 import { TILE_SOURCES } from './tile-sources.js';
 import { createAstronautMarker } from './astronaut-marker.js';
 import { createMapRotation } from './map-rotation.js';
+import { createMapPicker } from './map-picker.js';
 
 /** @typedef {import('../plan/plan-model.js').Route} Route */
 /** @typedef {import('../plan/plan-model.js').Plan} Plan */
@@ -77,6 +78,10 @@ function addOverZoomNotice(map) {
  * @property {(isOn: boolean) => void} setJourneyView Full-screen journey view: the map may turn, and zooms about its centre.
  * @property {(headingDeg: number) => void} setHeading Turn the map so this compass heading is up the screen (journey view only).
  * @property {() => number} imageryEnlargement How many times the imagery is enlarged past its own resolution (1 if not).
+ * @property {(stop: import('../plan/plan-model.js').Stop) => void} addStop Give a stop added later (a custom point) its marker.
+ * @property {(onPick: (lat: number, lon: number) => void) => void} startPicking Show the rover tracks and wait for taps on the map.
+ * @property {() => void} stopPicking Leave picking.
+ * @property {(text: string) => void} showPickMessage Say something while picking (for example why a tap was refused).
  * @property {(handler: () => void) => void} onUserPan Called when the visitor drags the map.
  * @property {() => void} resize Tell the map its box changed size.
  */
@@ -130,29 +135,29 @@ export function createMapView(container, route, extras, mode, onStopChosen) {
   planRoute.layer.addTo(routeLayer);
   const path = route.points.map((point) => L.latLng(point.lat, point.lon));
 
-  /** @type {Map<string, HTMLElement>} */
-  const markerElements = new Map();
-  const stopPositions = route.stops.map((stop) => L.latLng(route.points[stop.pointIndex].lat, route.points[stop.pointIndex].lon));
+  /** Badge and marker of each stop in the pool. Stops added later (custom points) get theirs then. */
+  /** @type {Map<string, { badge: HTMLElement, marker: L.Marker, stop: import('../plan/plan-model.js').Stop }>} */
+  const markers = new Map();
   /**
    * Sideways nudge for a stop's badge. Two drill sites sit about 12 m apart, so their badges
-   * would cover each other. The first of such a pair moves left and the second right.
-   * Only the badge moves: the stop's coordinates are unchanged.
-   * @param {number} index Position of the stop in the route.
+   * would cover each other. Of such a pair the earlier stop in the pool moves left and the later
+   * one right. Only the badge moves: the stop's coordinates are unchanged.
+   * @param {number} index Position of the stop in the pool.
    * @returns {number} Offset in pixels; negative is left.
    */
   const nudgeFor = (index) => {
-    const isNear = (/** @type {number} */ other) => other >= 0 && other < stopPositions.length
-      && map.distance(stopPositions[index], stopPositions[other]) < CROWDED_STOPS_M;
+    const here = route.stops[index];
+    const isNear = (/** @type {number} */ other) => other >= 0 && other < route.stops.length
+      && map.distance([here.lat, here.lon], [route.stops[other].lat, route.stops[other].lon]) < CROWDED_STOPS_M;
     if (isNear(index + 1)) return -CROWDED_NUDGE_PX;
     if (isNear(index - 1)) return CROWDED_NUDGE_PX;
     return 0;
   };
-
-  route.stops.forEach((stop, index) => {
-    const point = route.points[stop.pointIndex];
-    const badge = el('span', { className: 'map-waypoint', text: String(index + 1) });
-    markerElements.set(stop.id, badge);
-    const marker = L.marker([point.lat, point.lon], {
+  /** @param {import('../plan/plan-model.js').Stop} stop */
+  const addMarker = (stop) => {
+    const index = route.stops.indexOf(stop);
+    const badge = el('span', { className: `map-waypoint is-${stop.kind}`, text: '–' });
+    const marker = L.marker([stop.lat, stop.lon], {
       icon: L.divIcon({
         html: badge,
         className: 'map-waypoint-hit',
@@ -164,16 +169,17 @@ export function createMapView(container, route, extras, mode, onStopChosen) {
       keyboard: true,
     }).addTo(routeLayer);
     marker.on('click keypress', () => onStopChosen(stop.id));
-  });
+    markers.set(stop.id, { badge, marker, stop });
+  };
+  route.stops.forEach(addMarker);
+  const picker = createMapPicker(map, route.network);
 
   map.fitBounds(L.latLngBounds(path), { padding: [ROUTE_PADDING_PX, ROUTE_PADDING_PX] });
 
   const layerOptions = addLayerOptions(map, {
     tiles: TILE_SOURCES[mode],
-    stopLabels: route.stops.map((stop, index) => {
-      const point = route.points[stop.pointIndex];
-      return { name: stop.name, lat: point.lat, lon: point.lon, hasMarker: false };
-    }),
+    // Names for the curated stops only: the extra stops' names ("Sol 4989 stop") would crowd the map.
+    stopLabels: route.stops.filter((stop) => stop.kind === 'curated').map((stop) => ({ name: stop.name, lat: stop.lat, lon: stop.lon, hasMarker: false })),
     places: extras.places,
     calibration: extras.calibration,
   });
@@ -187,11 +193,27 @@ export function createMapView(container, route, extras, mode, onStopChosen) {
       planRoute.show(route, plan, activeStopId);
       rotation.straightenText();
       const visited = plan.stops.map((stop) => stop.id);
-      for (const [id, badge] of markerElements) {
+      for (const [id, { badge, marker, stop }] of markers) {
         const position = visited.indexOf(id);
         badge.classList.toggle('is-skipped', position < 0);
         badge.textContent = position < 0 ? '–' : String(position + 1);
+        // Curated stops always show (a dash when skipped); extra stops only when in the walk.
+        const isShown = stop.kind === 'curated' || position >= 0;
+        if (isShown && !routeLayer.hasLayer(marker)) marker.addTo(routeLayer);
+        if (!isShown && routeLayer.hasLayer(marker)) routeLayer.removeLayer(marker);
       }
+    },
+    addStop(stop) {
+      if (!markers.has(stop.id)) addMarker(stop);
+    },
+    startPicking(onPick) {
+      picker.start(onPick);
+    },
+    stopPicking() {
+      picker.stop();
+    },
+    showPickMessage(text) {
+      picker.say(text);
     },
     /** Switch every tiled layer between NASA's live tiles and the copy stored with the site. */
     showAstronaut(lat, lon, headingDeg) {
@@ -241,7 +263,7 @@ export function createMapView(container, route, extras, mode, onStopChosen) {
     },
     /** Mark one stop as the one whose details are shown. */
     highlightStop(stopId) {
-      for (const [id, badge] of markerElements) badge.classList.toggle('is-selected', id === stopId);
+      for (const [id, { badge }] of markers) badge.classList.toggle('is-selected', id === stopId);
     },
   };
 }

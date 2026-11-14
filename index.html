@@ -90,8 +90,10 @@
 
         <section class="card" aria-labelledby="where-title">
           <h2 id="where-title" class="card-title">Where</h2>
+          <div id="mission" class="mission" aria-live="polite"></div>
           <div id="stop-picker" class="stop-picker"></div>
-          <p class="basis">Tap a stop to show its leg on the map.</p>
+          <button id="add-point" class="button-secondary add-point" type="button" aria-pressed="false"><span data-icon="add_location"></span><span id="add-point-label">Add a point on the map</span></button>
+          <p class="basis">Tap a stop to show its leg on the map. Points you add snap to Curiosity's tracks.</p>
           <div id="totals" class="stat-grid"></div>
           <div id="profile"></div>
           <div id="sections"></div>

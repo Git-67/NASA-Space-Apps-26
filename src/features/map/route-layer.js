@@ -147,8 +147,7 @@ export function createRouteLayer() {
         }
         const target = route.stops.find((stop) => stop.id === section.toId);
         if (target?.terrain === 'hollow' && !section.isReturn) {
-          const point = route.points[target.pointIndex];
-          addCallout(callout([point.lat, point.lon], 'grain', 'Sand: slippery'));
+          addCallout(callout([target.lat, target.lon], 'grain', 'Sand: slippery'));
         }
       }
       const outward = plan.sections.filter((section) => !section.isReturn);

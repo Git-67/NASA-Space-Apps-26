@@ -9,6 +9,7 @@ import { loadJson } from '../lib/load-json.js';
 import { fromColumns } from '../lib/columns.js';
 import { parseDemCalibration, parseLandmarks } from '../features/map/map-layer-data.js';
 import { parseSpaceWeather } from '../features/conditions/space-weather-model.js';
+import { parseTrackNetwork } from '../features/plan/track-network.js';
 
 /** @typedef {import('../features/plan/plan-model.js').Route} Route */
 /** @typedef {import('../features/conditions/conditions-model.js').WeatherRecord} WeatherRecord */
@@ -30,6 +31,8 @@ const LANDMARKS_FILE = 'data/processed/landmarks.json';
 const DEM_CALIBRATION_FILE = 'data/processed/dem_calibration.json';
 const SPACE_WEATHER_FILE = 'data/processed/space_weather.json';
 const SAFE_PATHS_FILE = 'data/processed/safe_paths.json';
+const TRACK_NETWORK_FILE = 'data/processed/track_network.json';
+const ROVER_STOPS_FILE = 'data/processed/rover_stops.json';
 
 /**
  * Check the route and the safe paths, and join them into one route.
@@ -46,7 +49,22 @@ function parseRoute(data, paths) {
   const isComplete = pairs && ids.every((/** @type {string} */ a, /** @type {number} */ i) => ids.slice(i + 1)
     .every((/** @type {string} */ b) => Array.isArray(pairs[`${a}|${b}`]?.runs) || Array.isArray(pairs[`${b}|${a}`]?.runs)));
   if (!isComplete) throw new Error('The safe paths file is missing or damaged. Run scripts/prepare_safe_paths.py again.');
-  return { ...data, safePaths: pairs };
+  const stops = data.stops.map((/** @type {any} */ stop) => ({
+    ...stop, kind: 'curated', lat: data.points[stop.pointIndex].lat, lon: data.points[stop.pointIndex].lon,
+  }));
+  return { points: data.points, stops, safePaths: { ...pairs }, network: null };
+}
+
+/**
+ * Check the places where Curiosity parked (extra stops for daily missions).
+ * @param {any} data rover_stops.json
+ * @returns {import('../features/plan/plan-model.js').Stop[]}
+ */
+function parseRoverStops(data) {
+  if (!Array.isArray(data?.stops)) throw new Error('The rover stops file is damaged. Run scripts/prepare_rover_stops.py again.');
+  return data.stops
+    .filter((/** @type {any} */ stop) => typeof stop.id === 'string' && Number.isFinite(stop.lat) && Number.isFinite(stop.lon))
+    .map((/** @type {any} */ stop) => ({ ...stop, kind: 'rover' }));
 }
 
 /**
@@ -85,13 +103,21 @@ async function loadOptional(path, parse) {
  * @throws {Error} When a required file cannot be loaded.
  */
 export async function loadBriefingData() {
-  const [routeData, pathData, weatherData, places, calibration, spaceWeather] = await Promise.all([
+  const [routeData, pathData, weatherData, places, calibration, spaceWeather, network, roverStops] = await Promise.all([
     loadJson(ROUTE_FILE),
     loadJson(SAFE_PATHS_FILE),
     loadJson(WEATHER_FILE),
     loadOptional(LANDMARKS_FILE, parseLandmarks),
     loadOptional(DEM_CALIBRATION_FILE, parseDemCalibration),
     loadOptional(SPACE_WEATHER_FILE, parseSpaceWeather),
+    loadOptional(TRACK_NETWORK_FILE, parseTrackNetwork),
+    loadOptional(ROVER_STOPS_FILE, parseRoverStops),
   ]);
-  return { route: parseRoute(routeData, pathData), records: parseWeather(weatherData), places, calibration, spaceWeather };
+  const route = parseRoute(routeData, pathData);
+  // Without the network, only the precomputed curated stops can be walked: no rover stops, no custom points.
+  if (!(network instanceof Error)) {
+    route.network = network;
+    if (!(roverStops instanceof Error)) route.stops.push(...roverStops);
+  }
+  return { route, records: parseWeather(weatherData), places, calibration, spaceWeather };
 }

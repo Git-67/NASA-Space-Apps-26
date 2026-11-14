@@ -14,7 +14,7 @@ import { renderElevationProfile } from './elevation-profile.js';
 
 const DIFFICULTY_LABEL = { easier: 'Easier', moderate: 'Moderate', hard: 'Hard' };
 const DIFFICULTY_BADGE = { easier: 'badge-success', moderate: 'badge-warning', hard: 'badge-error' };
-const TERRAIN_LABEL = { transition: 'Edge of the ridges', ridge: 'Ridge', hollow: 'Sandy hollow' };
+const TERRAIN_LABEL = { transition: 'Edge of the ridges', ridge: 'Ridge', hollow: 'Sandy hollow', track: 'On Curiosity\'s tracks' };
 
 /**
  * The plan's sections as a table: the accessible view of what the map shows on hover.
@@ -69,7 +69,7 @@ export function renderPlan(targets, route, plan) {
     el('span', { className: 'stat-value' }, [value, el('span', { className: 'stat-unit', text: unit })]),
   ]);
   targets.totals.replaceChildren(
-    tile('Total time (est.)', formatDuration(plan.totalMinutes), ''),
+    tile('Time out (est.)', formatDuration(plan.totalMinutes), ''),
     tile('Round trip', String(Math.round(plan.distanceM)), ' m'),
     tile('Climb', String(Math.round(plan.ascentM)), ' m'),
   );
@@ -115,4 +115,24 @@ export function renderTasks(container, plan, focusedId) {
     if (stop.id === focusedId) details.setAttribute('open', '');
     return el('li', { className: stop.id === focusedId ? 'is-focused' : '', attrs: { id: `tasks-${stop.id}` } }, [details]);
   })));
+}
+
+/**
+ * The sol's mission (ours): what today's walk is for, and a way back to it after the stops were changed.
+ * @param {HTMLElement} container
+ * @param {{ sol: number, title: string, goal: string, isFollowed: boolean }} mission
+ * @param {() => void} onUse Called to go back to the mission's stops.
+ */
+export function renderMission(container, mission, onUse) {
+  const children = [
+    el('p', { className: 'eyebrow', text: `Mission for sol ${mission.sol} · ours` }),
+    el('p', { className: 'mission-title', text: mission.title }),
+    el('p', { className: 'mission-goal', text: mission.goal }),
+  ];
+  if (!mission.isFollowed) {
+    const button = el('button', { className: 'button-secondary', text: 'Use this mission', attrs: { type: 'button' } });
+    button.addEventListener('click', onUse);
+    children.push(button);
+  }
+  container.replaceChildren(...children);
 }

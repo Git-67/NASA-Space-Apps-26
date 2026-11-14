@@ -1154,6 +1154,14 @@ Added with the first build of the briefing page. They are compositions of existi
 
 **`disclosure`**: anything a walker does not need at a glance folds behind a 56px row: the verdict's reasons, extra readings, data gaps, the legs table, the safety rules, each stop's tasks, the packing list. The row is `{typography.body-md-medium}` in `{colors.link}` with a chevron on the right that points right when closed and down when open; tap anywhere on the row. A whole card can fold (`disclosure-card`): its title is the row, in `{colors.ink}`.
 
+**`mission`**: the sol's mission (ours), first in the Where card. A `{colors.surface-raised}` panel with `{rounded.md}`: eyebrow "Mission for sol 4711 · ours", the title in `{typography.heading-4}`, one goal line in `{typography.body-sm}` and `{colors.text-secondary}`. Once the crew changes the stops, a `button-secondary` "Use this mission" brings them back. The stop picker's top option is the same mission ("Mission: Nodule hunt", with its stop count and distance) with a star.
+
+**`add-point`**: "Add a point on the map", a `button-secondary` with an `add_location` icon under the stop list; while picking it reads "Cancel adding" with a `{colors.link}` border. While picking, every rover track shows on the map as a 2px dotted `{colors.route}` line (`map-tracks`), the cursor is a crosshair, and a banner at the top centre of the map (`{colors.surface-raised}`, `{colors.link}` border, `{typography.body-sm-medium}`) says "Tap a dotted rover track to add a point there", or why a tap was refused ("No rover track within 25 m of that spot (nearest 366 m)").
+
+**Extra stops on the map:** places Curiosity parked and the crew's points use the same `map-waypoint` badge with a dashed ring, and show only while they are in the walk; the five curated stops always show.
+
+**Totals:** time out across the full width, round trip and climb side by side below it.
+
 **`check-row`**: a 24px checkbox with its label, at least 44px tall. The label fills the row, so tapping anywhere on the row ticks the box. The checkbox is filled with `{colors.primary}` when ticked.
 
 **`stop-list`**: the checklist of stops. Each row has a checkbox, the stop's number and name in `{typography.body-sm-medium}`, a one-line summary in `{typography.caption}`, and a `button-link` to its details. Rows are divided by `{colors.hairline}`. The starting stop is ticked and cannot be unticked.

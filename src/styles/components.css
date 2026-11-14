@@ -173,7 +173,9 @@
 .stop-item .button-link { font: var(--type-body-sm-medium); min-height: var(--size-touch); }
 
 /* stat-tile */
-.stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-xs); }
+.stat-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-xs); }
+/* The walk time leads, across the full width; round trip and climb share the row below. */
+.stat-grid > :first-child { grid-column: 1 / -1; }
 .stat-tile {
   display: flex;
   flex-direction: column;
@@ -443,3 +445,11 @@
 .button-secondary:hover { background: var(--color-surface-raised); }
 .verdict-action { display: flex; flex-direction: column; align-items: stretch; gap: var(--space-xs); padding-top: var(--space-md); }
 .verdict-action .basis { text-align: center; }
+
+/* mission: what the sol's walk is for (ours), above the stop list. */
+.mission { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-xxs); padding: var(--space-md); background: var(--color-surface-raised); border-radius: var(--radius-md); }
+.mission-title { font: var(--type-heading-4); }
+.mission-goal { font: var(--type-body-sm); color: var(--color-text-secondary); }
+.mission .button-secondary { margin-top: var(--space-xs); }
+.add-point { align-self: flex-start; }
+.add-point[aria-pressed="true"] { border-color: var(--color-link); }

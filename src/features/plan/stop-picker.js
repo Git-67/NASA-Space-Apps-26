@@ -39,11 +39,14 @@ export function matchesQuery(stop, query) {
  * Build the picker.
  * @param {HTMLElement} container
  * @param {Route} route
- * @param {string} recommendedLabel Text of the recommended option, for example "All 5 stops, safest order (2.0 km)".
+ * @param {{ label: string, detail: string }} recommended The recommended option (today's mission), for example
+ *   "Mission: Ridge versus hollow" and "3 stops, safest order (1.8 km)". Changed later with setRecommended.
  * @param {PickerHandlers} handlers
- * @returns {{ update: (visitOrder: string[], focusedId: string | null) => void }}
+ * @returns {{ update: (visitOrder: string[], focusedId: string | null) => void,
+ *   setRecommended: (next: { label: string, detail: string }) => void }}
  */
-export function createStopPicker(container, route, recommendedLabel, handlers) {
+export function createStopPicker(container, route, recommended, handlers) {
+  let recommendedOption = recommended;
   const input = /** @type {HTMLInputElement} */ (el('input', {
     className: 'text-input', attrs: {
       id: 'stop-search', type: 'search', role: 'combobox', autocomplete: 'off',
@@ -82,7 +85,7 @@ export function createStopPicker(container, route, recommendedLabel, handlers) {
   const renderOptions = () => {
     const available = route.stops.filter((stop, index) => index > 0 && !visitOrder.includes(stop.id) && matchesQuery(stop, input.value));
     options = [
-      ...(input.value.trim() === '' ? [{ id: RECOMMENDED_ID, label: 'Recommended plan', detail: recommendedLabel }] : []),
+      ...(input.value.trim() === '' ? [{ id: RECOMMENDED_ID, label: recommendedOption.label, detail: recommendedOption.detail }] : []),
       ...available.map((stop) => ({ id: stop.id, label: stop.name, detail: stop.summary })),
     ];
     activeIndex = Math.min(activeIndex, options.length - 1);
@@ -129,6 +132,9 @@ export function createStopPicker(container, route, recommendedLabel, handlers) {
   });
 
   return {
+    setRecommended(next) {
+      recommendedOption = next;
+    },
     update(order, focusedId) {
       visitOrder = order;
       if (!listbox.hidden) renderOptions();

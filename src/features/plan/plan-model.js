@@ -13,17 +13,22 @@
 
 /**
  * @typedef {{ sol: number, lat: number, lon: number, elevationM: number, tiltDeg: number, alongM: number }} RoutePoint
- * @typedef {{ id: string, name: string, summary: string, terrain: 'transition' | 'ridge' | 'hollow', found: string,
- *   tasksOurs: string[], kitOurs: string[], workMinutesOurs: number, sourceLabel: string, sourceUrl: string,
- *   pointIndex: number }} Stop
+ * @typedef {{ id: string, name: string, summary: string, terrain: 'transition' | 'ridge' | 'hollow' | 'track',
+ *   found: string, tasksOurs: string[], kitOurs: string[], workMinutesOurs: number, sourceLabel: string, sourceUrl: string,
+ *   kind: 'curated' | 'rover' | 'custom', lat: number, lon: number, sol?: number, place?: number }} Stop
+ *   `kind`: one of the five curated stops (data/stops.json), a place Curiosity parked (rover_stops.json),
+ *   or a point the crew added on the map. `place`: its place in the track network, once looked up.
  * @typedef {'easier' | 'moderate' | 'hard'} Difficulty
  * @typedef {{ difficulty: Difficulty, points: number[][] }} PathRun A stretch of one difficulty, as [lat, lon] pairs.
  * @typedef {{ distanceM: number, ascentM: number, descentM: number, maxTiltDeg: number,
  *   steepest: number[], middle: number[], runs: PathRun[], profile: number[][] }} SafePath
  *   One safest path, in walking direction: the shortest over rover-driven ground within NASA's
  *   20-degree suit slope limit (scripts/safe_paths.py). `profile` is [metres walked, elevation m] pairs.
- * @typedef {{ points: RoutePoint[], stops: Stop[], safePaths: Record<string, SafePath> }} Route
- *   `safePaths` is keyed "fromId|toId", stored for one direction of each pair.
+ * @typedef {{ points: RoutePoint[], stops: Stop[], safePaths: Record<string, SafePath>,
+ *   network: import('./track-network.js').TrackNetwork | null }} Route
+ *   `stops` is the pool of stops that can be visited; the first is the start. `safePaths` is keyed
+ *   "fromId|toId", stored for one direction of each pair: precomputed for the curated stops, and
+ *   found on the spot over `network` (and kept) for any other pair.
  * @typedef {{ fromId: string, toId: string, fromName: string, toName: string, path: SafePath,
  *   distanceM: number, ascentM: number, descentM: number, maxRoverTiltDeg: number, difficulty: Difficulty,
  *   walkMinutes: number, isReturn: boolean }} Section
@@ -32,6 +37,7 @@
  *   `furthestM`: the farthest the walk goes from its start, in a straight line, in metres.
  */
 import { greatCircleM } from '../../lib/mars.js';
+import { describePath, findPath, nearestPlace } from './track-network.js';
 
 /**
  * Default suited walking speed in km/h.
@@ -78,13 +84,18 @@ export function rateDifficulty(maxRoverTiltDeg) {
  * @param {string} fromId
  * @param {string} toId
  * @returns {SafePath}
- * @throws {Error} When the pair is missing from the prepared file.
+ * @throws {Error} When there is no path: the pair is not precomputed and there is no track network,
+ *   or the two stops are not joined by usable rover-driven ground.
  */
 export function orientedPath(route, fromId, toId) {
   const forward = route.safePaths[`${fromId}|${toId}`];
   if (forward) return forward;
   const back = route.safePaths[`${toId}|${fromId}`];
-  if (!back) throw new Error(`No safe path between ${fromId} and ${toId}. Run scripts/prepare_safe_paths.py again.`);
+  if (!back) {
+    const found = findOnTracks(route, fromId, toId);
+    route.safePaths[`${fromId}|${toId}`] = found;
+    return found;
+  }
   return {
     ...back,
     ascentM: back.descentM,
@@ -92,6 +103,25 @@ export function orientedPath(route, fromId, toId) {
     runs: back.runs.map((run) => ({ difficulty: run.difficulty, points: [...run.points].reverse() })).reverse(),
     profile: back.profile.map(([walked, height]) => [back.distanceM - walked, height]).reverse(),
   };
+}
+
+/**
+ * Find the safest path between two stops over the track network, as the script would (A*).
+ * @param {Route} route
+ * @param {string} fromId
+ * @param {string} toId
+ * @returns {SafePath}
+ */
+function findOnTracks(route, fromId, toId) {
+  const network = route.network;
+  if (!network) throw new Error(`No safe path between ${fromId} and ${toId}: the track network is not loaded.`);
+  const placeOf = (/** @type {string} */ id) => {
+    const stop = route.stops.find((item) => item.id === id);
+    if (!stop) throw new Error(`No stop "${id}".`);
+    stop.place ??= nearestPlace(network, stop.lat, stop.lon).place;
+    return stop.place;
+  };
+  return describePath(network, findPath(network, placeOf(fromId), placeOf(toId)));
 }
 
 /**
@@ -147,7 +177,7 @@ export function buildPlan(route, visitOrder, walkingSpeedKmh) {
     totalMinutes: walkMinutes + workMinutes,
     distanceM: sections.reduce((sum, item) => sum + item.distanceM, 0),
     ascentM: sections.reduce((sum, item) => sum + item.ascentM, 0),
-    furthestM: furthestFrom(route.points[start.pointIndex], sections),
+    furthestM: furthestFrom(start, sections),
   };
 }
 
@@ -192,15 +222,17 @@ export function planRisk(route, order) {
 }
 
 /**
- * The recommended plan: every stop, in the order with the shortest total walk.
+ * The recommended order for a set of stops: the one with the shortest total walk.
  * Tries every order; with four stops after the start that is 24 orders, which
  * is instant even on a slow computer. Beyond about 8 stops this grows too fast
- * and a smarter search would be needed.
+ * and a smarter search would be needed (daily missions pick at most 4).
  * @param {Route} route
+ * @param {string[]} [stopIds] Stops to visit after the start; every curated stop if left out.
  * @returns {string[]} Stop ids after the start, in the safest order.
  */
-export function recommendedOrder(route) {
-  const others = route.stops.slice(1).map((stop) => stop.id);
+export function recommendedOrder(route, stopIds) {
+  const others = stopIds ?? route.stops.slice(1).filter((stop) => stop.kind === 'curated').map((stop) => stop.id);
+  if (others.length === 0) return [];
   return permutations(others).reduce((best, order) => (planRisk(route, order) < planRisk(route, best) ? order : best));
 }
 
