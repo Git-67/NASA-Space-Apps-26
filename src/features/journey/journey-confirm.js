@@ -13,6 +13,7 @@
  */
 import { el } from '../../lib/dom.js';
 import { icon } from '../../components/ui/icon.js';
+import { playCue } from '../../lib/sound.js';
 
 /** A confirm button ignores presses for this long after it appears, in milliseconds. */
 export const ARM_MS = 800;
@@ -106,8 +107,7 @@ export function askInSteps(dialog, steps, { onConfirmed, onCancelled }) {
     cancel.addEventListener('click', () => { stopTimers(); onCancelled(); });
     const next = () => {
       stopTimers();
-      if (index + 1 < steps.length) show(index + 1);
-      else onConfirmed();
+      if (index + 1 < steps.length) { playCue('step'); show(index + 1); } else onConfirmed();
     };
     if (step.isHold) confirmOnHold(confirm, next, keep);
     else confirm.addEventListener('click', next);

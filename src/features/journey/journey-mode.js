@@ -14,12 +14,16 @@
  *   presses). Ending the walk takes three (journey-dialogs.js).
  * - "Simulate alert" plays a random space weather alert, labelled as a drill.
  * - "Visor view" swaps the panels for a simulated helmet visor (visor-view.js).
+ * - Soft sound cues (lib/sound.js) mark arrivals, submitted tasks, the end of
+ *   the walk, and changes in the space weather level; each goes with
+ *   something on screen, and sound can be muted.
  * The walker faces the way the device's compass points, where it has one,
  * or else the direction of travel.
  *
  * SIMULATION: there is no real astronaut position; the overlay says so.
  */
 import { startCompass } from '../../lib/compass.js';
+import { playCue, unlockSound } from '../../lib/sound.js';
 import { formatDuration, greatCircleM } from '../../lib/mars.js';
 import { bearingDeg, buildJourney, headingAhead, positionAt, turnToward, walkOn } from './journey-model.js';
 import { createJourneyHud } from './journey-hud.js';
@@ -93,7 +97,7 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather, limits, onEnd
   let lastStatusAt = 0;
   let insets = { top: 0, bottom: 0 };
   let isVisor = false;
-  /** @type {WeatherSummary | null} The space weather last shown, for the visor. */
+  /** @type {WeatherSummary | null} The space weather last shown, for the visor and for alert sounds. */
   let shownWeather = null;
 
   const hud = createJourneyHud({
@@ -189,8 +193,10 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather, limits, onEnd
     isPlaying = false;
     showLeg();
     const stop = plan.stops.find((item) => item.id === arrival.stopId);
+    playCue(arrival.isFinish ? 'complete' : 'arrival');
     hud.dialogs.showArrival(arrival, stop, plan.stops.length, () => {
       if (arrival.isFinish) { end(); return; }
+      playCue('submitted');
       isPlaying = true;
       render(0);
     });
@@ -220,7 +226,13 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather, limits, onEnd
   }
 
   function showWeather() {
+    const previousLevel = shownWeather?.level ?? null;
     shownWeather = drill ? drillSummary(drill) : weather.current();
+    // A sound when the level changes during the walk (not for the first reading).
+    if (previousLevel !== null && shownWeather.level !== previousLevel) {
+      if (shownWeather.level === 'no-go' || shownWeather.level === 'caution') playCue(shownWeather.level);
+      else if (shownWeather.level === 'go') playCue('clear');
+    }
     hud.setWeather(shownWeather);
   }
 
@@ -244,14 +256,17 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather, limits, onEnd
     const isPausing = isPlaying && next.level === 'no-go';
     if (isPausing) isPlaying = false;
     drill = { drill: next, endsAtMs: simulatedMs + next.durationMinutes * 60_000 };
+    const levelBefore = shownWeather?.level;
     showWeather();
+    // showWeather sounds only a change of level; a second alert of the same level still sounds.
+    if (levelBefore === next.level) playCue(next.level);
     hud.dialogs.showDrill(next, isPausing, () => render(0));
     render(0);
   }
 
   function askToEnd() {
     if (!journey || hud.dialogs.isOpen()) return;
-    hud.dialogs.askToEnd(() => end(), () => render(0));
+    hud.dialogs.askToEnd(() => { playCue('ended'); end(); }, () => render(0));
   }
 
   /** @param {KeyboardEvent} event */
@@ -270,6 +285,8 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather, limits, onEnd
   async function begin(nextPlan) {
     if (journey || nextPlan.sections.length === 0) return;
     returnFocusTo = document.activeElement;
+    unlockSound(); // begin() runs from the "Begin journey" press: the one moment browsers allow sound to start
+    shownWeather = null;
     plan = nextPlan;
     journey = buildJourney(nextPlan);
     progress = { walkedM: 0, nextIndex: 0 };

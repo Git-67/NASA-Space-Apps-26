@@ -10,6 +10,7 @@ import { el } from '../../lib/dom.js';
 import { icon } from '../../components/ui/icon.js';
 import { createJourneyDialogs } from './journey-dialogs.js';
 import { createVisorView } from './visor-view.js';
+import { isSoundMuted, setSoundMuted } from '../../lib/sound.js';
 
 /**
  * @typedef {object} WeatherSummary
@@ -46,12 +47,22 @@ export function createJourneyHud(handlers) {
   speedButton.addEventListener('click', handlers.onSpeed);
   const drillButton = el('button', { className: SECONDARY, attrs: { type: 'button' } }, [icon('flare'), 'Simulate alert']);
   drillButton.addEventListener('click', handlers.onDrill);
-  // A small toggle on the right edge, for showing the simulated visor in a demo.
+  // Small round toggles on the right edge: the simulated visor (for a demo) and sound.
   const visorButton = el('button', {
-    className: 'journey-visor-toggle',
+    className: 'journey-side-toggle',
     attrs: { type: 'button', 'aria-pressed': 'false', 'aria-label': 'Visor view (simulated)', title: 'Visor view (simulated)' },
   }, [icon('visibility')]);
   visorButton.addEventListener('click', handlers.onVisor);
+  const soundButton = el('button', { className: 'journey-side-toggle', attrs: { type: 'button' } });
+  const showSound = () => {
+    const isMuted = isSoundMuted();
+    soundButton.replaceChildren(icon(isMuted ? 'volume_off' : 'volume_up'));
+    soundButton.setAttribute('aria-pressed', String(!isMuted));
+    soundButton.setAttribute('aria-label', 'Sound');
+    soundButton.setAttribute('title', isMuted ? 'Sound off' : 'Sound on');
+  };
+  soundButton.addEventListener('click', () => { setSoundMuted(!isSoundMuted()); showSound(); });
+  showSound();
   const recentreButton = el('button', { className: SECONDARY, attrs: { type: 'button' } }, [icon('my_location'), 'Re-centre']);
   recentreButton.addEventListener('click', handlers.onRecentre);
   recentreButton.hidden = true;
@@ -68,7 +79,7 @@ export function createJourneyHud(handlers) {
   ]);
   const root = el('div', { className: 'journey-hud' }, [top, bottom]);
   const visor = createVisorView(root, { onTogglePlay: handlers.onTogglePlay, onDrill: handlers.onDrill });
-  root.append(visorButton);
+  root.append(el('div', { className: 'journey-side' }, [visorButton, soundButton]));
   // The pop-ups come last, so they sit above the visor as well as the panels.
   root.append(dialogs.element);
   root.hidden = true;
