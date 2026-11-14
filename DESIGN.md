@@ -1138,7 +1138,7 @@ Added with the first build of the briefing page. They are compositions of existi
 - The study site is not chosen. The hero and telemetry examples use Jezero Crater as a placeholder.
 - The logo was checked by web search on 13 Nov 2026: no product or brand named "Sol Stroll" was found, and no identical mark. This was a text search, not an image search or a trademark search, and other "Sol" brands do use a sun in place of the "o".
 - The project name and headline copy are not chosen yet.
-- The basemap source and map library are not chosen; confirm licence and attribution wording when they are. The challenge's official resource list was not readable when this was written, and more resources are due on 14 Nov, so the layer names here are examples.
+- The map uses Leaflet and one basemap, the MRO HiRISE mosaic from NASA Mars Trek. HiRISE images are public domain and the team asks for the credit "NASA/JPL/University of Arizona". Other layer names in this file are examples.
 - Icon set not chosen. Pick one open-licensed set and use it throughout.
 - The diverging ramp's two warm steps were matched to the cool steps by lightness but have not been tested in a rendered map.
 - No texture or pattern fills are defined for print or forced-colours mode.

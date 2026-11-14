@@ -75,15 +75,24 @@ The product does not yet use the raw image service, the CTX mosaics or any radia
 - **Fallback:** cite published figures. For the September 2017 solar storm, published studies report surface dose rates rising to two to three times the background level over several hours (Zeitlin et al. 2018; Hassler et al. 2018; Ehresmann and Hassler 2018). These must be read and cited properly before use.
 - **Used for:** the solar storm replay (angle 6).
 
-### Challenge resources not yet examined
-- USGS Astrogeology interactive Mars maps: https://astrogeology-usgs.hub.arcgis.com/pages/interactive-maps-mars
-- Curiosity's proposed path up Mount Sharp: https://science.nasa.gov/resource/curiositys-proposed-path-up-mount-sharp/
-- More resources are due from the organisers on 14 Nov 2026.
+## The five resources listed by the challenge
+
+Rechecked on 14 Nov 2026. The organisers added no data on the day.
+
+| Resource | What it is | Used? | Why |
+|---|---|---|---|
+| [NASA Mars Trek](https://trek.nasa.gov/mars/) | Map portal with layers from many Mars missions | **Yes** | Source of the HiRISE basemap tiles. Its own page could not be fetched from the build environment (it returned an error), so its terms of use are still unread; the tile service itself works |
+| [Curiosity's proposed path up Mount Sharp](https://science.nasa.gov/resource/curiositys-proposed-path-up-mount-sharp/) | A route animation published 15 May 2019, built from MRO HiRISE, CRISM and CTX data and Mars Express HRSC data. Credit: NASA/JPL-Caltech/ESA/University of Arizona/JHUAPL/MSSS/USGS Astrogeology Science Center | **As a reference, not as data** | It shows the route planned in 2019. The product uses the path the rover actually recorded, which is newer and exact. The page names no regions in its text. It is a good image for the pitch: the plan in 2019 beside what the rover really did |
+| [USGS-NASA interactive Mars maps](https://astrogeology-usgs.hub.arcgis.com/pages/interactive-maps-mars) | A hub of interactive geologic maps | **Not yet** | The page loads its content with scripts and could not be read from the build environment, so what it offers for Gale Crater is unknown. A teammate should open it in a browser. The global geologic map (USGS SIM 3292, Tanaka et al. 2014) is also offered as a Mars Trek layer, but at a scale of 1 to 20 million it would show our whole route as one unit |
+| [NASA Worldview](https://worldview.earthdata.nasa.gov/) | Satellite imagery viewer | **No** | It shows Earth, not Mars |
+| [Mars Perseverance raw images](https://mars.nasa.gov/mars2020/multimedia/raw-images/) | Raw images from the Perseverance rover | **No** | Perseverance is in Jezero Crater, a different site. The equivalent for our site is Curiosity's raw image service, listed above and planned for the photo comparison |
+
+Two of the five resources cannot serve a Gale Crater project at all. That is not a problem: the challenge asks for NASA data from multiple missions, not for these five in particular.
 
 ## Science references still needed
 
-- A cited account of what Curiosity found in the boxwork region and the sols it was there (angle 5).
-- Cited limits for a suited walker: temperature, ultraviolet, radiation dose, slope, walking speed. Any limit without a source must be labelled as the team's assumption.
+- Done: what Curiosity found in the boxwork and when is cited in `docs/SCIENCE_BRIEF.md`.
+- Walking pace, slope, walk length and the career radiation limit have now been read from NASA documents; see `docs/SCIENCE_BRIEF.md` section 5. All the walking figures are lunar. Still without a source: temperature and ultraviolet limits, and the surface dose figures.
 
 ## Usage terms and credit lines
 
@@ -94,7 +103,8 @@ Checked 13 Nov 2026 by reading the two policy pages below. This is a reading of 
 | NASA content in general | "Generally not subject to copyright in the United States." May be used for educational or informational purposes without explicit permission. NASA should be acknowledged as the source | "NASA" plus the specific credit below |
 | JPL images and video (rover images, releases) | "May be used for any purpose without prior permission", with exceptions for third-party material | "Courtesy NASA/JPL-Caltech", unless the caption says otherwise |
 | Curiosity Mastcam images | Covered by the JPL policy. The releases we read credit them as shown | "NASA/JPL-Caltech/MSSS" |
-| MRO HiRISE and CTX imagery via Mars Trek | **Not checked.** Mars Trek's own terms were not read | To be confirmed. Do not guess |
+| MRO HiRISE imagery | The HiRISE team's usage page says its images "are within the public domain" with "no copyright restriction", and asks for a credit line where possible (read 14 Nov 2026) | "NASA/JPL/University of Arizona" |
+| NASA Mars Trek, which serves the tiles | **Not checked.** Its page could not be fetched | Name it as the service: "via NASA Mars Trek" |
 | Curiosity REMS weather feed | Provider's disclaimer: "intended for outreach purposes only"; science users are directed to the Planetary Data System | To be confirmed. Must name Centro de Astrobiología, and the outreach-only note must appear in the product |
 | Curiosity waypoint and traverse files | **Not checked.** Published on a NASA mission site, so the general NASA terms probably apply | "NASA/JPL-Caltech" (to be confirmed) |
 
@@ -102,4 +112,4 @@ Rules that apply to everything:
 - **No NASA insignia, logotype or seal, and no JPL logo.** Both policy pages say these need prior written approval and are not in the public domain.
 - **Never claim or imply endorsement** by NASA, JPL or Caltech.
 - **Third-party material** on NASA sites can be copyrighted. Use only images whose caption credits NASA or its mission partners.
-- Policy pages: https://www.nasa.gov/nasa-brand-center/images-and-media/ and https://www.jpl.nasa.gov/jpl-image-use-policy/
+- Policy pages: https://www.nasa.gov/nasa-brand-center/images-and-media/ , https://www.jpl.nasa.gov/jpl-image-use-policy/ and https://www.uahirise.org/media/usage.php

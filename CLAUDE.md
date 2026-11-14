@@ -7,7 +7,7 @@ If a rule here conflicts with a request, say so before proceeding instead of qui
 
 - **What:** a website plus a product pitch for the NASA Space Apps Challenge 2026 (Singapore, virtual).
 - **Challenge:** "Interplanetary Survival Guide: Martian Map". Build a layered, integrated view of a location or route on Mars that combines data from several NASA science missions, to help a human explorer plan a successful Marswalk while doing science along the way.
-- **Official brief and resources:** https://www.spaceappschallenge.org/2026/challenges/interplanetary-survival-guide-martian-map/?tab=resources (more resources are due on 14 Nov; re-read it before choosing datasets).
+- **Official brief and resources:** https://www.spaceappschallenge.org/2026/challenges/interplanetary-survival-guide-martian-map/?tab=resources (the organisers added no data on 14 Nov). How each of the five listed resources is used, or why it is not, is recorded in `docs/DATA_SOURCES.md`.
 - **Window:** Sat 14 Nov 2026 09:00 SGT to Sun 15 Nov 2026 23:59 SGT. Submission is a hard deadline.
 - **Deliverables:** project summary, demo (30-second video or 7 slides), a public project link, project details.
 - **Judged 1 to 5 on:** Impact, Creativity, Validity, Relevance, Presentation.
@@ -20,8 +20,8 @@ Every piece of work should move at least one judging criterion. If it moves none
 A briefing for **one real Marswalk** in the boxwork region of Mount Sharp, Gale Crater, that answers five questions on one map:
 
 1. **Why go:** one science question, and what a human can do at each stop that the rover could not.
-2. **Where:** Curiosity's real path as the proven route. Do not write a pathfinder.
-3. **When:** a go / caution / no-go window by season, from Curiosity's weather record.
+2. **Where:** Curiosity's real path as the proven route, walked out and back from the first stop, with distance, climb, time and difficulty for each section. Do not write a pathfinder.
+3. **When:** a go / caution / no-go verdict for any sol in Curiosity's weather record, judged against other sols at the same season.
 4. **How sure:** the orbital view beside the rover's ground photo at each stop. Stretch: a data confidence layer.
 5. **What if:** replay a real bad day (the 2018 dust storm, the 2017 solar storm) against the plan.
 
@@ -44,7 +44,7 @@ Changes to data, limits or scientific claims go through the science and data lea
 - **Name and tagline:** **Sol Stroll.** "Know before you go." (confirmed 13 Nov 2026)
 - **Problem statement (draft, in `docs/PITCH.md`):** Mars maps show where to walk. Sol Stroll tells a crew whether to go: one briefing for one real Marswalk.
 - **Science question, stops and safety limits:** `docs/SCIENCE_BRIEF.md`. Facts in it are marked Read, Snippet, Derived or Ours. Only "Read" facts, or facts the science lead has since verified, may appear in the product or the pitch without a caveat.
-- **Pitch outline:** `docs/PITCH.md`.
+- **Pitch outline:** `docs/PITCH.md`. It lists which numbers may be used, how to phrase them, and which claims to avoid.
 
 ## 2. Stack and commands
 

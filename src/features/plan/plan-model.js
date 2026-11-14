@@ -23,18 +23,20 @@
  */
 
 /**
- * Assumed suited walking speed in km/h.
- * Basis: NASA's Exploration EVA concept of operations (EVA-EXP-0042) pairs a
- * 6-hour walk with a 12 km walk-back distance, which is 2 km/h. That figure
- * is not Mars-specific and was taken from a search summary, so it is an
- * ASSUMPTION the visitor can change, not a NASA limit.
+ * Default suited walking speed in km/h.
+ * Basis: NASA's Exploration EVA System Concept of Operations (EVA-EXP-0042
+ * Rev B, section 4.2.1.3.1) plans lunar traverses at "an ~2 km/hr walking
+ * pace over relatively level regolith". That is a LUNAR planning figure:
+ * the same document says Mars walk-back ranges are "forward work". So for
+ * Mars it is an assumption the visitor can change, not a NASA limit.
  */
 export const DEFAULT_WALKING_SPEED_KMH = 2;
 
 /**
  * Rover tilt, in degrees, at which a section is called "hard".
- * Basis: a NASA lunar surface document (EVA-EXP-0075) describes suited
- * walking on slopes of up to 20 degrees. Lunar, not Mars, and unverified.
+ * Basis: EVA-EXP-0042 Rev B, section 4.2.1.3, lists "walking up/down/across
+ * a slope of up to 20 degrees" as a capability of the lunar surface suit.
+ * Lunar, not Mars; and we apply it to rover tilt, which only hints at slope.
  */
 export const HARD_TILT_DEG = 20;
 

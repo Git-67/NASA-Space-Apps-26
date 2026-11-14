@@ -31,9 +31,10 @@ Full details, limits and usage terms are in [`docs/DATA_SOURCES.md`](docs/DATA_S
 
 - **Measured by NASA missions:** imagery, rover positions and elevations, daily temperatures, sunrise and sunset.
 - **Derived by us:** distances along the path, climb, how unusual a sol is for its season.
-- **Assumed by us, and labelled in the page:** walking speed, time spent at each stop, the daylight safety margin, the difficulty bands, the packing list, and what a person could do at each stop.
+- **Taken from NASA's lunar planning, because none exists for Mars:** the 2 km/h walking pace and the 20° slope mark (NASA EVA-EXP-0042).
+- **Assumed by us, and labelled in the page:** time spent at each stop, the daylight safety margin, the 10° "moderate" mark, the packing list, and what a person could do at each stop.
 
-No Mars surface suit limits are public, so the verdict uses no temperature, ultraviolet or radiation dose thresholds.
+NASA's own planning document says walking ranges for Mars are still "forward work", and no Mars surface suit limits are public. So the verdict uses no temperature, ultraviolet or radiation dose thresholds.
 
 ## Run it
 
@@ -94,6 +95,6 @@ Rules for contributing are in [`CLAUDE.md`](CLAUDE.md). The design specification
 
 ## Credits
 
-Imagery and mission data courtesy NASA/JPL-Caltech and the mission teams named above. Fonts: Space Grotesk, Inter and JetBrains Mono (SIL Open Font License).
+Orbital imagery: NASA/JPL/University of Arizona (HiRISE), served by NASA Mars Trek. Rover data: courtesy NASA/JPL-Caltech. Weather: Centro de Astrobiología (CSIC-INTA) via NASA. Fonts: Space Grotesk, Inter and JetBrains Mono (SIL Open Font License).
 
 Sol Stroll was created for the NASA Space Apps Challenge 2026. It is not affiliated with or endorsed by NASA.
