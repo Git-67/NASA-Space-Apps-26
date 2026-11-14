@@ -89,3 +89,50 @@ body.is-visor .map-attribution { position: fixed; left: 50%; right: auto; bottom
 
 /* The walker's 88px marker would fill the minimap; it is drawn smaller there. */
 body.is-visor .map-astronaut { scale: 0.6; }
+
+/* A hazard just ahead, under the heading. */
+.visor-hazard { font: var(--type-body-sm-medium); }
+
+/*
+ * visor-panel: the journey's pop-ups (a stop's tasks, the end of the walk, alerts, ending early)
+ * drawn inside the visor instead of as a window: small white type on the dark glass, a thin rim,
+ * 44px touch targets. Sits in the visor's clear middle, between the next stop and the weather.
+ */
+.visor-panel {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  width: min(var(--size-visor-panel), 40vw);
+  max-height: 60dvh;
+  overflow-y: auto;
+  padding: var(--space-md);
+  background: color-mix(in srgb, var(--color-route-casing) 96%, transparent);
+  color: var(--color-map-ink);
+  border: 1px solid color-mix(in srgb, var(--color-map-ink) 40%, transparent);
+  border-radius: var(--radius-lg);
+  pointer-events: auto;
+}
+.visor-panel[hidden] { display: none; }
+.visor-panel .eyebrow { color: var(--color-map-ink); opacity: 0.6; }
+.visor-panel .journey-dialog-title { font: var(--type-heading-4); }
+.visor-panel .journey-dialog-text { font: var(--type-body-sm); }
+.visor-panel .journey-dialog-level { font: var(--type-body-md-medium); color: var(--color-map-ink); }
+/* The visor keeps only what to do: the reason for a stop stays in the map view. */
+.visor-panel .task-why { display: none; }
+.visor-panel .basis { font: var(--type-caption); color: var(--color-map-ink); opacity: 0.6; }
+.visor-panel .journey-tasks .check-row { min-height: var(--size-touch); gap: var(--space-sm); border-bottom-color: color-mix(in srgb, var(--color-map-ink) 20%, transparent); }
+.visor-panel .journey-tasks input { width: var(--space-lg); height: var(--space-lg); accent-color: var(--color-map-ink); }
+.visor-panel .journey-tasks label { font: var(--type-body-sm); }
+.visor-panel .journey-choice { gap: var(--space-sm); padding-top: var(--space-xxs); }
+.visor-panel .button-large { min-height: var(--size-touch); padding: 0 var(--space-md); font: var(--type-body-sm-medium); }
+.visor-panel .button-primary { background: var(--color-map-ink); color: var(--color-route-casing); }
+.visor-panel .button-primary:disabled { background: transparent; color: color-mix(in srgb, var(--color-map-ink) 45%, transparent); border: 1px solid color-mix(in srgb, var(--color-map-ink) 25%, transparent); }
+.visor-panel .button-secondary { background: transparent; color: var(--color-map-ink); border-color: color-mix(in srgb, var(--color-map-ink) 50%, transparent); }
+.visor-panel .journey-confirm.is-hold { background-image: linear-gradient(var(--color-text-muted), var(--color-text-muted)); }
+/* The panel says it all: the visor's big alert line steps back while it is open. */
+.journey-hud:has(.visor-panel:not([hidden])) .visor-alert-text { display: none; }

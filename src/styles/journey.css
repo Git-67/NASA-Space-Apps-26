@@ -20,7 +20,7 @@ body.is-journey .leaflet-control-container { display: none; }
 body.is-journey .map-waypoint-hit,
 body.is-journey .map-route-hit { pointer-events: none; }
 
-/* Heading-up map: a square as wide as the screen's diagonal, centred, turned (map-rotation.js sets the sizes). */
+/* Heading-up map: a square as wide as the screen's diagonal, centred; map-rotation.js sets its size and turns it. */
 body.is-journey .map-container.is-turnable {
   position: absolute;
   left: 50%;
@@ -28,11 +28,7 @@ body.is-journey .map-container.is-turnable {
   width: var(--map-turned-side);
   height: var(--map-turned-side);
   translate: -50% -50%;
-  rotate: var(--map-angle, 0deg);
 }
-/* Text on the map turns back, so it stays upright. Route arrows keep turning with the map. */
-.map-container.is-turnable .map-label,
-.map-container.is-turnable .map-waypoint { rotate: calc(-1 * var(--map-angle, 0deg)); }
 
 .journey-hud { position: fixed; inset: 0; z-index: 1600; pointer-events: none; }
 .journey-hud[hidden] { display: none; }
@@ -82,6 +78,9 @@ body.is-journey .map-container.is-turnable {
 
 .journey-sim { font: var(--type-eyebrow); letter-spacing: var(--tracking-eyebrow); text-transform: uppercase; color: var(--color-accent); }
 .journey-next { font: var(--type-heading-4); text-align: center; }
+/* A hazard just ahead: icon and words, in the warning colour. */
+.journey-hazard { display: inline-flex; align-items: center; gap: var(--space-xs); font: var(--type-body-md-medium); color: var(--color-semantic-warning); }
+.journey-hazard[hidden] { display: none; }
 .journey-facing { font: var(--type-caption); color: var(--color-text-secondary); }
 
 /* Space weather, top right. */

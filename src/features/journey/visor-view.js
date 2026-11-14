@@ -22,6 +22,7 @@
  *
  * On the visor, following its curve:
  * - top: a compass tape with the heading, and a diamond where the next stop lies;
+ *   under it, a warning of a hazard just ahead (steep ground, sand);
  * - left: the next stop, its distance and walking time, and the minimap;
  * - right: the space weather level, its source, and a drill's countdown;
  * - chin: two gauges along the bottom of the visor against NASA's limits (time
@@ -206,6 +207,8 @@ export function createVisorView(container, handlers) {
   const weatherTime = edgeText('right', 328, 'visor-detail');
 
   const alertText = svg('text', { x: CENTRE_X, y: 490, class: 'visor-alert-text', 'text-anchor': 'middle' });
+  // A hazard just ahead, under the heading: the first thing below where the eyes rest.
+  const hazardText = svg('text', { x: CENTRE_X, y: 214, class: 'visor-hazard', 'text-anchor': 'middle' });
   const outGauge = chinGauge('visor-out-guide', 150, 112);
   const baseGauge = chinGauge('visor-base-guide', 18, 68);
   const simulationPath = svg('path', { id: 'visor-sim-guide', d: chinArc(SIM_LABEL_ELLIPSE, 108, 72), class: 'visor-guide' });
@@ -232,6 +235,7 @@ export function createVisorView(container, handlers) {
     nextLabel, nextName, nextDistance,
     weatherLabel, weatherLevel, weatherText, weatherTime,
     alertText,
+    hazardText,
     outGauge.group, baseGauge.group,
     simulationPath, svg('text', { class: 'visor-sim' }, [simulationText]),
   ]);
@@ -271,6 +275,10 @@ export function createVisorView(container, handlers) {
         top: offsetY + (MINIMAP_Y - MINIMAP_RADIUS) * scale,
         size: 2 * MINIMAP_RADIUS * scale,
       };
+    },
+    /** @param {string | null} text A hazard just ahead, or null for none. */
+    setHazard(text) {
+      hazardText.textContent = text === null ? '' : `⚠ ${text}`;
     },
     /** @param {boolean} isPlaying */
     setPlaying(isPlaying) {

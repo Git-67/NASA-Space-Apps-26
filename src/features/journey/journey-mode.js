@@ -13,6 +13,8 @@
  * - At each stop the walk waits for the stop's tasks to be submitted (two
  *   presses). Ending the walk takes three (journey-dialogs.js).
  * - "Simulate alert" plays a random space weather alert, labelled as a drill.
+ * - A warning shows (and sounds) about 30 m before steep ground or a sandy
+ *   hollow, with the distance counting down, until the walker is past it.
  * - "Visor view" swaps the panels for a simulated helmet visor (visor-view.js).
  * - Soft sound cues (lib/sound.js) mark arrivals, submitted tasks, the end of
  *   the walk, and changes in the space weather level; each goes with
@@ -25,7 +27,7 @@
 import { startCompass } from '../../lib/compass.js';
 import { playCue, unlockSound } from '../../lib/sound.js';
 import { formatDuration, greatCircleM } from '../../lib/mars.js';
-import { bearingDeg, buildJourney, headingAhead, positionAt, turnToward, walkOn } from './journey-model.js';
+import { bearingDeg, buildJourney, hazardsWithin, headingAhead, positionAt, turnToward, walkOn } from './journey-model.js';
 import { createJourneyHud } from './journey-hud.js';
 
 /** @typedef {import('../plan/plan-model.js').Plan} Plan */
@@ -37,10 +39,16 @@ import { createJourneyHud } from './journey-hud.js';
 const SPEEDS = [60, 120, 30];
 /** Zoom while walking: one step past the sharpest real imagery (HiRISE, zoom 16), so the ground near the walker is large. */
 const WALK_ZOOM = 17;
-/** Zoom of the visor's minimap: about 200 m across, enough to see the way to the next stop. */
-const MINIMAP_ZOOM = 15;
+/** Zoom of the visor's minimap: about 100 m across, close enough to see the ground near the walker. */
+const MINIMAP_ZOOM = 16;
 /** Under reduced motion, the walker moves in steps this far apart in time, in milliseconds. */
 const STEP_MS = 1000;
+/**
+ * Shortest time between drawn frames, in milliseconds: about 30 a second. Moving and turning a
+ * screen-sized map is the heaviest work on a tablet; half the frames halves it, and a walker
+ * moves at most a few pixels between frames, which still looks smooth.
+ */
+const FRAME_MS = 33;
 /** Longest time one frame may advance the walk, in milliseconds: after the tab was hidden, the walker must not jump past stops. */
 const MAX_FRAME_MS = 1500;
 /** The status text changes at most this often, in milliseconds: no need to rewrite it every frame. */
@@ -49,8 +57,16 @@ const STATUS_EVERY_MS = 250;
 const WEATHER_REFRESH_MS = 15 * 60 * 1000;
 /** The map's heading looks this far ahead along the path, in metres, so it does not swing at every small bend. */
 const LOOK_AHEAD_M = 25;
+/** Warn of a hazard (steep ground, sand) this many metres before it: about a minute's walk at 2 km/h. */
+const HAZARD_WARN_M = 30;
+/** Keep the warning shown until this many metres past the hazard's start... */
+const HAZARD_CLEAR_M = 10;
+/** ...and for at least this long in real time, in milliseconds: sped up, a walker passes 30 m in a second. */
+const HAZARD_MIN_SHOW_MS = 4000;
 /** The map turns most of the way to a new heading in about this long, in milliseconds. */
 const TURN_TIME_MS = 600;
+/** The walker's cone turns most of the way to a new heading in about this long, in milliseconds. */
+const FACING_TIME_MS = 250;
 
 /**
  * Set up journey mode.
@@ -73,12 +89,20 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather, limits, onEnd
   let plan = null;
   /** Metres walked, and the index of the next stop not yet reached. */
   let progress = { walkedM: 0, nextIndex: 0 };
+  /** Hazards warned about so far (journey.hazards, in walking order), and the one shown now. */
+  let hazardsWarned = 0;
+  /** @type {import('./journey-model.js').Hazard | null} */
+  let shownHazard = null;
+  /** When the shown hazard may be cleared, from performance.now(). */
+  let hazardShownUntil = 0;
   let isPlaying = false;
   let speedIndex = 0;
   /** @type {number | null} */
   let compassHeading = null;
   /** Heading the map is turned to (compass degrees); eases towards the walker's. */
   let mapHeading = /** @type {number | null} */ (null);
+  /** Heading the walker's cone shows (compass degrees); eases towards the compass or the path. */
+  let facingDeg = /** @type {number | null} */ (null);
   /** @type {(() => void) | null} */
   let stopCompass = null;
   /** @type {number | null} */
@@ -145,7 +169,12 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather, limits, onEnd
     const position = positionAt(journey, progress.walkedM);
     const next = journey.arrivals[progress.nextIndex] ?? null;
     const travel = headingAhead(journey, progress.walkedM, LOOK_AHEAD_M, next ? next.alongM : journey.totalM);
-    const facing = compassHeading ?? travel;
+    const wanted = compassHeading ?? travel;
+    // Eased, like the map's turn: a compass jitters, and the path's direction jumps at sharp bends.
+    facingDeg = isSnap || prefersReducedMotion || facingDeg === null
+      ? wanted
+      : turnToward(facingDeg, wanted, 1 - Math.exp(-elapsedMs / FACING_TIME_MS));
+    const facing = facingDeg;
     map.showAstronaut(position.lat, position.lon, facing);
     if (isFollowing) {
       mapHeading = isSnap || prefersReducedMotion || mapHeading === null
@@ -156,11 +185,12 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather, limits, onEnd
       map.keepCentred(position.lat, position.lon, insets);
     }
     if (isVisor) {
-      const target = next ? positionAt(journey, next.alongM) : null;
-      hud.visor.setHeading(mapHeading ?? facing, target ? bearingDeg(position.lat, position.lon, target.lat, target.lon) : null);
+      const nextPlace = next ? positionAt(journey, next.alongM) : null;
+      hud.visor.setHeading(mapHeading ?? facing, nextPlace ? bearingDeg(position.lat, position.lon, nextPlace.lat, nextPlace.lon) : null);
     }
     if (!isStatusDue) return;
     lastStatusAt = now;
+    updateHazard();
     const metresToGo = next ? next.alongM - progress.walkedM : 0;
     hud.setStatus({
       nextName: next ? next.name : null,
@@ -205,6 +235,7 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather, limits, onEnd
   /** @param {number} now performance.now() */
   function tick(now) {
     if (!journey) return;
+    if (now - lastTime < FRAME_MS) { schedule(); return; }
     const elapsedMs = Math.min(now - lastTime, MAX_FRAME_MS);
     lastTime = now;
     const speed = SPEEDS[speedIndex];
@@ -213,6 +244,14 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather, limits, onEnd
     if (isPlaying && !hud.dialogs.isOpen()) {
       const step = walkOn(journey, progress, elapsedMs * metresPerMs * speed);
       progress = { walkedM: step.walkedM, nextIndex: step.nextIndex };
+      const warned = hazardsWithin(journey, hazardsWarned, progress.walkedM, HAZARD_WARN_M);
+      if (warned > hazardsWarned) {
+        // The nearest new one is shown; several at once (a steep stretch into a sandy stop) sound once.
+        shownHazard = journey.hazards[warned - 1];
+        hazardShownUntil = performance.now() + HAZARD_MIN_SHOW_MS;
+        hazardsWarned = warned;
+        playCue('hazard');
+      }
       if (step.arrival) arrive(step.arrival);
     }
     render(elapsedMs);
@@ -251,7 +290,18 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather, limits, onEnd
   }
 
   /** Play a random simulated alert. A no-go alert pauses the walk, as a real one would. */
+  /** Show the hazard just ahead with its distance, or clear it once passed. */
+  function updateHazard() {
+    const isPassed = shownHazard && progress.walkedM > shownHazard.alongM + HAZARD_CLEAR_M;
+    if (isPassed && performance.now() >= hazardShownUntil) shownHazard = null;
+    if (!shownHazard) { hud.setHazard(null); return; }
+    const metres = Math.round(shownHazard.alongM - progress.walkedM);
+    hud.setHazard(metres > 0 ? `${shownHazard.text} in ${metres} m` : isPassed ? `${shownHazard.text} · passed` : `${shownHazard.text} · here`);
+  }
+
   function startDrill() {
+    // Not over a stop's tasks or the end checks: an alert would replace them.
+    if (hud.dialogs.isOpen()) return;
     const next = weather.drill();
     const isPausing = isPlaying && next.level === 'no-go';
     if (isPausing) isPlaying = false;
@@ -290,9 +340,12 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather, limits, onEnd
     plan = nextPlan;
     journey = buildJourney(nextPlan);
     progress = { walkedM: 0, nextIndex: 0 };
+    hazardsWarned = 0;
+    shownHazard = null;
     isPlaying = true;
     compassHeading = null;
     mapHeading = null;
+    facingDeg = null;
     simulatedMs = 0;
     drill = null;
     isVisor = false;

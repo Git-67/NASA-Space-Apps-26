@@ -68,11 +68,16 @@ export function createJourneyHud(handlers) {
   recentreButton.hidden = true;
   const next = el('p', { className: 'journey-next', attrs: { 'aria-live': 'polite' } });
   const facing = el('p', { className: 'journey-facing' });
+  // A hazard just ahead (steep ground, sand), in words with a warning icon; empty otherwise.
+  const hazardText = el('span');
+  const hazard = el('p', { className: 'journey-hazard', attrs: { role: 'status' } }, [icon('warning'), hazardText]);
+  hazard.hidden = true;
   const dialogs = createJourneyDialogs();
 
   const top = el('div', { className: 'journey-top' }, [el('div', { className: 'journey-top-left' }, [endButton, north]), weather]);
   const bottom = el('div', { className: 'journey-bottom' }, [
     el('p', { className: 'journey-sim', text: 'Simulation · not a real position' }),
+    hazard,
     next,
     facing,
     el('div', { className: 'journey-controls' }, [playButton, speedButton, drillButton, recentreButton]),
@@ -81,7 +86,7 @@ export function createJourneyHud(handlers) {
   const visor = createVisorView(root, { onTogglePlay: handlers.onTogglePlay, onDrill: handlers.onDrill });
   root.append(el('div', { className: 'journey-side' }, [visorButton, soundButton]));
   // The pop-ups come last, so they sit above the visor as well as the panels.
-  root.append(dialogs.element);
+  root.append(dialogs.panel, dialogs.element);
   root.hidden = true;
   document.body.append(root);
 
@@ -92,6 +97,7 @@ export function createJourneyHud(handlers) {
     setVisor(isVisor) {
       document.body.classList.toggle('is-visor', isVisor);
       visor.setShown(isVisor);
+      dialogs.setVisor(isVisor);
       visorButton.setAttribute('aria-pressed', String(isVisor));
       this.placeMinimap();
     },
@@ -123,6 +129,15 @@ export function createJourneyHud(handlers) {
       const facingText = facingFrom === 'compass' ? 'Map turns with this device\'s compass' : 'Map turns to your direction of travel';
       // Said here because the map's own notice is hidden in journey mode (DESIGN.md, map-notice).
       facing.textContent = enlargement > 1 ? `${facingText} · imagery enlarged ${enlargement}×` : facingText;
+    },
+    /**
+     * Warn of a hazard just ahead, in both views, or clear the warning.
+     * @param {string | null} text What and how far, such as "Steep ground (hard) in 18 m"; null for none.
+     */
+    setHazard(text) {
+      hazard.hidden = text === null;
+      hazardText.textContent = text ?? '';
+      visor.setHazard(text);
     },
     /** @param {number} mapAngleDeg The map's screen angle, degrees clockwise; north points this way. */
     setNorth(mapAngleDeg) {

@@ -1,14 +1,19 @@
 // @ts-check
 /**
- * The journey's pop-ups, all in one modal <dialog>: a stop's tasks on
- * arrival, ending the walk, and a simulated space weather alert. The walk
- * waits while any of them is open (journey-mode.js).
+ * The journey's pop-ups: a stop's tasks on arrival, the end of the walk,
+ * ending it early, and a simulated space weather alert. The walk waits while
+ * any of them is open (journey-mode.js).
+ *
+ * Where they appear: in map view, a modal <dialog>; in the visor view, a
+ * panel drawn inside the visor itself (`visor-panel`), small and white like
+ * the rest of the visor. Switching view while one is open moves it across.
  *
  * Built for gloved hands and dusty screens (journey-confirm.js):
  * - Submitting a stop's tasks takes two presses: "Submit tasks", then a
  *   check on the other side of the screen.
  * - Ending the walk takes three: two taps on opposite sides, then a hold.
  * Escape always means the safe choice: back to the tasks, or keep walking.
+ * The visor panel keeps 44px touch targets; it is smaller than the dialog, not fiddly.
  */
 import { el } from '../../lib/dom.js';
 import { icon } from '../../components/ui/icon.js';
@@ -26,9 +31,16 @@ const END_STEPS = [
   { title: 'Hold to end', text: 'Press and hold for 2 seconds.', confirmLabel: 'Hold to end', confirmIcon: 'flag', cancelLabel: 'Keep walking', confirmSide: 'right', isHold: true },
 ];
 
-/** Create the dialog (not yet on the page) and the ways to fill it. */
+/** Create the dialog and the visor panel (not yet on the page) and the ways to fill them. */
 export function createJourneyDialogs() {
   const dialog = /** @type {HTMLDialogElement} */ (el('dialog', { className: 'journey-dialog', attrs: { 'aria-labelledby': DIALOG_TITLE_ID } }));
+  const panel = el('section', { className: 'visor-panel', attrs: { role: 'dialog', 'aria-labelledby': DIALOG_TITLE_ID } });
+  panel.hidden = true;
+  /** Whether pop-ups go in the visor panel rather than the dialog. */
+  let isVisor = false;
+  /** @returns {HTMLElement} Where pop-ups are drawn now. */
+  const surface = () => (isVisor ? panel : dialog);
+  const isOpen = () => dialog.open || !panel.hidden;
   /** What Escape does for what is shown now. */
   let onEscape = () => {};
   /** Whether the dialog must stay open (a stop's tasks wait for an answer). */
@@ -39,7 +51,8 @@ export function createJourneyDialogs() {
   dialog.addEventListener('cancel', (event) => { event.preventDefault(); onEscape(); });
   // Some browsers close a dialog on a second Escape whatever the page says. Tasks not
   // answered are shown again, rather than lost.
-  dialog.addEventListener('close', () => { if (mustStayOpen) dialog.showModal(); });
+  dialog.addEventListener('close', () => { if (mustStayOpen && !isVisor) dialog.showModal(); });
+  panel.addEventListener('keydown', (event) => { if (event.key === 'Escape') onEscape(); });
 
   /**
    * @param {() => void} escape
@@ -49,13 +62,15 @@ export function createJourneyDialogs() {
     stopTimers();
     onEscape = escape;
     mustStayOpen = isRequired;
-    if (!dialog.open) dialog.showModal();
+    if (isVisor) panel.hidden = false;
+    else if (!dialog.open) dialog.showModal();
   };
   const close = () => {
     stopTimers();
     mustStayOpen = false;
     onEscape = () => {};
     if (dialog.open) dialog.close();
+    panel.hidden = true;
   };
   /** @type {number[]} */
   let timers = [];
@@ -67,8 +82,27 @@ export function createJourneyDialogs() {
 
   return {
     element: dialog,
-    isOpen: () => dialog.open,
+    panel,
+    isOpen,
     close,
+    /**
+     * Draw pop-ups in the visor panel or in the dialog; one that is open moves across.
+     * @param {boolean} isInVisor
+     */
+    setVisor(isInVisor) {
+      if (isInVisor === isVisor) return;
+      const from = surface();
+      const wasOpen = isOpen();
+      isVisor = isInVisor;
+      if (!wasOpen) return;
+      const to = surface();
+      to.replaceChildren(...from.childNodes);
+      if (from === dialog) dialog.close();
+      else panel.hidden = true;
+      if (to === dialog) dialog.showModal();
+      else panel.hidden = false;
+      /** @type {HTMLElement | null} */ (to.querySelector('button, input'))?.focus();
+    },
     /**
      * Three checks before the walk ends.
      * @param {() => void} onEnd
@@ -77,7 +111,7 @@ export function createJourneyDialogs() {
     askToEnd(onEnd, onKeepWalking) {
       const keepWalking = () => { close(); onKeepWalking(); };
       open(keepWalking, false);
-      stopTimers = askInSteps(dialog, END_STEPS, { onConfirmed: () => { close(); onEnd(); }, onCancelled: keepWalking });
+      stopTimers = askInSteps(surface(), END_STEPS, { onConfirmed: () => { close(); onEnd(); }, onCancelled: keepWalking });
     },
     /**
      * A stop's tasks, then a check before walking on.
@@ -112,7 +146,7 @@ export function createJourneyDialogs() {
             list,
             el('p', { className: 'basis', text: 'Tasks are our suggestions, not NASA\'s.' }),
           ];
-        dialog.replaceChildren(
+        surface().replaceChildren(
           el('p', { className: 'eyebrow', text: isFinish ? 'Back at the start' : `Stop ${arrival.visitNumber} of ${stopCount} · about ${formatDuration(stop?.workMinutesOurs ?? 0)}` }),
           el('h2', { className: 'journey-dialog-title', text: isFinish ? 'Walk complete' : arrival.name, attrs: { id: DIALOG_TITLE_ID } }),
           ...body,
@@ -127,7 +161,7 @@ export function createJourneyDialogs() {
         const done = boxes.filter((item) => item.box.checked).length;
         const text = isFinish ? 'The journey will close.' : `${done} of ${boxes.length} tasks ticked.${done < boxes.length ? ' Unticked tasks stay undone.' : ''}`;
         onEscape = showTasks;
-        stopTimers = askInSteps(dialog, [{
+        stopTimers = askInSteps(surface(), [{
           title: isFinish ? 'End the journey?' : `Leave ${arrival.name}?`,
           text,
           confirmLabel: isFinish ? 'End journey' : 'Submit and walk on',
@@ -153,7 +187,7 @@ export function createJourneyDialogs() {
       const button = /** @type {HTMLButtonElement} */ (el('button', { className: 'button-primary button-large journey-confirm', text: 'Understood', attrs: { type: 'button' } }));
       button.addEventListener('click', acknowledge);
       armLater(button, keep);
-      dialog.replaceChildren(
+      surface().replaceChildren(
         el('p', { className: 'eyebrow journey-drill-eyebrow', text: 'Simulated alert · a drill, not real data' }),
         el('h2', { className: 'journey-dialog-title', text: drill.title, attrs: { id: DIALOG_TITLE_ID } }),
         el('p', { className: `journey-dialog-level is-${drill.level}` }, [icon('warning'), drill.level === 'no-go' ? 'No-go: take shelter' : 'Caution']),

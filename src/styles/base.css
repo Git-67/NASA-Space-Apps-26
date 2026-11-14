@@ -14,6 +14,7 @@
   --size-layer-panel: 320px;     /* Widest the map layer panel grows (DESIGN.md, map-popup width). */
   --size-journey-panel: 720px;   /* Widest the journey's bottom panel grows (DESIGN.md, journey-hud). */
   --size-journey-dialog: 720px;  /* Widest the journey pop-ups grow (DESIGN.md, journey-dialog). */
+  --size-visor-panel: 380px;     /* Widest a pop-up inside the visor grows (DESIGN.md, journey-visor). */
   --layer-panel-max-height: 40vh; /* Open layer panel leaves most of a small map visible. */
   --shadow-floating-dark: rgba(0, 0, 0, 0.5) 0px 8px 24px -4px;
   --shadow-raised-light: rgba(20, 22, 28, 0.06) 0px 2px 8px 0px;

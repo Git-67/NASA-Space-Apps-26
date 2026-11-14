@@ -81,7 +81,7 @@ function confirmOnHold(button, onHeld, keep) {
 
 /**
  * Ask for one or more confirmations in a row, inside the journey dialog.
- * @param {HTMLDialogElement} dialog Where to show them; its contents are replaced.
+ * @param {HTMLElement} dialog Where to show them (the dialog or the visor panel); its contents are replaced.
  * @param {ConfirmStep[]} steps Asked in order; all must be confirmed.
  * @param {{ onConfirmed: () => void, onCancelled: () => void }} handlers Cancelling at any step stops.
  * @returns {() => void} Stops any pending timers, for when the dialog is closed from elsewhere.

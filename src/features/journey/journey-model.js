@@ -31,7 +31,14 @@ const MIN_LOOK_AHEAD_M = 1;
  * @property {number} visitNumber Place in the visiting order; the start is 1.
  * @property {boolean} isFinish Whether this is the return to the start.
  */
-/** @typedef {{ points: JourneyPoint[], totalM: number, arrivals: Arrival[] }} Journey */
+/**
+ * @typedef {object} Hazard A harder place on the walk, to warn the walker about before they reach it.
+ * @property {'steep' | 'sand'} kind Steep: a stretch the plan rates moderate or hard (from the rover's
+ *   tilt there). Sand: a stop in a sandy hollow, where boots can slip.
+ * @property {string} text Short, for a visor: "Steep ground (hard)", "Sand: slippery".
+ * @property {number} alongM Metres walked when it is reached.
+ */
+/** @typedef {{ points: JourneyPoint[], totalM: number, arrivals: Arrival[], hazards: Hazard[] }} Journey */
 
 /**
  * Join a plan's legs, return included, into one line with distances along it.
@@ -43,18 +50,24 @@ export function buildJourney(plan) {
   const points = [];
   /** @type {Arrival[]} */
   const arrivals = [];
+  /** @type {Hazard[]} */
+  const hazards = [];
   let alongM = 0;
   plan.sections.forEach((section, index) => {
-    const line = section.path.runs.flatMap((run, runIndex) => (runIndex === 0 ? run.points : run.points.slice(1)));
-    line.forEach(([lat, lon], pointIndex) => {
-      const previous = points[points.length - 1];
-      if (previous && pointIndex === 0) return; // each leg starts where the last one ended
-      if (previous) alongM += greatCircleM(previous.lat, previous.lon, lat, lon);
-      points.push({ lat, lon, alongM });
-    });
+    for (const run of section.path.runs) {
+      if (run.difficulty !== 'easier') hazards.push({ kind: 'steep', text: `Steep ground (${run.difficulty})`, alongM });
+      run.points.forEach(([lat, lon], pointIndex) => {
+        const previous = points[points.length - 1];
+        if (previous && pointIndex === 0) return; // each stretch starts where the last one ended
+        if (previous) alongM += greatCircleM(previous.lat, previous.lon, lat, lon);
+        points.push({ lat, lon, alongM });
+      });
+    }
+    const stop = plan.stops.find((item) => item.id === section.toId);
+    if (stop?.terrain === 'hollow' && !section.isReturn) hazards.push({ kind: 'sand', text: 'Sand: slippery', alongM });
     arrivals.push({ stopId: section.toId, name: section.toName, alongM, visitNumber: index + 2, isFinish: section.isReturn });
   });
-  return { points, totalM: alongM, arrivals };
+  return { points, totalM: alongM, arrivals, hazards };
 }
 
 /**
@@ -145,4 +158,19 @@ export function headingAhead(journey, alongM, aheadM, limitM) {
 export function turnToward(currentDeg, targetDeg, share) {
   const difference = ((((targetDeg - currentDeg) % 360) + 540) % 360) - 180;
   return (((currentDeg + difference * share) % 360) + 360) % 360;
+}
+
+/**
+ * How many hazards the walker has been warned about: every hazard from `warnedCount` on that is now
+ * within the warning distance ahead (or already passed). Hazards are in walking order.
+ * @param {Journey} journey
+ * @param {number} warnedCount Hazards warned about so far.
+ * @param {number} walkedM Metres walked.
+ * @param {number} warnM Warn this many metres before a hazard.
+ * @returns {number} The new count; the hazards from `warnedCount` up to it are the ones to warn about now.
+ */
+export function hazardsWithin(journey, warnedCount, walkedM, warnM) {
+  let count = warnedCount;
+  while (count < journey.hazards.length && journey.hazards[count].alongM - walkedM <= warnM) count += 1;
+  return count;
 }

@@ -10,6 +10,8 @@ import { el } from '../../lib/dom.js';
 
 /** Side of the marker's box, in pixels: room for the cone around the dot. */
 const SIZE_PX = 88;
+/** Turns of the cone smaller than this, in degrees, are not drawn. */
+const MIN_TURN_DEG = 1;
 /** Keeps the walker above stops and labels. */
 const Z_OFFSET = 1000;
 
@@ -29,11 +31,20 @@ export function createAstronautMarker() {
     keyboard: false,
     zIndexOffset: Z_OFFSET,
   });
+  /**
+   * The cone's angle, never wrapped back into 0 to 360: the cone's turn is animated, so going
+   * from 359° to 1° as "1deg" would spin it almost a full circle the wrong way. Adding the short
+   * difference instead turns it 2°.
+   */
+  let shownDeg = 0;
   return {
     marker,
     update(lat, lon, headingDeg) {
       marker.setLatLng([lat, lon]);
-      cone.style.rotate = `${headingDeg.toFixed(0)}deg`;
+      const turn = ((((headingDeg - shownDeg) % 360) + 540) % 360) - 180;
+      if (Math.abs(turn) < MIN_TURN_DEG) return;
+      shownDeg += turn;
+      cone.style.rotate = `${shownDeg.toFixed(0)}deg`;
     },
   };
 }
