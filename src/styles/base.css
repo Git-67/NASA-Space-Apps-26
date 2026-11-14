@@ -5,6 +5,7 @@
  */
 :root {
   --size-touch: 44px;            /* Minimum touch target (DESIGN.md, Touch targets). */
+  --size-touch-large: 56px;      /* Journey mode controls: gloved hands (DESIGN.md, journey-hud). */
   --size-nav: 64px;              /* Top nav height. */
   --size-panel: 400px;           /* Side panel beside the map on desktop. */
   --size-logo: 28px;             /* Logo height in the nav. */

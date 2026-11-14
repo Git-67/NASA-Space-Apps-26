@@ -18,6 +18,7 @@ import { el } from '../../lib/dom.js';
 import { addLayerOptions } from './map-layer-options.js';
 import { createRouteLayer } from './route-layer.js';
 import { TILE_SOURCES } from './tile-sources.js';
+import { createAstronautMarker } from './astronaut-marker.js';
 
 /** @typedef {import('../plan/plan-model.js').Route} Route */
 /** @typedef {import('../plan/plan-model.js').Plan} Plan */
@@ -54,6 +55,17 @@ function addOverZoomNotice(map) {
   update();
 }
 
+/**
+ * @typedef {object} MapViewApi
+ * @property {(plan: Plan, activeStopId: string | null) => void} showPlan
+ * @property {(stopId: string | null) => void} highlightStop
+ * @property {(mode: import('./tile-sources.js').ConnectionMode) => void} setMode
+ * @property {(lat: number, lon: number, headingDeg: number) => void} showAstronaut Place the walker, facing headingDeg (compass).
+ * @property {() => void} hideAstronaut
+ * @property {(lat: number, lon: number, zoom: number | null, isAnimated: boolean) => void} follow Centre on a point; null keeps the zoom.
+ * @property {() => void} resize Tell the map its box changed size.
+ */
+
 /** Leaflet's latitude/longitude grid, measured on Mars instead of Earth. */
 const MARS_CRS = L.extend({}, L.CRS.EPSG4326, { R: MARS_RADIUS_M });
 
@@ -65,8 +77,7 @@ const MARS_CRS = L.extend({}, L.CRS.EPSG4326, { R: MARS_RADIUS_M });
  *   or why each could not be loaded; a missing one only disables its own layer.
  * @param {import('./tile-sources.js').ConnectionMode} mode Read tiles from NASA ('online') or from the site ('offline').
  * @param {(stopId: string) => void} onStopChosen Called when a visitor activates a stop marker.
- * @returns {{ showPlan: (plan: Plan, activeStopId: string | null) => void, highlightStop: (stopId: string | null) => void,
- *   setMode: (mode: import('./tile-sources.js').ConnectionMode) => void }}
+ * @returns {MapViewApi}
  */
 export function createMapView(container, route, extras, mode, onStopChosen) {
   const map = L.map(container, {
@@ -96,6 +107,7 @@ export function createMapView(container, route, extras, mode, onStopChosen) {
   addOverZoomNotice(map);
 
   const routeLayer = L.layerGroup().addTo(map);
+  const astronaut = createAstronautMarker();
   const planRoute = createRouteLayer();
   planRoute.layer.addTo(routeLayer);
   const path = route.points.map((point) => L.latLng(point.lat, point.lon));
@@ -163,6 +175,19 @@ export function createMapView(container, route, extras, mode, onStopChosen) {
       }
     },
     /** Switch every tiled layer between NASA's live tiles and the copy stored with the site. */
+    showAstronaut(lat, lon, headingDeg) {
+      if (!map.hasLayer(astronaut.marker)) astronaut.marker.addTo(map);
+      astronaut.update(lat, lon, headingDeg);
+    },
+    hideAstronaut() {
+      astronaut.marker.remove();
+    },
+    follow(lat, lon, zoom, isAnimated) {
+      map.setView([lat, lon], zoom ?? map.getZoom(), { animate: isAnimated });
+    },
+    resize() {
+      map.invalidateSize({ animate: false });
+    },
     setMode(next) {
       showBasemaps(TILE_SOURCES[next]);
       layerOptions.setTiles(TILE_SOURCES[next]);

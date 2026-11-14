@@ -18,6 +18,7 @@ import { refreshSpaceWeather } from '../features/conditions/space-weather-live.j
 import { renderConnection } from '../features/connection/connection-view.js';
 import { canReachNasa, detectMode, setPrefersOffline } from '../lib/connection.js';
 import { loadBriefingData } from './load-briefing-data.js';
+import { createJourneyMode } from '../features/journey/journey-mode.js';
 
 /** @typedef {import('./load-briefing-data.js').BriefingData} BriefingData */
 
@@ -128,6 +129,7 @@ function start({ route, records, places, calibration, spaceWeather: bundledSpace
       kit: requireElement('kit'),
     }, route, plan);
     renderTasks(requireElement('tasks'), plan, state.activeStopId);
+    beginButton.disabled = plan.sections.length === 0;
     mapView.showPlan(plan, state.activeStopId);
     mapView.highlightStop(state.activeStopId);
   }
@@ -139,14 +141,44 @@ function start({ route, records, places, calibration, spaceWeather: bundledSpace
     state.sol = Math.min(presentSol, Math.max(firstSol, sol));
     redraw();
   };
-  /** Online: extend the space weather to today. Falls back to the bundle, with a note, if NASA does not answer. */
+  /** When live space weather was last read, for the journey's weather card. */
+  let liveReadAt = /** @type {Date | null} */ (null);
+  /**
+   * Online: extend the space weather to today. Falls back to the bundle, with a note, if NASA does not answer.
+   * @returns {Promise<void>}
+   */
   const goLive = () => {
-    if (bundledSpaceWeather instanceof Error) return;
-    refreshSpaceWeather(bundledSpaceWeather, today)
-      .then((fresh) => { if (state.mode === 'online') state.spaceWeather = fresh; })
+    if (bundledSpaceWeather instanceof Error || state.mode !== 'online') return Promise.resolve();
+    return refreshSpaceWeather(bundledSpaceWeather, new Date())
+      .then((fresh) => { if (state.mode === 'online') { state.spaceWeather = fresh; liveReadAt = new Date(); } })
       .catch((error) => { state.connectionNote = `Live space weather failed: ${error instanceof Error ? error.message : error}`; })
       .finally(redraw);
   };
+
+  const journeyMode = createJourneyMode({
+    map: mapView,
+    walkingSpeedKmh: DEFAULT_WALKING_SPEED_KMH,
+    weather: {
+      current: () => {
+        const now = new Date().toISOString().slice(0, 10);
+        const record = state.spaceWeather;
+        const latest = record instanceof Error ? null : record.coverageEnd;
+        const isLive = state.mode === 'online' && latest === now && liveReadAt !== null;
+        const reason = assessSpaceWeather(record, latest !== null && latest < now ? latest : now);
+        return {
+          level: reason.level,
+          text: reason.text,
+          isLive,
+          asOf: isLive && liveReadAt ? `Read from NASA at ${liveReadAt.toISOString().slice(11, 16)} UTC` : `Stored data up to ${latest ?? 'unknown'}`,
+        };
+      },
+      refresh: goLive,
+    },
+  });
+  const beginButton = /** @type {HTMLButtonElement} */ (requireElement('begin-journey'));
+  beginButton.addEventListener('click', () => {
+    journeyMode.begin(buildPlan(route, state.visitOrder, DEFAULT_WALKING_SPEED_KMH));
+  });
   /** @param {import('../lib/connection.js').ConnectionMode} mode */
   const setMode = (mode) => {
     state.mode = mode;

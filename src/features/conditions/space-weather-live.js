@@ -3,8 +3,8 @@
  * Bring the bundled space weather up to date from NASA DONKI, when online.
  *
  * The site carries a record up to the day it was built
- * (data/processed/space_weather.json). Online, this reads only the days after
- * that, with the same rules as scripts/prepare_space_weather.py (arrivals at
+ * (data/processed/space_weather.json). Online, this reads the days from
+ * its last one on, with the same rules as scripts/prepare_space_weather.py (arrivals at
  * Mars from WSA-Enlil runs, particle events, interplanetary shocks), and joins
  * them on. Offline, or if NASA does not answer, the bundled record is used as
  * it is and the page says how recent it is.
@@ -88,14 +88,14 @@ export function eventsFromDonki(simulations, particles, shocks) {
  * Add the days since the bundled record ends, read live from NASA.
  * @param {SpaceWeather} bundled The record stored with the site.
  * @param {Date} now The present moment.
- * @returns {Promise<SpaceWeather>} The record extended to today, or the bundled record if it is already current.
+ * @returns {Promise<SpaceWeather>} The record extended to today. The bundle's last day is always read again,
+ *   because it may have been built before that day ended.
  * @throws {Error} With a plain message when NASA's service cannot be read.
  */
 export async function refreshSpaceWeather(bundled, now) {
   const today = now.toISOString().slice(0, 10);
-  if (bundled.coverageEnd >= today) return bundled;
-  // At most the last 60 days: an older bundle keeps a gap, which the page reports.
-  const start = [shiftDate(bundled.coverageEnd, 1), shiftDate(today, 1 - MAX_WINDOW_DAYS)].sort()[1];
+  // From the bundle's last day, but at most the last 60 days: an older bundle keeps a gap, which the page reports.
+  const start = [bundled.coverageEnd, shiftDate(today, 1 - MAX_WINDOW_DAYS)].sort()[1];
   const [simulations, particles, shocks] = await Promise.all([
     getKind('WSAEnlilSimulations', shiftDate(start, -LOOKBACK_DAYS), today),
     getKind('SEP', start, today),

@@ -14,6 +14,7 @@ Mars maps show where to walk. Sol Stroll tells a crew whether to go. It follows 
 - A task list for each stop with why it matters, hazards on the route, and a packing list.
 - **Live, with an offline mode:** online it reads live NASA data; with no link (as on Mars), or at the press of a button, it uses the copy stored with the site and says how recent it is (first load about 1.2 MB).
 - The **safest path** between stops under **NASA's rules**: only ground Curiosity actually drove (263 rover drives joined into a network), never steeper than NASA's 20° suit limit, and the shortest within it. The verdict also applies NASA's 8-hour and 2 km walk limits.
+- **Begin journey:** a full-screen, simulated walk of the plan. The top bar and side panel close, the map zooms in, the walker moves from start to end with a cone showing where they face (the device compass on phones and tablets, else the direction of travel), live space weather sits top right, and each stop's tasks pop up on arrival. It is labelled as a simulation: there is no real astronaut position.
 - Map options: contour lines from NASA's Gale elevation model, colour HiRISE imagery, names of places Curiosity explored, and a latitude/longitude grid.
 - Dark and light themes.
 
