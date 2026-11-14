@@ -27,7 +27,9 @@ A briefing for **one real Marswalk** in the boxwork region of Mount Sharp, Gale 
 
 The verdict rests on daylight, how unusual the chosen sol is for its season, and whether a solar storm is under way. It does **not** use invented temperature, ultraviolet or dose thresholds; no citable Mars suit limits exist.
 
-Out of scope: other sites, a 3D globe, a helmet display, route finding across undriven ground. See `docs/COMPETITIVE_ANALYSIS.md` for why, and `docs/DATA_SOURCES.md` for what each data source can and cannot support.
+**Changed 14 Nov 2026 by the team:** a **visor view** is in scope, as a demo: during "Begin journey", the screen can show a curved helmet visor with only the critical information on it (heading, next stop, space weather, time out and distance from base against NASA's limits). It is a browser simulation of what a helmet display could show, labelled as such; there is no helmet, headset or AR hardware. NASA TechPort project 94571 (Giner, Inc., 2018 to 2019, completed) developed a curved, self-darkening visor; it is a tinting project, not a display, so cite it only for the visor's shape and tint.
+
+Out of scope: other sites, a 3D globe, real helmet or AR headset hardware, route finding across undriven ground. See `docs/COMPETITIVE_ANALYSIS.md` for why, and `docs/DATA_SOURCES.md` for what each data source can and cannot support.
 
 ### Team roles (agreed 13 Nov 2026)
 

@@ -1,0 +1,91 @@
+/*
+ * journey-visor (DESIGN.md): a curved helmet visor with only the critical
+ * information, all in white (src/features/journey/visor-view.js). A
+ * simulation. Its clear middle is dark, standing in for the view of the
+ * ground; the journey map becomes a small round minimap on its left.
+ * Theme-independent, like the map overlays. Only tokens are used.
+ */
+
+body.is-visor .journey-top,
+body.is-visor .journey-bottom { display: none; }
+
+/* The view through the visor: dark and clear. Sits above the map, below the minimap. */
+.visor { position: fixed; inset: 0; pointer-events: none; background: var(--color-route-casing); }
+.visor[hidden] { display: none; }
+.visor-drawing { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+
+/* The minimap: the journey map itself, moved into the circle the visor draws for it. */
+body.is-visor .map-area {
+  inset: auto;
+  left: var(--minimap-left);
+  top: var(--minimap-top);
+  width: var(--minimap-size);
+  height: var(--minimap-size);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  z-index: 1700;
+}
+body.is-visor .map-label-anchor,
+body.is-visor .map-arrow-anchor { display: none; }
+/* Attribution stays on screen (DESIGN.md, map-attribution), centred under the visor. */
+body.is-visor .map-attribution { position: fixed; left: 50%; right: auto; bottom: var(--space-xs); translate: -50% 0; max-width: 50%; }
+
+/* Everything on the visor is white, with a dark outline so it reads over any ground. */
+.visor-shade-clear { stop-color: var(--color-route-casing); stop-opacity: 0; }
+.visor-shade-edge { stop-color: var(--color-route-casing); stop-opacity: 0.55; }
+.visor-rim { fill: none; stroke: var(--color-map-ink); stroke-opacity: 0.35; stroke-width: 2; }
+.visor-rim.is-caution { stroke-opacity: 0.9; stroke-width: 6; }
+.visor-rim.is-no-go { stroke-opacity: 1; stroke-width: 10; }
+@media (prefers-reduced-motion: no-preference) {
+  .visor-rim.is-no-go { animation: visor-pulse 1.2s ease-in-out infinite alternate; }
+}
+@keyframes visor-pulse { from { stroke-opacity: 1; } to { stroke-opacity: 0.3; } }
+.visor-minimap-ring { fill: none; stroke: var(--color-map-ink); stroke-opacity: 0.6; stroke-width: 1.5; }
+
+/*
+ * Small white type with a thin dark outline. Three levels of emphasis: primary
+ * (the next stop's distance, an alert), secondary (names, levels, heading,
+ * gauges) and faint labels at 60 percent.
+ */
+.visor-drawing text {
+  fill: var(--color-map-ink);
+  paint-order: stroke;
+  stroke: var(--color-route-casing);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+.visor-primary { font: var(--type-heading-4); }
+.visor-value { font: var(--type-body-md-medium); }
+.visor-detail { font: var(--type-caption); }
+.visor-drawing .visor-label,
+.visor-drawing .visor-tick-label,
+.visor-drawing .visor-sim,
+.visor-drawing .visor-detail { fill-opacity: 0.6; }
+.visor-label { font: var(--type-caption-bold); letter-spacing: var(--tracking-eyebrow); }
+.visor-alert-text { font: var(--type-heading-3); letter-spacing: var(--tracking-eyebrow); }
+
+/* Compass tape: thin and faint, with the heading and the next-stop marker brighter. */
+.visor-tape { fill: none; stroke: var(--color-map-ink); stroke-opacity: 0.5; stroke-width: 1.5; }
+.visor-tick { stroke: var(--color-map-ink); stroke-opacity: 0.5; stroke-width: 1.5; }
+.visor-tick-label { font: var(--type-caption); }
+.visor-caret { fill: var(--color-map-ink); }
+.visor-next-marker { fill: var(--color-map-ink); stroke: var(--color-route-casing); stroke-width: 2; }
+/* Off the tape: hollow, held at the tape's end. */
+.visor-next-marker.is-off-tape { fill: var(--color-route-casing); stroke: var(--color-map-ink); stroke-width: 2; }
+.visor-heading { font: var(--type-body-md-medium); }
+
+/* Gauges against NASA's limits along the chin. The label says "near limit" or "at limit" in words. */
+.visor-guide { fill: none; stroke: none; }
+.visor-gauge-track { fill: none; stroke: var(--color-map-ink); stroke-opacity: 0.2; stroke-width: 5; stroke-linecap: round; }
+.visor-gauge-fill { fill: none; stroke: var(--color-map-ink); stroke-opacity: 0.85; stroke-width: 5; stroke-linecap: round; }
+.visor-gauge-label { font: var(--type-caption); }
+.visor-sim { font: var(--type-telemetry); letter-spacing: var(--tracking-eyebrow); }
+
+/* The few controls sit outside the visor, in the bottom corners. */
+.visor-controls { position: absolute; bottom: var(--space-md); display: flex; gap: var(--space-sm); pointer-events: auto; }
+.visor-controls.is-left { left: var(--space-md); }
+.visor-controls.is-right { right: var(--space-md); }
+.visor-controls .button-secondary { background: var(--color-surface-raised); }
+
+/* The walker's 88px marker would fill the minimap; it is drawn smaller there. */
+body.is-visor .map-astronaut { scale: 0.6; }

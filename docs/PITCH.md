@@ -94,6 +94,8 @@ A 30-second video cannot carry the evidence slide. **The slides are the safer ch
 | "Automatically plans your route" | It builds a plan along Curiosity's path. It does not find routes |
 | "NASA's packing list" | The packing list is ours |
 | The logo or idea is "unique" | Not established |
+| "NASA is building a visor display" (citing TechPort 94571) | That project (Giner, Inc., 2018 to 2019, completed) made a curved visor that darkens itself. It shows no information. Say "a curved, self-darkening visor like the one NASA funded (TechPort 94571)", and call our visor view a simulation |
+| "Works in a helmet" | The visor view is a browser simulation on a tablet; no helmet or headset was tested |
 
 ## Required closing line
 

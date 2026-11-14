@@ -19,6 +19,7 @@ import { addLayerOptions } from './map-layer-options.js';
 import { createRouteLayer } from './route-layer.js';
 import { TILE_SOURCES } from './tile-sources.js';
 import { createAstronautMarker } from './astronaut-marker.js';
+import { createMapRotation } from './map-rotation.js';
 
 /** @typedef {import('../plan/plan-model.js').Route} Route */
 /** @typedef {import('../plan/plan-model.js').Plan} Plan */
@@ -29,8 +30,8 @@ import { createAstronautMarker } from './astronaut-marker.js';
 const MIN_ZOOM = 8;
 const MAX_ZOOM = 18;
 const ROUTE_PADDING_PX = 48;
-/** Room kept between a followed walker and the edges of the clear area, in pixels. */
-const KEEP_IN_VIEW_MARGIN_PX = 96;
+/** A followed walker this many pixels or more from their place on screen is moved back; less is not worth a redraw. */
+const RECENTRE_MIN_PX = 1;
 /** Side of the square hit area around each stop badge, in pixels (the 44px touch target). */
 const HIT_AREA_PX = 44;
 /** Stops closer together than this, in metres, would hide each other on the map. */
@@ -65,8 +66,11 @@ function addOverZoomNotice(map) {
  * @property {(lat: number, lon: number, headingDeg: number) => void} showAstronaut Place the walker, facing headingDeg (compass).
  * @property {() => void} hideAstronaut
  * @property {(lat: number, lon: number, zoom: number | null, isAnimated: boolean) => void} follow Centre on a point; null keeps the zoom.
- * @property {(lat: number, lon: number, inset: { top: number, bottom: number }, isAnimated: boolean) => void} keepInView
- *   Pan only if the point has left the clear area between panels (insets in pixels from the top and bottom edges).
+ * @property {(lat: number, lon: number, inset: { top: number, bottom: number }) => void} keepCentred
+ *   Keep a point at the centre of the clear area between panels (insets in pixels from the top and bottom edges), unanimated.
+ * @property {(isOn: boolean) => void} setJourneyView Full-screen journey view: the map may turn, and zooms about its centre.
+ * @property {(headingDeg: number) => void} setHeading Turn the map so this compass heading is up the screen (journey view only).
+ * @property {() => number} imageryEnlargement How many times the imagery is enlarged past its own resolution (1 if not).
  * @property {(handler: () => void) => void} onUserPan Called when the visitor drags the map.
  * @property {() => void} resize Tell the map its box changed size.
  */
@@ -111,6 +115,7 @@ export function createMapView(container, route, extras, mode, onStopChosen) {
   L.control.scale({ position: 'bottomleft', imperial: false }).addTo(map);
   addOverZoomNotice(map);
 
+  const rotation = createMapRotation(map, container);
   const routeLayer = L.layerGroup().addTo(map);
   const astronaut = createAstronautMarker();
   const planRoute = createRouteLayer();
@@ -190,20 +195,28 @@ export function createMapView(container, route, extras, mode, onStopChosen) {
     follow(lat, lon, zoom, isAnimated) {
       map.setView([lat, lon], zoom ?? map.getZoom(), { animate: isAnimated });
     },
-    keepInView(lat, lon, inset, isAnimated) {
-      // Leaflet pans only when the point is outside the padded box, so most frames cost nothing
-      // and tiles are not cancelled mid-load (which showed as blurry patches).
-      map.panInside([lat, lon], {
-        paddingTopLeft: [KEEP_IN_VIEW_MARGIN_PX, inset.top + KEEP_IN_VIEW_MARGIN_PX],
-        paddingBottomRight: [KEEP_IN_VIEW_MARGIN_PX, inset.bottom + KEEP_IN_VIEW_MARGIN_PX],
-        animate: isAnimated,
-      });
+    keepCentred(lat, lon, inset) {
+      // Where the point should sit, measured from the screen's centre, turned into the map box's axes.
+      const wanted = rotation.toBox({ x: 0, y: (inset.top - inset.bottom) / 2 });
+      const offset = map.latLngToContainerPoint([lat, lon]).subtract(map.getSize().divideBy(2)).subtract(wanted).round();
+      // An unanimated pan of a few pixels: no tile reload, no animation restarted every frame.
+      if (Math.abs(offset.x) >= RECENTRE_MIN_PX || Math.abs(offset.y) >= RECENTRE_MIN_PX) map.panBy(offset, { animate: false });
+    },
+    setJourneyView(isOn) {
+      rotation.setEnabled(isOn);
+    },
+    setHeading(headingDeg) {
+      rotation.setAngle(-headingDeg);
+    },
+    imageryEnlargement() {
+      return Math.max(1, 2 ** (map.getZoom() - TILE_SOURCES.offline.hirise.maxZoom));
     },
     onUserPan(handler) {
       map.on('dragstart', handler);
     },
     resize() {
       map.invalidateSize({ animate: false });
+      rotation.fit();
     },
     setMode(next) {
       showBasemaps(TILE_SOURCES[next]);

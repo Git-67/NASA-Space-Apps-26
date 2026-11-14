@@ -11,8 +11,28 @@ body.is-journey .panel,
 body.is-journey .skip-link,
 body.is-journey .leaflet-control-zoom,
 body.is-journey .map-layer-panel { display: none; }
-body.is-journey .map-area { position: fixed; inset: 0; z-index: 1; height: 100dvh; }
+body.is-journey .map-area { position: fixed; inset: 0; z-index: 1; height: 100dvh; overflow: hidden; }
 body.is-journey .map-container { height: 100%; min-height: 0; border-radius: 0; }
+body.is-journey .map-attribution { position: absolute; right: 0; bottom: 0; z-index: 500; max-width: 70%; }
+/* The map's own controls sit in the corners of the turned box, off screen; the HUD says what they would. */
+body.is-journey .leaflet-control-container { display: none; }
+/* Taps on stops and legs are off while walking: fewer mis-taps, and the turned box would misplace them (map-rotation.js). */
+body.is-journey .map-waypoint-hit,
+body.is-journey .map-route-hit { pointer-events: none; }
+
+/* Heading-up map: a square as wide as the screen's diagonal, centred, turned (map-rotation.js sets the sizes). */
+body.is-journey .map-container.is-turnable {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--map-turned-side);
+  height: var(--map-turned-side);
+  translate: -50% -50%;
+  rotate: var(--map-angle, 0deg);
+}
+/* Text on the map turns back, so it stays upright. Route arrows keep turning with the map. */
+.map-container.is-turnable .map-label,
+.map-container.is-turnable .map-waypoint { rotate: calc(-1 * var(--map-angle, 0deg)); }
 
 .journey-hud { position: fixed; inset: 0; z-index: 1600; pointer-events: none; }
 .journey-hud[hidden] { display: none; }
@@ -24,7 +44,7 @@ body.is-journey .map-container { height: 100%; min-height: 0; border-radius: 0; 
   align-items: center;
   gap: var(--space-xs);
   margin: 0 auto;
-  max-width: var(--size-panel);
+  max-width: var(--size-journey-panel);
   padding: var(--space-md);
   background: var(--color-surface-raised);
   color: var(--color-ink);
@@ -34,6 +54,26 @@ body.is-journey .map-container { height: 100%; min-height: 0; border-radius: 0; 
   pointer-events: auto;
 }
 .journey-top > * { pointer-events: auto; }
+.journey-top-left { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-xs); pointer-events: none; }
+.journey-top-left > * { pointer-events: auto; }
+
+/* North arrow: where north is on the turned map. */
+.journey-north {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-touch-large);
+  height: var(--size-touch-large);
+  background: var(--color-surface-raised);
+  color: var(--color-ink);
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-floating);
+  font: var(--type-caption-bold);
+  line-height: 1;
+}
+.journey-north-arrow { display: inline-flex; color: var(--color-semantic-error-text); }
 
 /* Controls are DESIGN.md's button-primary and button-secondary in the button-large size (components.css). */
 .journey-end { background: var(--color-surface-raised); box-shadow: var(--shadow-floating); }
@@ -66,10 +106,39 @@ body.is-journey .map-container { height: 100%; min-height: 0; border-radius: 0; 
 .journey-weather[data-level="no-go"] .reason-symbol { background: var(--color-tint-red); color: var(--color-semantic-error-text); }
 .journey-weather[data-level="unknown"] .reason-symbol { background: var(--color-surface); color: var(--color-text-secondary); }
 
-/* Task pop-up on arrival. */
+/* journey-side: small round toggles on the right edge, middle height: the simulated visor, and sound. */
+.journey-side {
+  position: fixed;
+  right: var(--space-md);
+  top: 50%;
+  translate: 0 -50%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  pointer-events: auto;
+}
+.journey-side-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-touch-large);
+  height: var(--size-touch-large);
+  background: var(--color-surface-raised);
+  color: var(--color-ink);
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-floating);
+  cursor: pointer;
+}
+.journey-side-toggle .icon { width: var(--space-xl); height: var(--space-xl); }
+.journey-side-toggle[aria-pressed="true"] { background: var(--color-primary); color: var(--color-on-primary); border-color: var(--color-primary); }
+
+/* journey-dialog: the pop-ups (tasks, ending the walk, simulated alerts). Large, for thick gloves. */
 .journey-dialog {
-  width: min(var(--size-panel), calc(100vw - var(--space-xxl)));
-  padding: var(--space-xl);
+  width: min(var(--size-journey-dialog), calc(100vw - var(--space-xxl)));
+  max-height: calc(100dvh - var(--space-xxl));
+  overflow-y: auto;
+  padding: var(--space-xxl);
   background: var(--color-surface-raised);
   color: var(--color-ink);
   border: 1px solid var(--color-hairline-strong);
@@ -77,15 +146,45 @@ body.is-journey .map-container { height: 100%; min-height: 0; border-radius: 0; 
   box-shadow: var(--shadow-floating);
   pointer-events: auto;
 }
-.journey-dialog[open] { display: flex; flex-direction: column; gap: var(--space-sm); }
+.journey-dialog[open] { display: flex; flex-direction: column; gap: var(--space-md); }
 .journey-dialog::backdrop { background: var(--color-void); opacity: 0.6; }
+.journey-dialog-title { font: var(--type-heading-2); }
+.journey-dialog-text { font: var(--type-subtitle); }
+.journey-dialog .task-why { font: var(--type-body-md); }
 .journey-tasks { display: flex; flex-direction: column; }
-.journey-tasks .check-row { min-height: var(--size-touch-large); border-bottom: 1px solid var(--color-hairline); }
-.journey-tasks input { width: var(--space-xl); height: var(--space-xl); accent-color: var(--color-primary); flex: none; }
-.journey-tasks label { font: var(--type-body-md); }
+.journey-tasks .check-row { min-height: calc(var(--size-touch-large) + var(--space-md)); gap: var(--space-md); border-bottom: 1px solid var(--color-hairline); }
+.journey-tasks input { width: var(--space-xxl); height: var(--space-xxl); accent-color: var(--color-primary); flex: none; }
+/* The label fills the row, so the whole row ticks the box. */
+.journey-tasks label { flex: 1; align-self: stretch; display: flex; align-items: center; font: var(--type-subtitle); }
+
+/* Two choices side by side, each half the width; a lone button takes the right half. */
+.journey-choice { display: flex; gap: var(--space-md); padding-top: var(--space-xs); }
+.journey-choice > * { flex: 1 1 0; justify-content: center; }
+.journey-choice > :only-child { flex: 0 1 50%; margin-left: auto; }
+
+/* Hold to confirm: the button fills from left to right while held. */
+.journey-confirm.is-hold {
+  background-image: linear-gradient(var(--color-primary-pressed), var(--color-primary-pressed));
+  background-repeat: no-repeat;
+  background-size: 0% 100%;
+  transition: background-size var(--hold-ms) linear;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
+}
+.journey-confirm.is-hold.is-holding { background-size: 100% 100%; }
+
+.journey-dialog-level { display: flex; align-items: center; gap: var(--space-xs); font: var(--type-heading-4); }
+.journey-dialog-level.is-no-go { color: var(--color-semantic-error-text); }
+.journey-dialog-level.is-caution { color: var(--color-semantic-warning); }
+.journey-drill-eyebrow { color: var(--color-accent); }
 
 @media (max-width: 479px) {
   .journey-top { flex-direction: column; align-items: stretch; }
   .journey-weather { max-width: none; }
   .journey-bottom { left: var(--space-xs); right: var(--space-xs); bottom: var(--space-xl); }
+  .journey-dialog { padding: var(--space-lg); }
+  .journey-choice { flex-direction: column; }
+  .journey-choice > :only-child { flex-basis: auto; margin-left: 0; }
 }

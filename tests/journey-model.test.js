@@ -1,7 +1,8 @@
 // @ts-check
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { bearingDeg, buildJourney, nextArrival, positionAt } from '../src/features/journey/journey-model.js';
+import { bearingDeg, buildJourney, headingAhead, positionAt, turnToward, walkOn } from '../src/features/journey/journey-model.js';
+import { drawDrill } from '../src/features/conditions/space-weather-drill.js';
 
 /** A leg in a plan. Test data only. */
 const section = (toId, points, isReturn = false) => ({
@@ -41,9 +42,57 @@ test('positionAt interpolates along the walk and gives the direction of travel',
   assert.deepEqual([positionAt(journey, -5).lat, positionAt(journey, 1e9).lat], [0, 0]);
 });
 
-test('nextArrival is the first stop ahead, and null at the end', () => {
+test('walkOn stops at each stop once, in order, then walks to the end', () => {
   const journey = buildJourney(plan);
-  assert.equal(nextArrival(journey, 0)?.stopId, 'b');
-  assert.equal(nextArrival(journey, journey.arrivals[0].alongM)?.stopId, 'c');
-  assert.equal(nextArrival(journey, journey.totalM), null);
+  let progress = { walkedM: 0, nextIndex: 0 };
+  const reached = [];
+  for (let step = 0; step < 100; step += 1) {
+    const result = walkOn(journey, progress, 7);
+    if (result.arrival) reached.push(result.arrival.stopId);
+    progress = result;
+  }
+  assert.deepEqual(reached, ['b', 'c', 'a']);
+  assert.equal(progress.walkedM, journey.totalM);
+});
+
+test('walkOn reaches two stops at the same place one after the other, never skipping one', () => {
+  // Two stops on the same point: the second leg has no length. Test data only.
+  const samePlace = /** @type {any} */ ({
+    stops: [{ id: 'a' }, { id: 'b' }, { id: 'c' }],
+    sections: [section('b', [[0, 0], [0.001, 0]]), section('c', [[0.001, 0], [0.001, 0]]), section('a', [[0.001, 0], [0, 0]], true)],
+  });
+  const journey = buildJourney(samePlace);
+  const first = walkOn(journey, { walkedM: 0, nextIndex: 0 }, 1000);
+  const second = walkOn(journey, first, 0);
+  assert.deepEqual([first.arrival?.stopId, second.arrival?.stopId], ['b', 'c']);
+  assert.equal(walkOn(journey, second, 0).arrival, null);
+});
+
+test('headingAhead looks ahead but not past the next stop', () => {
+  const journey = buildJourney(plan);
+  const corner = journey.arrivals[0].alongM;
+  // 10 m before the corner, looking 30 m ahead: the bend pulls the heading east of north.
+  assert.ok(headingAhead(journey, corner - 10, 30, journey.totalM) > 10);
+  // The same, but stopping at the corner: still due north.
+  assert.equal(Math.round(headingAhead(journey, corner - 10, 30, corner)), 0);
+  // At the corner itself: the next leg's direction, east.
+  assert.equal(Math.round(headingAhead(journey, corner, 30, corner)), 90);
+});
+
+test('turnToward turns the short way round', () => {
+  assert.equal(turnToward(350, 10, 0.5), 0);
+  assert.equal(turnToward(10, 350, 0.5), 0);
+  assert.equal(turnToward(90, 180, 1), 180);
+  assert.equal(turnToward(90, 180, 0), 90);
+});
+
+test('drawDrill picks an alert our rule knows, with a duration in range', () => {
+  const lowest = drawDrill(() => 0);
+  const highest = drawDrill(() => 0.999);
+  for (const drill of [lowest, highest]) {
+    assert.ok(['no-go', 'caution'].includes(drill.level));
+    assert.ok(drill.durationMinutes >= 20 && drill.durationMinutes <= 240);
+    assert.equal(drill.durationMinutes % 5, 0);
+  }
+  assert.notEqual(lowest.title, highest.title);
 });
