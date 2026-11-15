@@ -25,6 +25,7 @@ import { createJourneyMode } from '../features/journey/journey-mode.js';
 import { missionForSol } from '../features/plan/daily-mission.js';
 import { addCustomPoint } from '../features/plan/custom-points.js';
 import { initViewTabs } from '../features/views/view-tabs.js';
+import { createGroundViewer } from '../features/ground/ground-view.js';
 
 /** @typedef {import('./load-briefing-data.js').BriefingData} BriefingData */
 
@@ -39,7 +40,7 @@ const DEFAULT_SOL = 4711;
  * @param {BriefingData} data
  * @param {import('../lib/connection.js').ConnectionMode} startMode Online (live NASA data) or offline (stored data).
  */
-function start({ route, records, places, calibration, spaceWeather: bundledSpaceWeather }, startMode) {
+function start({ route, records, places, calibration, spaceWeather: bundledSpaceWeather, groundViews }, startMode) {
   const recordBySol = new Map(records.map((record) => [record.sol, record]));
   const firstSol = records[0].sol;
   const reference = records[records.length - 1];
@@ -89,7 +90,20 @@ function start({ route, records, places, calibration, spaceWeather: bundledSpace
     document.getElementById(`tasks-${stopId}`)?.scrollIntoView({ block: 'nearest' });
   };
   const missionBox = requireElement('mission');
-  const mapView = createMapView(requireElement('map'), route, { places, calibration }, state.mode, focusStop);
+  // Ground photos: a camera badge beside each stop that has them opens the viewer. Without the
+  // file the map simply has no camera badges; nothing else depends on it.
+  const groundViewer = createGroundViewer();
+  const viewsByStop = groundViews instanceof Error ? new Map() : groundViews;
+  const mapView = createMapView(requireElement('map'), route, {
+    places,
+    calibration,
+    groundStopIds: new Set(viewsByStop.keys()),
+    onGroundView: (stopId) => {
+      const view = viewsByStop.get(stopId);
+      const stop = route.stops.find((candidate) => candidate.id === stopId);
+      if (view && stop) groundViewer.open(stop.name, view);
+    },
+  }, state.mode, focusStop);
   /** The picker's top option: the sol's mission. */
   const missionOption = () => {
     const km = (buildPlan(route, solMission.order, DEFAULT_WALKING_SPEED_KMH).distanceM / 1000).toFixed(1);

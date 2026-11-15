@@ -17,7 +17,7 @@ Every piece of work should move at least one judging criterion. If it moves none
 
 ### What we are building (agreed 13 Nov 2026, widened by the team on 14 Nov 2026)
 
-**Status at the end of 14 Nov:** questions 1, 2 and 3 are built, along with a journey mode, a visor view, a Weather view and an offline mode. Since 15 Nov the page has three views switched from the top nav: Map (the map alone, with the verdict as a pop-up), Briefing and Weather (dashboards). Question 4 (the photo comparison) and the guided replay in question 5 are **not built**. `README.md` lists what works; `SUMMARY.md` lists what is left.
+**Status at the end of 14 Nov:** questions 1, 2 and 3 are built, along with a journey mode, a visor view, a Weather view and an offline mode. Since 15 Nov the page has three views switched from the top nav: Map (the map alone, with the verdict as a pop-up), Briefing and Weather (dashboards). Also since 15 Nov: ground photos at every stop, opened from camera badges on the map, and a two-finger turn of the map. Question 4 is **half built** (the ground photos exist, but not beside the orbital view) and the guided replay in question 5 is **not built**. `README.md` lists what works; `SUMMARY.md` lists what is left.
 
 A briefing for **one real Marswalk** in the boxwork region of Mount Sharp, Gale Crater, that answers five questions on one map:
 
@@ -66,7 +66,7 @@ Chosen for a team that knows Python, HTML, CSS and basic JavaScript, and for fre
 | Task | Command |
 |---|---|
 | Dev server | `python3 -m http.server 8000` then open http://localhost:8000 |
-| Prepare data | `python3 scripts/<name>.py` (each script documents its inputs and outputs). Order: `prepare_route.py`, `prepare_safe_paths.py`, `prepare_rover_stops.py` |
+| Prepare data | `python3 scripts/<name>.py` (each script documents its inputs and outputs). Order: `prepare_route.py`, `prepare_safe_paths.py`, `prepare_rover_stops.py`, `prepare_ground_views.py` |
 | Python dependencies | `pip install -r requirements.txt` (pinned versions) |
 | Test | `node --test tests/*.test.js` |
 | Test the path search | `python3 -m unittest discover scripts` (A* in `scripts/safe_paths.py`) |
@@ -88,6 +88,7 @@ src/
   features/map/        The map, its layers and layer panel.
   features/plan/       Stops, daily missions, custom points, path search, sections, hazards, elevation profile.
   features/conditions/ The sol's conditions, NASA's limits, space weather, the verdict.
+  features/ground/     Ground photos: what Curiosity saw from each stop, and the viewer.
   features/journey/    Begin journey: the simulated walk, its pop-ups, the visor view.
   features/connection/ The online and offline switch.
   features/theme/      Dark and light switching.

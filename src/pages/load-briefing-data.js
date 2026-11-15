@@ -10,6 +10,7 @@ import { fromColumns } from '../lib/columns.js';
 import { parseDemCalibration, parseLandmarks } from '../features/map/map-layer-data.js';
 import { parseSpaceWeather } from '../features/conditions/space-weather-model.js';
 import { parseTrackNetwork } from '../features/plan/track-network.js';
+import { parseGroundViews } from '../features/ground/ground-model.js';
 
 /** @typedef {import('../features/plan/plan-model.js').Route} Route */
 /** @typedef {import('../features/conditions/conditions-model.js').WeatherRecord} WeatherRecord */
@@ -23,6 +24,7 @@ import { parseTrackNetwork } from '../features/plan/track-network.js';
  * @property {Place[] | Error} places
  * @property {DemCalibration | Error} calibration
  * @property {SpaceWeather | Error} spaceWeather
+ * @property {Map<string, import('../features/ground/ground-model.js').GroundView> | Error} groundViews Ground photos by stop id, or why they could not be loaded.
  */
 
 const ROUTE_FILE = 'data/processed/route.json';
@@ -33,6 +35,7 @@ const SPACE_WEATHER_FILE = 'data/processed/space_weather.json';
 const SAFE_PATHS_FILE = 'data/processed/safe_paths.json';
 const TRACK_NETWORK_FILE = 'data/processed/track_network.json';
 const ROVER_STOPS_FILE = 'data/processed/rover_stops.json';
+const GROUND_VIEWS_FILE = 'data/processed/ground_views.json';
 
 /**
  * Check the route and the safe paths, and join them into one route.
@@ -103,7 +106,7 @@ async function loadOptional(path, parse) {
  * @throws {Error} When a required file cannot be loaded.
  */
 export async function loadBriefingData() {
-  const [routeData, pathData, weatherData, places, calibration, spaceWeather, network, roverStops] = await Promise.all([
+  const [routeData, pathData, weatherData, places, calibration, spaceWeather, network, roverStops, groundViews] = await Promise.all([
     loadJson(ROUTE_FILE),
     loadJson(SAFE_PATHS_FILE),
     loadJson(WEATHER_FILE),
@@ -112,6 +115,7 @@ export async function loadBriefingData() {
     loadOptional(SPACE_WEATHER_FILE, parseSpaceWeather),
     loadOptional(TRACK_NETWORK_FILE, parseTrackNetwork),
     loadOptional(ROVER_STOPS_FILE, parseRoverStops),
+    loadOptional(GROUND_VIEWS_FILE, parseGroundViews),
   ]);
   const route = parseRoute(routeData, pathData);
   // Without the network, only the precomputed curated stops can be walked: no rover stops, no custom points.
@@ -119,5 +123,5 @@ export async function loadBriefingData() {
     route.network = network;
     if (!(roverStops instanceof Error)) route.stops.push(...roverStops);
   }
-  return { route, records: parseWeather(weatherData), places, calibration, spaceWeather };
+  return { route, records: parseWeather(weatherData), places, calibration, spaceWeather, groundViews };
 }

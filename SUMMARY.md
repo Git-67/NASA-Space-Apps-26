@@ -24,13 +24,15 @@ The team widened the scope during the day. `CLAUDE.md` section 1 records each ch
 | Begin journey | A full-screen simulated walk for a tablet, with tasks, hazard warnings and sound cues |
 | Visor view | A simulated helmet visor showing only the critical readings |
 | Weather view | Conditions at a glance, charts, and a "dust watch" |
+| Ground photos (15 Nov) | Camera badges beside each stop open Curiosity's navigation camera frames from that spot, eight directions each, stored with the site |
+| Turn the map (15 Nov) | Two fingers twist the map on a tablet; a compass button puts north back |
 | Three views (15 Nov) | Tabs in the top nav: Map (the map alone, verdict as a pop-up), Briefing and Weather (dashboards). The address keeps the view: `#map`, `#briefing`, `#weather` |
 | Offline mode | Everything works from a copy stored with the site |
 | Map layers | Contours, colour imagery, place names, a grid |
 
 ## Not built
 
-1. **The orbit and ground photo comparison** (the "how sure" question). `docs/API_NOTES.md` has the working query and what exists at each stop.
+1. **The orbital view beside the ground photo** (the "how sure" question). The ground photos are built and open from the map; they are not shown side by side with the orbital image.
 2. **A guided storm replay.** Typing a sol works; nothing steps through the storm.
 
 ## Decisions already made (do not reopen without a reason)
@@ -73,6 +75,7 @@ These were found by reading `main` on 14 Nov. None was changed, because this pas
 
 - Surface radiation figures and the September 2017 solar storm figure: from search summaries only.
 - Two inferences in the science brief about which NASA sample is which drill hole.
+- The compass direction of each ground photo. It is the rover's heading plus the camera's angle, on our reading of what that angle is measured from. Not confirmed against NASA documentation.
 - The coordinate convention and elevation datum of the rover position files.
 - Usage terms for the Mars Trek service and the rover position files.
 - Whether judges accept the outreach-labelled weather feed.
