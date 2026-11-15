@@ -17,7 +17,7 @@ What still sets it apart, as built and checked in a browser:
 - **Space weather aimed at Mars.** It uses NASA's forecasts of solar storms arriving at Mars, not just events seen from Earth.
 - **Every limit is NASA's own, and labelled lunar**, with NASA's statement that the Mars figures are still to come.
 - **It only walks where a rover has driven**, and says why: our elevation data cannot judge slopes at a walker's scale.
-- **It works with no link to Earth**, from a copy stored with the site, and says how old that copy is.
+- **It works with no link to Earth**, from a copy stored with the site, and says how old that copy is. Since 15 Nov the device saves the whole site after the first visit, ground photos included.
 - Every number shows its basis.
 
 What the field has that we do not: 3D views, suit consumable models, more than one site, rock detection.

@@ -72,7 +72,9 @@ python3 -m http.server 8000
 
 Then open http://localhost:8000.
 
-Run the tests (needs Node 20 or later). There are 65:
+**On a tablet or phone, open the GitHub Pages address, not the laptop's network address.** Saving the site on the device needs HTTPS (or `localhost`); over plain HTTP from another machine the page still works but nothing is saved for offline use. Wait for the footer of the Briefing or Weather view to say "Saved on this device" before going offline. On an iPad, add the site to the home screen so Safari keeps the saved copy.
+
+Run the tests (needs Node 20 or later). There are 91:
 
 ```bash
 node --test tests/*.test.js
@@ -168,7 +170,8 @@ python3 scripts/build_tokens.py
 | `scripts/` | Python scripts that turn NASA downloads into the small files the page loads |
 | `data/stops.json` | The five curated stops, written by hand with sources |
 | `data/raw/`, `data/processed/` | Untouched downloads, and the scripts' output |
-| `tests/` | Tests for the planning, verdict, journey, visor, map layer and path search logic |
+| `tests/` | Tests for the planning, verdict, journey, visor, map layer, path search and offline store logic |
+| `sw.js`, `offline-manifest.json` | The offline store (service worker) and the list of every file it saves; rebuild the list with `scripts/build_offline_manifest.py` |
 | `public/vendor/leaflet/` | Leaflet 1.9.4 (BSD 2-Clause), minified, the map library |
 | `public/fonts/` | Bundled text fonts (OFL), from `scripts/vendor_fonts.py` |
 | `src/components/ui/icon-paths.js` | Bundled icons as SVG paths (Material Symbols, Apache 2.0), from `scripts/vendor_icons.py` |
