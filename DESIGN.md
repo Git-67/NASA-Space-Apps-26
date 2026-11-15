@@ -1051,7 +1051,18 @@ The categorical palette was validated against `{colors.surface}`: all eight slot
 - **Arming:** every confirming button is disabled for 0.8 s after it appears, so a second tap meant for the previous button does nothing.
 - **Sides:** choices sit side by side, each half the width; a lone button takes the right half. A step's confirm button is on the other side from the previous step's, so tapping the same spot twice never confirms twice. The safe choice gets the focus, and Escape always means the safe choice.
 - **Tasks on arrival (two presses):** eyebrow "Stop N of M · about X min", the stop's name, why, its tasks as check rows 72px tall with 32px boxes in `{typography.subtitle}` (the whole row ticks the box), then "Submit tasks" (right). Then a check: "Leave <stop>? 2 of 3 tasks ticked." with "Submit and walk on" (left) and "Back to tasks" (right), which keeps the ticks. Each stop's tasks appear once.
-- **Ending the walk (three presses):** "End the walk?" (confirm right), "Are you sure?" (confirm left), then "Hold to end" (right): a press and hold of 2 s, the button filling with `{colors.primary-pressed}` from left to right while held. Letting go early does nothing.
+- **Ending the walk (hold and slide):** "End journey" pauses the walk and shows "End the walk?" with a `slide-to-confirm` in its danger tone and "Keep walking" below it, which has the focus. Escape keeps walking.
+- **Reaching a stop (check your position):** before a stop's tasks, the pop-up asks "Are you at <stop>?" and shows the stop's ground photos (`ground-photos`, compact) with "Turn left" and "Turn right", so the walker can compare the ground around them with what Curiosity saw from that spot. A `slide-to-confirm` in its confirm tone ("Hold, then slide: I am here") moves on to the tasks. A stop with no ground photos says so and still asks for the slide. A line under it says this is the walker's own check: the walk is simulated and the page cannot tell where they are. Escape does nothing here.
+
+**`slide-to-confirm`**: a handle that must be held, then slid, to confirm. It replaces buttons where a stray press would matter.
+- A track 56px tall, fully rounded, background `{colors.canvas}`, border `1px solid {colors.border-control}`, with its label centred in `{typography.body-md-medium}` and `{colors.text-secondary}`.
+- A 56px round handle at its left end with an arrow: `{colors.surface-raised}` with a 2px `{colors.border-control}` ring.
+- **How it works:** press the handle and keep still for half a second; it turns solid and is then free to move. Slide it to the right end and it confirms. Let go sooner and it goes back to the start. A tap, or a swipe without the hold, does nothing.
+- The part of the track already crossed fills in behind the handle.
+- **Two tones.** Danger, for what cannot be undone (ending a walk): the handle turns `{colors.semantic-error}` with `{colors.on-primary}`, the fill is `{colors.tint-red}`. Confirm, for a check (being at a stop): `{colors.primary}` with `{colors.on-primary}`, the fill `{colors.tint-blue}`.
+- It is dimmed and ignores presses for 0.8 s after it appears, so a tap meant for the last button does nothing.
+- **Keyboard:** the handle takes focus as a slider; holding the right arrow key moves it, and letting go before the end sends it back.
+- The state is never shown by colour alone: the handle's position and the filled track show it too.
 - **Simulated alert:** "Simulate alert" draws one of the alerts our space weather rule knows (direct hit: no-go; glancing blow or solar particles: caution) with a random duration of 20 min to 4 h of simulated time, judged by the verdict's own rule. The pop-up says "Simulated alert · a drill, not real data", the level in words with a warning icon (`{colors.semantic-error-text}` for no-go, `{colors.semantic-warning}` for caution), the rule's advice, and one "Understood" button. A no-go alert pauses the walk.
 
 **`journey-side`**: two 56px round toggles stacked on the right edge at middle height during a journey: the visor (eye icon) and sound (speaker icon, crossed out when muted). `{colors.surface-raised}` when off, `{colors.primary}` with `{colors.on-primary}` when on, `aria-pressed`, with a name and a tooltip.
@@ -1084,7 +1095,7 @@ Sound is never the only signal: each cue goes with something on screen. It start
 
 **`map-astronaut`**: the walker. A 20px `{colors.map-ink}` dot with a 3px `{colors.route-casing}` ring and a 2px `{colors.route}` halo, inside an 88px box holding a 70° `{colors.map-ink}` cone at 75 percent opacity that points where the walker faces (0° north, clockwise): from the device compass where there is one, else the direction of travel. Theme-independent, like the other map overlays.
 
-**`connection-toggle`**: the top bar's live / offline control. A `badge-live` ("LIVE · NASA", or "OFFLINE · DATA TO 14 NOV 2026" on `{colors.surface-raised}` with `{colors.text-secondary}`) followed by the action ("Go offline" / "Go online") in `{typography.button-md}`, one 44px button. Below 768px only the badge's first word shows; the accessible name always carries the full state and the action. Never say LIVE unless the data is live.
+**`connection-status`**: the top bar's signal badge. It reports; it is not a control. A `badge-live` reading "LIVE · NASA" when NASA can be reached, or "NO SIGNAL · DATA TO 14 NOV 2026" on `{colors.surface-raised}` with `{colors.text-secondary}` when it cannot. The page switches by itself, both ways: it checks the link every 30 seconds, when the device's network comes back or drops, and when the page is looked at again. One missed check is not enough to go offline; it takes two in a row. Below 768px only the badge's first words show; its title and accessible name always carry the full state. Never say LIVE unless the data is live.
 
 **`map-notice`**: a one-line status on the map, for example "Enlarged 4× past the imagery's own resolution". A `map-label`-style panel above the scale bar, in `{typography.caption}`. Shown only while it is true.
 
@@ -1238,7 +1249,7 @@ The Weather view. It is built only from components already in this file; it adds
 ### Navigation
 
 **`top-nav`**: sticky bar, height 64px, background `{colors.canvas}`, bottom border `1px solid {colors.hairline}`.
-- Left: the logo (`logo-on-dark.svg` or `logo-on-light.svg` by theme), 28px tall, linking to the home page. Centre: the three view tabs (`segmented-tab`), whose underline sits on the nav's bottom border. Right: the online and offline switch, then `theme-toggle`.
+- Left: the logo (`logo-on-dark.svg` or `logo-on-light.svg` by theme), 28px tall, linking to the home page. Centre: the three view tabs (`segmented-tab`), whose underline sits on the nav's bottom border. Right: the signal badge (`connection-status`), then `theme-toggle`.
 
 **`theme-toggle`**: a 44px icon button (sun or moon) that switches theme. It has an accessible name that states the action ("Switch to light theme"), and the choice persists.
 - There is no menu button: with three tabs, everything stays visible. Below 768px the tabs move to a second row.

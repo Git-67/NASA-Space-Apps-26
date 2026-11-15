@@ -49,3 +49,9 @@
   .ground-dialog { padding: var(--space-md); }
   .ground-controls .button-large { padding: 0 var(--space-md); }
 }
+
+/* ground-photos: the photo, the turn buttons and the caption, stacked. */
+.ground-photos { display: flex; flex-direction: column; gap: var(--space-sm); min-width: 0; }
+/* Compact, inside the journey's arrival check: a shorter photo, so the slide below it stays on screen. */
+.ground-photos.is-compact .ground-photo { height: 36dvh; object-fit: cover; }
+.ground-photos.is-compact .telemetry { display: none; }

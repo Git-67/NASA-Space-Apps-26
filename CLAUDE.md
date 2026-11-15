@@ -17,7 +17,7 @@ Every piece of work should move at least one judging criterion. If it moves none
 
 ### What we are building (agreed 13 Nov 2026, widened by the team on 14 Nov 2026)
 
-**Status at the end of 14 Nov:** questions 1, 2 and 3 are built, along with a journey mode, a visor view, a Weather view and an offline mode. Since 15 Nov the page has three views switched from the top nav: Map (the map alone, with the verdict as a pop-up), Briefing and Weather (dashboards). Also since 15 Nov: ground photos at every stop, opened from camera badges on the map, and a two-finger turn of the map. Question 4 is **half built** (the ground photos exist, but not beside the orbital view) and the guided replay in question 5 is **not built**. `README.md` lists what works; `SUMMARY.md` lists what is left.
+**Status at the end of 14 Nov:** questions 1, 2 and 3 are built, along with a journey mode, a visor view, a Weather view and an offline mode. Since 15 Nov the page has three views switched from the top nav: Map (the map alone, with the verdict as a pop-up), Briefing and Weather (dashboards). Also since 15 Nov: ground photos at every stop, opened from camera badges on the map and shown on arrival in a journey for the walker to confirm they are there; a two-finger turn of the map; and hold-and-slide confirmations in the journey. Question 4 is **half built** (the ground photos exist, but not beside the orbital view) and the guided replay in question 5 is **not built**. `README.md` lists what works; `SUMMARY.md` lists what is left.
 
 A briefing for **one real Marswalk** in the boxwork region of Mount Sharp, Gale Crater, that answers five questions on one map:
 
@@ -59,7 +59,7 @@ Chosen for a team that knows Python, HTML, CSS and basic JavaScript, and for fre
 - **Types:** plain JavaScript with JSDoc types and `// @ts-check` at the top of each file. This replaces TypeScript, which would need a build step.
 - **Map:** Leaflet 1.9.4, the official minified build, vendored in `public/vendor/leaflet/` and loaded as a classic script (`src/lib/leaflet.js` hands it to the modules). **Charts:** hand-drawn inline SVG so far; add a charting library only if a chart needs more than that.
 - **Data preparation:** Python scripts in `scripts/` turn raw NASA data into small JSON, GeoJSON or image files in `data/processed/`. The browser never parses raw mission files.
-- **Online with an offline mode (decided 14 Nov 2026):** online, the page reads live NASA data (map tiles, DONKI space weather, the REMS feed). When NASA cannot be reached, or the visitor chooses offline, it uses the copy stored with the site (tiles, fonts, icons, all data) and says how recent that copy is. The offline copy must always be complete: refresh it with the scripts in `scripts/` before each release. Keep the first load under about 1.5 MB, and do heavy computation in the scripts, not the browser, because computers on Mars will be modest.
+- **Online with an offline mode (decided 14 Nov 2026; automatic since 15 Nov):** the page detects signal by itself and switches both ways; nobody chooses (`src/lib/connection.js`). Online, the page reads live NASA data (map tiles, DONKI space weather, the REMS feed). When NASA cannot be reached it uses the copy stored with the site (tiles, fonts, icons, all data) and says how recent that copy is. The offline copy must always be complete: refresh it with the scripts in `scripts/` before each release. Keep the first load under about 1.5 MB, and do heavy computation in the scripts, not the browser, because computers on Mars will be modest.
 - **Safety rules are NASA's (decided 14 Nov 2026):** use NASA's published figures (EVA-EXP-0042, NASA-STD-3001) wherever one exists, cite it, and say "lunar" when it is a lunar figure. Our own numbers are allowed only where NASA has none, and are labelled "ours" in the page.
 - **Hosting:** GitHub Pages, served from `main`, for judges. The same folder runs from a local server with no internet. The repository must be public for Pages on a free plan.
 
@@ -90,7 +90,7 @@ src/
   features/conditions/ The sol's conditions, NASA's limits, space weather, the verdict.
   features/ground/     Ground photos: what Curiosity saw from each stop, and the viewer.
   features/journey/    Begin journey: the simulated walk, its pop-ups, the visor view.
-  features/connection/ The online and offline switch.
+  features/connection/ The signal badge. The detector itself is lib/connection.js.
   features/theme/      Dark and light switching.
   components/ui/       Shared presentational pieces (icons).
   lib/                 Framework-free helpers: Mars constants, data loading, DOM building, compass, sound.

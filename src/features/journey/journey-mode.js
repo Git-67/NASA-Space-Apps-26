@@ -11,7 +11,7 @@
  * - Only the leg being walked is drawn solid; the rest are dotted and faint
  *   until the walker reaches the stop where they begin.
  * - At each stop the walk waits for the stop's tasks to be submitted (two
- *   presses). Ending the walk takes three (journey-dialogs.js).
+ *   presses), after the walker confirms being there. Ending the walk takes a hold and a slide (journey-dialogs.js).
  * - "Simulate alert" plays a random space weather alert, labelled as a drill.
  * - A warning shows (and sounds) about 30 m before steep ground or a sandy
  *   hollow, with the distance counting down, until the walker is past it.
@@ -85,10 +85,12 @@ const FACING_TIME_MS = 250;
  *   Space weather for now, how to read it again, and how to draw a simulated alert.
  * @param {{ outMinutes: number, baseM: number }} options.limits NASA's longest walk (minutes) and farthest
  *   straight-line distance from base (metres), shown on the visor's gauges.
+ * @param {(stop: import('../plan/plan-model.js').Stop) => HTMLElement | null} options.groundPhotosFor The ground photos
+ *   of a stop, ready to show on arrival, or null when the stop has none.
  * @param {() => void} options.onEnd Called after the journey closes, so the page can redraw its own view.
  * @returns {{ begin: (plan: Plan) => Promise<void>, isActive: () => boolean }}
  */
-export function createJourneyMode({ map, walkingSpeedKmh, weather, limits, onEnd }) {
+export function createJourneyMode({ map, walkingSpeedKmh, weather, limits, groundPhotosFor, onEnd }) {
   const metresPerMs = (walkingSpeedKmh * 1000) / 3_600_000;
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   /** @type {ReturnType<typeof buildJourney> | null} */
@@ -261,7 +263,7 @@ export function createJourneyMode({ map, walkingSpeedKmh, weather, limits, onEnd
     const { arrival, stop } = pendingArrival;
     if (!isVisor) {
       hud.visor.setNotice(null);
-      hud.dialogs.showArrival(arrival, stop, plan.stops.length, () => {
+      hud.dialogs.showArrival(arrival, stop, plan.stops.length, stop ? groundPhotosFor(stop) : null, () => {
         if (arrival.isFinish) { end(); return; }
         finishStop();
       });

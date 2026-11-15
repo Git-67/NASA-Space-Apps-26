@@ -26,6 +26,9 @@ The team widened the scope during the day. `CLAUDE.md` section 1 records each ch
 | Weather view | Conditions at a glance, charts, and a "dust watch" |
 | Ground photos (15 Nov) | Camera badges beside each stop open Curiosity's navigation camera frames from that spot, eight directions each, stored with the site |
 | Turn the map (15 Nov) | Two fingers twist the map on a tablet; a compass button puts north back |
+| Arrival check (15 Nov) | On reaching a stop in a journey: the stop's ground photos and a hold-and-slide "I am here" before the tasks |
+| Hold and slide (15 Nov) | Ending a walk takes a held handle slid across, replacing the three-step confirmation |
+| Signal detector (15 Nov) | The manual online and offline button is gone. The page checks its link to NASA and switches by itself |
 | Three views (15 Nov) | Tabs in the top nav: Map (the map alone, verdict as a pop-up), Briefing and Weather (dashboards). The address keeps the view: `#map`, `#briefing`, `#weather` |
 | Offline mode | Everything works from a copy stored with the site |
 | Map layers | Contours, colour imagery, place names, a grid |
@@ -46,7 +49,7 @@ The team widened the scope during the day. `CLAUDE.md` section 1 records each ch
 | Safety figures | NASA's own wherever one exists, labelled "lunar". Ours only where NASA has none, labelled "ours" |
 | Visor | A browser simulation, labelled as such. No helmet or headset |
 | Stack | Static HTML, CSS and JavaScript, no build step. Leaflet vendored. Python for data |
-| Online and offline | Live NASA data when reachable; the stored copy otherwise, with its date shown |
+| Online and offline | Automatic. Live NASA data when there is signal; the stored copy otherwise, with its date shown. No manual switch |
 | Design | `DESIGN.md` is binding. `src/styles/tokens.css` is generated from it |
 | Pitch | Seven slides. Opening ends: "Your map tells you where. Sol Stroll tells you when, and when not to." |
 

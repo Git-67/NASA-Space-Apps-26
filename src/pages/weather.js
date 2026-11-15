@@ -85,7 +85,7 @@ const DONKI = "https://api.nasa.gov/DONKI/";
 
 async function fetchData() {
   const errors = [];
-  // Offline (no link, or chosen in the top bar; see src/lib/connection.js): skip the live sources.
+  // Offline (no signal; see src/lib/connection.js): skip the live sources.
   const isOffline = document.documentElement.dataset.connection === "offline";
   for (const s of SOURCES.filter((source) => source.isLocal || !isOffline)) {
     try {

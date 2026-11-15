@@ -7,26 +7,22 @@
  * asks for input (journey-mode.js shows read-only notices there instead).
  *
  * Built for gloved hands and dusty screens (journey-confirm.js):
+ * - Reaching a stop asks the walker to confirm they are there, with a hold
+ *   and a slide, beside the ground photos Curiosity took from that spot.
  * - Submitting a stop's tasks takes two presses: "Submit tasks", then a
  *   check on the other side of the screen.
- * - Ending the walk takes three: two taps on opposite sides, then a hold.
+ * - Ending the walk takes a hold and a slide (slide-to-confirm.js): no tap can do it.
  * Escape always means the safe choice: back to the tasks, or keep walking.
  */
 import { el } from '../../lib/dom.js';
 import { icon } from '../../components/ui/icon.js';
 import { armLater, askInSteps, DIALOG_TITLE_ID } from './journey-confirm.js';
+import { createSlideToConfirm } from './slide-to-confirm.js';
 import { formatDuration } from '../../lib/mars.js';
 
 /** @typedef {import('../plan/plan-model.js').Stop} Stop */
 /** @typedef {import('./journey-model.js').Arrival} Arrival */
 /** @typedef {import('../conditions/space-weather-drill.js').Drill} Drill */
-
-/** @type {import('./journey-confirm.js').ConfirmStep[]} */
-const END_STEPS = [
-  { title: 'End the walk?', text: 'The walk is paused.', confirmLabel: 'End journey', confirmIcon: 'close', cancelLabel: 'Keep walking', confirmSide: 'right' },
-  { title: 'Are you sure?', text: 'Your place on the walk will be lost.', confirmLabel: 'Yes, end it', confirmIcon: 'close', cancelLabel: 'Keep walking', confirmSide: 'left' },
-  { title: 'Hold to end', text: 'Press and hold for 2 seconds.', confirmLabel: 'Hold to end', confirmIcon: 'flag', cancelLabel: 'Keep walking', confirmSide: 'right', isHold: true },
-];
 
 /** Create the dialog (not yet on the page) and the ways to fill it. */
 export function createJourneyDialogs() {
@@ -73,23 +69,35 @@ export function createJourneyDialogs() {
     isOpen,
     close,
     /**
-     * Three checks before the walk ends.
+     * Ask before the walk ends: hold the handle, then slide it across.
      * @param {() => void} onEnd
      * @param {() => void} onKeepWalking
      */
     askToEnd(onEnd, onKeepWalking) {
       const keepWalking = () => { close(); onKeepWalking(); };
       open(keepWalking, false);
-      stopTimers = askInSteps(dialog, END_STEPS, { onConfirmed: () => { close(); onEnd(); }, onCancelled: keepWalking });
+      const slide = createSlideToConfirm('Hold, then slide to end', () => { close(); onEnd(); });
+      stopTimers = slide.stop;
+      const keepButton = el('button', { className: 'button-secondary button-large', text: 'Keep walking', attrs: { type: 'button' } });
+      keepButton.addEventListener('click', keepWalking);
+      dialog.replaceChildren(
+        el('p', { className: 'eyebrow', text: 'Walk paused' }),
+        el('h2', { className: 'journey-dialog-title', text: 'End the walk?', attrs: { id: DIALOG_TITLE_ID } }),
+        el('p', { className: 'journey-dialog-text', text: 'Press and hold the arrow, then slide it to the right. Your place on the walk will be lost.' }),
+        slide.element,
+        el('div', { className: 'journey-choice' }, [keepButton]),
+      );
+      keepButton.focus();
     },
     /**
-     * A stop's tasks, then a check before walking on.
+     * Reaching a stop: confirm being there (beside the ground photos), then its tasks, then a check before walking on.
      * @param {Arrival} arrival
      * @param {Stop | undefined} stop
      * @param {number} stopCount Stops in the walk, the start included.
+     * @param {HTMLElement | null} groundPhotos The stop's ground photos, ready to show, or null when it has none.
      * @param {() => void} onSubmitted Called once the walker has confirmed.
      */
-    showArrival(arrival, stop, stopCount, onSubmitted) {
+    showArrival(arrival, stop, stopCount, groundPhotos, onSubmitted) {
       const isFinish = arrival.isFinish || !stop;
       const tasks = stop && !arrival.isFinish ? stop.tasksOurs : [];
       const boxes = tasks.map((task, index) => {
@@ -140,8 +148,30 @@ export function createJourneyDialogs() {
         }], { onConfirmed: () => { close(); onSubmitted(); }, onCancelled: showTasks });
       };
 
+      // First, at a stop: is the walker really there? They compare the ground with Curiosity's photos
+      // and confirm with a hold and a slide, which no stray touch can do. The walk is simulated, so
+      // this is the walker's own check: the page has no way to know where they are.
+      const showCheck = () => {
+        own();
+        onEscape = () => {};
+        const slide = createSlideToConfirm('Hold, then slide: I am here', showTasks, 'confirm');
+        const stopSlide = stopTimers;
+        stopTimers = () => { stopSlide(); slide.stop(); };
+        dialog.replaceChildren(
+          el('p', { className: 'eyebrow', text: `Stop ${arrival.visitNumber} of ${stopCount} · check your position` }),
+          el('h2', { className: 'journey-dialog-title', text: `Are you at ${arrival.name}?`, attrs: { id: DIALOG_TITLE_ID } }),
+          el('p', { className: 'journey-dialog-text', text: groundPhotos
+            ? 'Look around. Does it match what Curiosity saw from this spot?'
+            : 'There are no ground photos for this point. Check the map and your surroundings.' }),
+          ...(groundPhotos ? [groundPhotos] : []),
+          slide.element,
+          el('p', { className: 'basis', text: 'Your own check: the walk is simulated, and this page cannot tell where you are.' }),
+        );
+        /** @type {HTMLElement | null} */ (slide.element.querySelector('.slide-handle'))?.focus();
+      };
+
       open(() => {}, true);
-      showTasks();
+      if (isFinish) showTasks(); else showCheck();
     },
     /**
      * A simulated space weather alert, acknowledged with one (delayed) press.
