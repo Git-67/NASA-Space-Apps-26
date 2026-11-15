@@ -21,14 +21,18 @@
   <script type="module" src="src/pages/weather.js"></script>
 </head>
 <body>
-  <a class="skip-link" href="#panel">Skip to the briefing</a>
+  <a class="skip-link" href="#briefing">Skip to the content</a>
 
   <header class="top-nav">
     <a class="brand" href="./" aria-label="Sol Stroll home">
       <img class="logo logo-on-dark" src="public/brand/logo-on-dark.svg" alt="Sol Stroll" height="28">
       <img class="logo logo-on-light" src="public/brand/logo-on-light.svg" alt="Sol Stroll" height="28">
     </a>
-    <p class="tagline">Know before you go.</p>
+    <div class="tabs nav-tabs" role="tablist" aria-label="Views">
+      <button class="tab" type="button" role="tab" id="tab-btn-map" data-view="map" aria-controls="view-map" aria-selected="true"><span data-icon="map"></span>Map</button>
+      <button class="tab" type="button" role="tab" id="tab-btn-briefing" data-view="briefing" aria-controls="view-briefing" aria-selected="false" tabindex="-1"><span data-icon="checklist"></span>Briefing</button>
+      <button class="tab" type="button" role="tab" id="tab-btn-weather" data-view="weather" aria-controls="view-weather" aria-selected="false" tabindex="-1"><span data-icon="partly_cloudy_day"></span>Weather</button>
+    </div>
     <button id="connection-toggle" class="connection-toggle" type="button" aria-pressed="false" disabled>
       <span id="connection-status" class="badge-live">CHECKING LINK…</span><span class="connection-action"></span>
     </button>
@@ -40,99 +44,118 @@
       <p>Loading the briefing…</p>
     </div>
 
-    <div id="briefing" class="briefing" hidden>
-      <section class="map-area" aria-label="Map of the Marswalk">
-        <div id="map" class="map-container"></div>
-        <p class="map-attribution">Imagery and elevation: MRO HiRISE and CTX (NASA/JPL/UArizona) via NASA Mars Trek and Curiosity's map. Route and names: NASA/JPL-Caltech.</p>
+    <div id="briefing" class="views" hidden>
+      <!-- Map view: the map alone, with the verdict as a pop-up on its right. -->
+      <section id="view-map" class="view view-map" role="tabpanel" aria-labelledby="tab-btn-map">
+        <div class="map-area">
+          <div id="map" class="map-container"></div>
+          <p class="map-attribution">Imagery and elevation: MRO HiRISE and CTX (NASA/JPL/UArizona) via NASA Mars Trek and Curiosity's map. Route and names: NASA/JPL-Caltech.</p>
+        </div>
+
+        <aside id="verdict-popup" class="verdict-popup" aria-labelledby="verdict-popup-title">
+          <h2 id="verdict-popup-title" class="visually-hidden">Verdict for this walk</h2>
+          <button id="verdict-popup-toggle" class="button-icon verdict-popup-toggle" type="button" aria-expanded="true" aria-controls="verdict-popup-body" aria-label="Hide the verdict details"><span data-icon="expand_less"></span></button>
+          <div id="verdict" class="verdict" aria-live="polite"></div>
+          <div id="verdict-popup-body" class="verdict-popup-body">
+            <button id="begin-journey" class="button-primary button-large" type="button"><span data-icon="directions_walk"></span>Begin journey</button>
+            <p class="basis">Simulated walk of your plan.</p>
+            <button class="button-link source-link" type="button" data-show-view="briefing">Why, and the full briefing</button>
+          </div>
+        </aside>
       </section>
 
-      <aside id="panel" class="panel" aria-label="Marswalk briefing">
-        <header class="panel-intro">
+      <!-- Briefing view: the plan as a dashboard. -->
+      <section id="view-briefing" class="view dashboard" role="tabpanel" aria-labelledby="tab-btn-briefing" hidden>
+        <header class="dashboard-intro">
           <p class="eyebrow">Mount Sharp · Gale Crater · Mars</p>
           <h1>The boxwork Marswalk</h1>
         </header>
 
-        <div class="tabs" role="tablist" aria-label="Sidebar sections">
-          <button class="tab" type="button" role="tab" id="tab-btn-briefing" aria-controls="tab-briefing" aria-selected="true">Briefing</button>
-          <button class="tab" type="button" role="tab" id="tab-btn-weather" aria-controls="tab-weather" aria-selected="false" tabindex="-1">Weather</button>
+        <div class="dashboard-columns">
+          <div class="dashboard-column">
+            <section class="card" aria-labelledby="verdict-title">
+              <h2 id="verdict-title" class="card-title">Verdict</h2>
+              <div id="briefing-verdict" class="verdict"></div>
+              <div id="verdict-reasons"></div>
+              <button class="button-secondary" type="button" data-show-view="map"><span data-icon="map"></span>See it on the map</button>
+            </section>
+
+            <section class="card" aria-labelledby="when-title">
+              <h2 id="when-title" class="card-title">When</h2>
+              <div class="when-row">
+                <button id="present-button" class="button-secondary" type="button" aria-pressed="false"><span data-icon="today"></span>Today</button>
+                <div class="field when-sol">
+                  <label for="sol-input">Sol (mission day)</label>
+                  <input id="sol-input" class="text-input" type="number" step="1" inputmode="numeric">
+                </div>
+              </div>
+              <div class="slider-row">
+                <label class="visually-hidden" for="sol-slider">Sol, as a slider</label>
+                <input id="sol-slider" class="slider" type="range" step="1">
+              </div>
+              <p id="present-note" class="basis" hidden></p>
+              <div id="conditions"></div>
+              <div id="space-weather" class="space-weather" aria-live="polite"></div>
+              <p class="data-source-caption">Sources: <a class="button-link" href="https://mars.nasa.gov/rss/api/?feed=weather&amp;category=msl&amp;feedtype=json" rel="noopener">Curiosity REMS</a> (measured) · <a class="button-link" href="https://api.nasa.gov/" rel="noopener">NASA DONKI</a> (storms at Mars are forecasts). Accessed 14 Nov 2026.</p>
+            </section>
+
+          </div>
+
+          <div class="dashboard-column">
+            <section class="card" aria-labelledby="where-title">
+              <h2 id="where-title" class="card-title">Where</h2>
+              <div id="mission" class="mission" aria-live="polite"></div>
+              <div id="stop-picker" class="stop-picker"></div>
+              <button id="add-point" class="button-secondary add-point" type="button" aria-pressed="false"><span data-icon="add_location"></span><span id="add-point-label">Add a point on the map</span></button>
+              <p class="basis">"Add a point" opens the map: tap near a rover track. Points you add snap to Curiosity's tracks.</p>
+              <div id="totals" class="stat-grid"></div>
+              <div id="profile"></div>
+              <div id="sections"></div>
+              <details class="disclosure">
+                <summary>Safety rules used</summary>
+                <p class="basis">NASA's rules (lunar; none set for Mars yet): 2 km/h, up to 8 h out, up to 2 km from base, slopes up to 20°. Paths use only ground Curiosity drove and skip anything steeper than 20°. Slope is from the rover's tilt: under 17° easier (Apollo 15 walked 17°), 17° to 20° harder.</p>
+              </details>
+            </section>
+
+          </div>
+
+          <div class="dashboard-column">
+            <section class="card" aria-labelledby="stop-title">
+              <h2 id="stop-title" class="card-title">Tasks</h2>
+              <p class="basis">Tap a stop for its tasks. Our suggestions, not NASA's.</p>
+              <div id="tasks"></div>
+            </section>
+
+            <section class="card" aria-labelledby="danger-title">
+              <h2 id="danger-title" class="card-title">Dangers</h2>
+              <div id="dangers"></div>
+            </section>
+
+            <section class="card" aria-labelledby="kit-title">
+              <details class="disclosure disclosure-card">
+                <summary><h2 id="kit-title" class="card-title">What to pack</h2></summary>
+                <div id="kit"></div>
+                <p class="basis">Our suggestion, not a NASA list.</p>
+              </details>
+            </section>
+
+          </div>
         </div>
+      </section>
 
-        <div id="tab-briefing" class="tabpanel" role="tabpanel" aria-labelledby="tab-btn-briefing">
+      <!-- Weather view: filled by src/pages/weather.js the first time it is shown. -->
+      <section id="view-weather" class="view dashboard" role="tabpanel" aria-labelledby="tab-btn-weather" hidden>
+        <header class="dashboard-intro">
+          <p class="eyebrow">Gale Crater · Mars</p>
+          <h1>Weather</h1>
+        </header>
+        <div id="tab-weather" class="weather-grid"></div>
+      </section>
 
-        <section class="card verdict-card" aria-labelledby="verdict-title">
-          <h2 id="verdict-title" class="visually-hidden">Verdict</h2>
-          <div id="verdict" class="verdict" aria-live="polite"></div>
-          <div class="verdict-action">
-            <button id="begin-journey" class="button-primary button-large" type="button"><span data-icon="directions_walk"></span>Begin journey</button>
-            <p class="basis">Simulated walk of your plan.</p>
-          </div>
-        </section>
-
-        <section class="card" aria-label="Why this verdict">
-          <div id="verdict-reasons"></div>
-        </section>
-
-        <section class="card" aria-labelledby="when-title">
-          <h2 id="when-title" class="card-title">When</h2>
-          <div class="when-row">
-            <button id="present-button" class="button-secondary" type="button" aria-pressed="false"><span data-icon="today"></span>Today</button>
-            <div class="field when-sol">
-              <label for="sol-input">Sol (mission day)</label>
-              <input id="sol-input" class="text-input" type="number" step="1" inputmode="numeric">
-            </div>
-          </div>
-          <div class="slider-row">
-            <label class="visually-hidden" for="sol-slider">Sol, as a slider</label>
-            <input id="sol-slider" class="slider" type="range" step="1">
-          </div>
-          <p id="present-note" class="basis" hidden></p>
-          <div id="conditions"></div>
-          <div id="space-weather" class="space-weather" aria-live="polite"></div>
-          <p class="data-source-caption">Sources: <a class="button-link" href="https://mars.nasa.gov/rss/api/?feed=weather&amp;category=msl&amp;feedtype=json" rel="noopener">Curiosity REMS</a> (measured) · <a class="button-link" href="https://api.nasa.gov/" rel="noopener">NASA DONKI</a> (storms at Mars are forecasts). Accessed 14 Nov 2026.</p>
-        </section>
-
-        <section class="card" aria-labelledby="where-title">
-          <h2 id="where-title" class="card-title">Where</h2>
-          <div id="mission" class="mission" aria-live="polite"></div>
-          <div id="stop-picker" class="stop-picker"></div>
-          <button id="add-point" class="button-secondary add-point" type="button" aria-pressed="false"><span data-icon="add_location"></span><span id="add-point-label">Add a point on the map</span></button>
-          <p class="basis">Tap a stop to show its leg on the map. Points you add snap to Curiosity's tracks.</p>
-          <div id="totals" class="stat-grid"></div>
-          <div id="profile"></div>
-          <div id="sections"></div>
-          <details class="disclosure">
-            <summary>Safety rules used</summary>
-            <p class="basis">NASA's rules (lunar; none set for Mars yet): 2 km/h, up to 8 h out, up to 2 km from base, slopes up to 20°. Paths use only ground Curiosity drove and skip anything steeper than 20°. Slope is from the rover's tilt: under 17° easier (Apollo 15 walked 17°), 17° to 20° harder.</p>
-          </details>
-        </section>
-
-        <section class="card" aria-labelledby="stop-title">
-          <h2 id="stop-title" class="card-title">Tasks</h2>
-          <p class="basis">Tap a stop for its tasks. Our suggestions, not NASA's.</p>
-          <div id="tasks"></div>
-        </section>
-
-        <section class="card" aria-labelledby="danger-title">
-          <h2 id="danger-title" class="card-title">Dangers</h2>
-          <div id="dangers"></div>
-        </section>
-
-        <section class="card" aria-labelledby="kit-title">
-          <details class="disclosure disclosure-card">
-            <summary><h2 id="kit-title" class="card-title">What to pack</h2></summary>
-            <div id="kit"></div>
-            <p class="basis">Our suggestion, not a NASA list.</p>
-          </details>
-        </section>
-
-        </div>
-        <div id="tab-weather" class="tabpanel" role="tabpanel" aria-labelledby="tab-btn-weather" hidden></div>
-
-        <footer class="panel-footer">
-          <p>Made for the NASA Space Apps Challenge 2026. Not affiliated with or endorsed by NASA.</p>
-          <p><a class="button-link source-link" href="docs/DATA_SOURCES.md">Data sources</a></p>
-        </footer>
-      </aside>
+      <footer class="page-footer">
+        <p>Made for the NASA Space Apps Challenge 2026. Not affiliated with or endorsed by NASA.</p>
+        <p><a class="button-link source-link" href="docs/DATA_SOURCES.md">Data sources</a></p>
+      </footer>
     </div>
   </main>
 </body>

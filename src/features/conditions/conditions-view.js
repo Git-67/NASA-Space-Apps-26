@@ -19,13 +19,12 @@ const UV_LABEL = { Low: 'Low', Moderate: 'Moderate', High: 'High', Very_High: 'V
 const MISSING = 'not recorded';
 
 /**
- * Draw the verdict: one big word and a one-line summary, read at a glance. The reasons and
- * their basis go in a separate disclosure under "Begin journey", for anyone who asks why.
- * @param {HTMLElement} container Where the verdict itself goes.
- * @param {HTMLElement} reasonsContainer Where the "Why" disclosure goes.
+ * Draw the verdict's headline: one big word and a short summary, read at a glance.
+ * It is shown twice: in the pop-up on the map, and at the top of the briefing.
+ * @param {HTMLElement} container
  * @param {Verdict} verdict
  */
-export function renderVerdict(container, reasonsContainer, verdict) {
+export function renderVerdictHeadline(container, verdict) {
   container.dataset.level = verdict.level;
   const flagged = verdict.reasons.filter((reason) => reason.level !== 'go');
   const summary = flagged.length === 0
@@ -38,8 +37,17 @@ export function renderVerdict(container, reasonsContainer, verdict) {
     ]),
     el('p', { className: 'verdict-summary', text: summary }),
   );
-  reasonsContainer.replaceChildren(el('details', { className: 'disclosure' }, [
-    el('summary', { text: `Why (${verdict.reasons.length} checks)` }),
+}
+
+/**
+ * Draw every check behind the verdict, each with its basis. In the briefing there is room to
+ * show them all, so nothing is folded away.
+ * @param {HTMLElement} container
+ * @param {Verdict} verdict
+ */
+export function renderVerdictReasons(container, verdict) {
+  container.replaceChildren(
+    el('h3', { className: 'reasons-title', text: `Why: ${verdict.reasons.length} checks` }),
     el('ul', { className: 'reason-list' }, verdict.reasons.map((reason) => el('li', { attrs: { 'data-level': reason.level } }, [
       el('span', { className: 'reason-symbol', text: VERDICT_SYMBOL[reason.level], attrs: { 'aria-hidden': 'true' } }),
       el('div', {}, [
@@ -47,7 +55,7 @@ export function renderVerdict(container, reasonsContainer, verdict) {
         el('p', { className: 'basis', text: `Basis: ${reason.basis}` }),
       ]),
     ]))),
-  ]));
+  );
 }
 
 /**

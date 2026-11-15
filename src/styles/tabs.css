@@ -6,19 +6,19 @@
  * names the DESIGN.md component it implements.
  */
 
-/* segmented-tab: underline tabs that switch the panel between Briefing and Weather. */
-.tabs {
-  display: flex;
-  gap: var(--space-xxs);
-  overflow-x: auto;
-  border-bottom: 1px solid var(--color-hairline);
-}
+/* segmented-tab: the view tabs in the top nav (Map, Briefing, Weather). */
+.tabs { display: flex; gap: var(--space-xxs); }
 .tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
   min-height: var(--size-touch);
-  padding: var(--space-sm) var(--space-md);
+  padding: 0 var(--space-md);
   background: transparent;
   border: 0;
+  /* The underline sits on the nav's own bottom border. */
   border-bottom: 2px solid transparent;
+  border-top: 2px solid transparent;
   color: var(--color-text-muted);
   font: var(--type-body-sm-medium);
   white-space: nowrap;
@@ -28,9 +28,20 @@
 .tab:hover { color: var(--color-text-secondary); }
 .tab[aria-selected="true"] { color: var(--color-ink); border-bottom-color: var(--color-accent); }
 
-/* Cards in a tab are spaced like every other card on the page (DESIGN.md, Whitespace). */
-.tabpanel { display: flex; flex-direction: column; gap: var(--space-xl); min-width: 0; }
-.tabpanel[hidden] { display: none; }
+/* The weather view: its cards side by side where there is room, the chart taking two columns. */
+.weather-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--size-dashboard-column)), 1fr));
+  gap: var(--space-xl);
+  align-items: start;
+}
+/* Wide screens: "At a glance" and "Dust watch" stack on the left; the chart takes the rest. */
+@media (min-width: 1024px) {
+  .weather-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .weather-grid > .card:nth-child(1) { grid-column: 1; grid-row: 1; }
+  .weather-grid > .card:nth-child(2) { grid-column: 2; grid-row: 1 / span 2; }
+  .weather-grid > .card:nth-child(3) { grid-column: 1; grid-row: 2; }
+}
 
 /* Same as .visually-hidden; the Weather tab's script uses this name. */
 .sr-only {
@@ -43,8 +54,8 @@
 }
 
 /* ---------- Weather tab: shared pieces ---------- */
-#tab-weather { container-type: inline-size; }
-#tab-weather .card { overflow: hidden; }
+/* Each card lays its contents out by its own width, wherever the grid puts it. */
+#tab-weather .card { container-type: inline-size; overflow: hidden; }
 #tab-weather .card-title { display: flex; align-items: center; gap: var(--space-xs); }
 
 /* Sub-heading inside a card. */
@@ -237,7 +248,8 @@
 .wx-sw.low { background: transparent; border: 2px solid var(--series); }
 .wx-usual-sw { width: var(--space-md); height: 0; border-radius: 0; background: transparent; border-top: 2px dotted var(--color-text-muted); }
 
-.wx-plot { position: relative; }
+/* The chart is drawn 360 units wide and scales with its box; the cap keeps its labels a readable size in a wide card. */
+.wx-plot { position: relative; max-width: calc(1.75 * var(--size-dashboard-column)); }
 .wx-plot svg { display: block; width: 100%; height: auto; touch-action: pan-y; }
 .wx-grid { stroke: var(--color-chart-grid); stroke-width: 1; }
 .wx-axis, .wx-cross { stroke: var(--color-chart-axis); stroke-width: 1; }

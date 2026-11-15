@@ -23,7 +23,8 @@ The team widened the scope during the day. `CLAUDE.md` section 1 records each ch
 | Space weather | NASA DONKI: solar storms forecast to arrive at Mars, and particles detected near Earth |
 | Begin journey | A full-screen simulated walk for a tablet, with tasks, hazard warnings and sound cues |
 | Visor view | A simulated helmet visor showing only the critical readings |
-| Weather tab | Conditions at a glance, charts, and a "dust watch" |
+| Weather view | Conditions at a glance, charts, and a "dust watch" |
+| Three views (15 Nov) | Tabs in the top nav: Map (the map alone, verdict as a pop-up), Briefing and Weather (dashboards). The address keeps the view: `#map`, `#briefing`, `#weather` |
 | Offline mode | Everything works from a copy stored with the site |
 | Map layers | Contours, colour imagery, place names, a grid |
 

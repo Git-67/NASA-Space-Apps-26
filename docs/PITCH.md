@@ -40,7 +40,7 @@ Each slide names the judging criterion it is there to win.
 |---|---|---|---|
 | 1 | **Do you go?** | The opening, over the logo. Nothing else on the slide | Presentation |
 | 2 | **The problem** | Orbital maps are static. Mars is not: in the 2018 dust storm the daily high at Curiosity's site fell from 4 °C to −29 °C in six weeks. And a crew cannot wait for Earth: a signal takes from about 3 to about 22 minutes each way | Impact |
-| 3 | **What we built** | One real walk in the Mount Sharp boxwork: a map, the safest path over ground a rover has driven, and a verdict for the day. Use `docs/screenshots/briefing-light.png`. Do not promise "five questions": the photo comparison is not built | Relevance |
+| 3 | **What we built** | One real walk in the Mount Sharp boxwork: a map, the safest path over ground a rover has driven, and a verdict for the day. Use `docs/screenshots/map-light.png`, with `briefing-dashboard-light.png` beside it if there is room. Do not promise "five questions": the photo comparison is not built | Relevance |
 | 4 | **Why this walk** | The boxwork: groundwater that outlasted the lakes. Curiosity needed nine months and four drill holes to work through it. At NASA's planning pace the whole route is about half an hour's walk each way | Impact, Creativity |
 | 5 | **The evidence** | The data table: which mission, which instrument, what it gives us. Then the honesty: what is measured, what is derived, what is our assumption | Validity |
 | 6 | **What makes it different** | The entries we reviewed plan a route. Ours gives a verdict, and it changes with the date. Same walk, three days: Go on sol 4711; Caution on sol 2100, the 2018 dust storm; No-go on sol 1947, when NASA forecast a solar storm hitting Mars. Use `docs/screenshots/verdict-no-go.png` | Creativity |
@@ -48,7 +48,7 @@ Each slide names the judging criterion it is there to win.
 
 Rules for the deck:
 - One idea per slide. If a slide needs two sentences of explanation, it is two slides or it is cut.
-- Slides use the **light theme** (see `DESIGN.md`). `docs/screenshots/` holds the briefing in both themes; the journey, visor, no-go and Weather tab pictures are dark, taken 14 Nov. Retake them if the product changes.
+- Slides use the **light theme** (see `DESIGN.md`). `docs/screenshots/` holds the Map view and the Briefing dashboard in both themes; the journey, visor, no-go and Weather pictures are dark. All were retaken on 15 Nov after the layout changed to three views. Retake them if the product changes again.
 - **Keep the journey and the visor to one slide.** Other teams have helmet views and route planners. Ours are how a crew uses the verdict, not the point of the project.
 - Every number has its source in small text at the bottom of the slide.
 - Slide 5 is where this project beats the field. Do not cut it for time.
@@ -60,8 +60,8 @@ An optional picture for slide 4: NASA's 2019 animation of Curiosity's *proposed*
 | Seconds | Content |
 |---|---|
 | 0 to 8 | The opening, shortened: "You're on Mars. Your target is five hundred metres away. The route is clear. Do you go?" |
-| 8 to 20 | Screen recording: the map, adding a stop, the path and the verdict updating, then "Begin journey" for two seconds |
-| 20 to 27 | Type sol 1815 (13 Sep 2017): NASA forecast a solar storm at Mars and the verdict turns to Caution by itself. Type sol 1947: a forecast direct hit, No-go. **Do not press "Today" in a demo:** it gives "No verdict", because the rover's weather record ends in August 2026 |
+| 8 to 20 | Screen recording: the Map view with its verdict pop-up; switch to Briefing, add a stop, watch the verdict's checks update; back to Map and "Begin journey" for two seconds |
+| 20 to 27 | In Briefing, type sol 1815 (13 Sep 2017): NASA forecast a solar storm at Mars and the verdict turns to Caution by itself. Type sol 1947: a forecast direct hit, No-go. **Do not press "Today" in a demo:** it gives "No verdict", because the rover's weather record ends in August 2026 |
 | 27 to 30 | Logo and tagline |
 
 A 30-second video cannot carry the evidence slide. **The slides are the safer choice for this project**, because its strength is Validity.

@@ -7,7 +7,7 @@
 /* Full-screen map: nothing else to press by mistake. */
 body.is-journey { overflow: hidden; }
 body.is-journey .top-nav,
-body.is-journey .panel,
+body.is-journey .verdict-popup,
 body.is-journey .skip-link,
 body.is-journey .leaflet-control-zoom,
 body.is-journey .map-layer-panel { display: none; }

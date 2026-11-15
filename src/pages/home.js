@@ -13,7 +13,7 @@ import { buildPlan, DEFAULT_WALKING_SPEED_KMH, recommendedOrder } from '../featu
 import { renderMission, renderPlan, renderTasks } from '../features/plan/plan-view.js';
 import { createStopPicker } from '../features/plan/stop-picker.js';
 import { compareWithSeason, decideVerdict } from '../features/conditions/conditions-model.js';
-import { renderConditions, renderSpaceWeather, renderVerdict } from '../features/conditions/conditions-view.js';
+import { renderConditions, renderSpaceWeather, renderVerdictHeadline, renderVerdictReasons } from '../features/conditions/conditions-view.js';
 import { assessSpaceWeather } from '../features/conditions/space-weather-model.js';
 import { refreshSpaceWeather } from '../features/conditions/space-weather-live.js';
 import { drawDrill } from '../features/conditions/space-weather-drill.js';
@@ -24,8 +24,12 @@ import { loadBriefingData } from './load-briefing-data.js';
 import { createJourneyMode } from '../features/journey/journey-mode.js';
 import { missionForSol } from '../features/plan/daily-mission.js';
 import { addCustomPoint } from '../features/plan/custom-points.js';
+import { initViewTabs } from '../features/views/view-tabs.js';
 
 /** @typedef {import('./load-briefing-data.js').BriefingData} BriefingData */
+
+/** Screens narrower than the tablet breakpoint (DESIGN.md, Breakpoints). */
+const NARROW_SCREEN = '(max-width: 767px)';
 
 /** Sol the page opens on: the sol Curiosity reached the last stop, in the boxwork itself. */
 const DEFAULT_SOL = 4711;
@@ -140,10 +144,14 @@ function start({ route, records, places, calibration, spaceWeather: bundledSpace
       + (state.mode === 'online' && latest === date ? 'Space weather is live from NASA.' : `Space weather is the latest stored: ${latest ?? 'none'}.`);
     renderConnection(connection, { mode: state.mode, dataTo: latest, note: state.connectionNote });
 
-    renderVerdict(requireElement('verdict'), requireElement('verdict-reasons'), decideVerdict({
+    const verdict = decideVerdict({
       planMinutes: plan.totalMinutes, furthestM: plan.furthestM, record, comparison,
       spaceWeather: assessSpaceWeather(spaceWeather, weatherDate),
-    }));
+    });
+    // The same verdict in both places: the pop-up on the map, and the top of the briefing.
+    renderVerdictHeadline(requireElement('verdict'), verdict);
+    renderVerdictHeadline(requireElement('briefing-verdict'), verdict);
+    renderVerdictReasons(requireElement('verdict-reasons'), verdict);
     renderConditions(requireElement('conditions'), state.sol, record, comparison);
     renderSpaceWeather(requireElement('space-weather'), spaceWeather, weatherDate);
     picker.update(state.visitOrder, state.activeStopId);
@@ -221,7 +229,8 @@ function start({ route, records, places, calibration, spaceWeather: bundledSpace
     addPointButton.setAttribute('aria-pressed', String(isPicking));
     requireElement('add-point-label').textContent = isPicking ? 'Cancel adding' : 'Add a point on the map';
     if (!isPicking) { mapView.stopPicking(); return; }
-    requireElement('map').scrollIntoView({ block: 'nearest' });
+    // The button lives in the briefing; the tap happens on the map.
+    views.show('map');
     mapView.startPicking((lat, lon) => {
       const added = addCustomPoint(route, lat, lon);
       if ('error' in added) { mapView.showPickMessage(added.error); return; }
@@ -259,11 +268,29 @@ function start({ route, records, places, calibration, spaceWeather: bundledSpace
   });
   if (state.mode === 'online') goLive();
 
+  // The verdict pop-up on the map folds down to its headline, so it can be moved out of the way.
+  const popup = requireElement('verdict-popup');
+  const popupToggle = requireElement('verdict-popup-toggle');
+  const setPopupCollapsed = (/** @type {boolean} */ isCollapsed) => {
+    popup.classList.toggle('is-collapsed', isCollapsed);
+    popupToggle.setAttribute('aria-expanded', String(!isCollapsed));
+    popupToggle.setAttribute('aria-label', isCollapsed ? 'Show the verdict details' : 'Hide the verdict details');
+  };
+  popupToggle.addEventListener('click', () => setPopupCollapsed(!popup.classList.contains('is-collapsed')));
+  // On a narrow screen the open pop-up would cover the map's controls and much of the route, so it starts folded.
+  setPopupCollapsed(window.matchMedia(NARROW_SCREEN).matches);
+
   solInput.addEventListener('change', () => setSol(solInput.value));
   solSlider.addEventListener('input', () => setSol(solSlider.value));
   presentButton.addEventListener('click', () => setSol(String(presentSol)));
 
   redraw();
+  // The map is sized while its view is on screen, so it must be measured again whenever it returns.
+  const views = initViewTabs((view) => {
+    if (view === 'map') mapView.resize();
+    else if (state.isPicking) setPicking(false);
+    document.dispatchEvent(new CustomEvent('sol-stroll:view', { detail: view }));
+  });
 }
 
 /** Load the data, then start the page or show why it could not start. */
