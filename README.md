@@ -2,8 +2,7 @@
 
 **Know before you go.** A go / no-go briefing for one real Marswalk on Mars, built for the NASA Space Apps Challenge 2026 ("Interplanetary Survival Guide: Martian Map").
 
-## AI Acknowledgement Disclaimer
-All codes, and markdown files were generated using Claude, but have been reviewed and acknowledged by respective team members.
+> DISCLAIMER (AI Acknowledgement): All codes, and markdown files were generated using Claude, but have been reviewed and acknowledged by respective team members.
 
 Mars maps show where to walk. Sol Stroll tells a crew whether to go. It follows NASA's Curiosity rover through the boxwork region of Mount Sharp, in Gale Crater, and answers three questions about that one walk: why go, where, and when. Two more were planned and are not built: how sure (the orbital view beside the rover's ground photo) and a guided "what if" replay.
 
