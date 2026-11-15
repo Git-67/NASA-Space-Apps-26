@@ -27,6 +27,7 @@ How each data service is called, tested on 14 Nov 2026. For the developers. What
 - Each layer describes itself at `.../<layer>/1.0.0/WMTSCapabilities.xml`: extent, zoom levels, image format.
 - Row comes before column. The grid is plain latitude and longitude, two tiles wide at zoom 0.
 - The page loads one small tile at start to decide whether it is online (3-second limit).
+- Since 15 Nov the offline store (`sw.js`) keeps every tile the map shows, read with browser access so its real size is counted, up to 2,500 tiles (about 115 MB at most). Offline the map asks for them with `?saved=1`, which is answered from the store only. The signal check (`?probe=`) always goes to NASA.
 
 ### Curiosity waypoints and traverse
 - `https://mars.nasa.gov/mmgis-maps/MSL/Layers/json/MSL_waypoints.json` (points) and `MSL_traverse.json` (the drives, as lines).

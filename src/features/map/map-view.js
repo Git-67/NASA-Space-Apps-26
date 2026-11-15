@@ -17,7 +17,7 @@ import { MARS_RADIUS_M } from '../../lib/mars.js';
 import { el } from '../../lib/dom.js';
 import { addLayerOptions } from './map-layer-options.js';
 import { createRouteLayer } from './route-layer.js';
-import { TILE_SOURCES } from './tile-sources.js';
+import { SAVED_NASA_TILES, TILE_SOURCES } from './tile-sources.js';
 import { createAstronautMarker } from './astronaut-marker.js';
 import { createMapRotation } from './map-rotation.js';
 import { createCompassControl } from './compass-control.js';
@@ -117,14 +117,17 @@ export function createMapView(container, route, extras, mode, onStopChosen) {
   // CTX covers the crater at every zoom (enlarged past zoom 10); HiRISE covers its area on top.
   /** @type {import('../../lib/leaflet.js').MapLayer[]} */
   let basemaps = [];
-  /** @param {import('./tile-sources.js').TileSets} tiles */
-  const showBasemaps = (tiles) => {
+  /** @param {import('./tile-sources.js').ConnectionMode} shownMode */
+  const showBasemaps = (shownMode) => {
     for (const layer of basemaps) layer.remove();
-    basemaps = [tiles.ctx, tiles.hirise].map((set) => L.tileLayer(set.url, {
+    const tiles = TILE_SOURCES[shownMode];
+    // Offline, NASA tiles this device saved earlier go underneath the stored set (sw.js).
+    const saved = shownMode === 'offline' ? SAVED_NASA_TILES : [];
+    basemaps = [...saved, tiles.ctx, tiles.hirise].map((set) => L.tileLayer(set.url, {
       bounds: set.bounds, minZoom: set.minZoom, maxNativeZoom: set.maxZoom, maxZoom: MAX_ZOOM, zIndex: 1,
     }).addTo(map));
   };
-  showBasemaps(TILE_SOURCES[mode]);
+  showBasemaps(mode);
 
   // Top left, above the layer panel: the right side of the map belongs to the verdict pop-up.
   L.control.zoom({ position: 'topleft', zoomInTitle: 'Zoom in', zoomOutTitle: 'Zoom out' }).addTo(map);
@@ -302,7 +305,7 @@ export function createMapView(container, route, extras, mode, onStopChosen) {
       rotation.fit();
     },
     setMode(next) {
-      showBasemaps(TILE_SOURCES[next]);
+      showBasemaps(next);
       layerOptions.setTiles(TILE_SOURCES[next]);
     },
     /** Mark one stop as the one whose details are shown. */

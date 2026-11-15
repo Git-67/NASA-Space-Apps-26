@@ -37,6 +37,12 @@ const HIRISE_AREA = L.latLngBounds([-4.9254743, 137.1224669], [-4.2489588, 137.7
 /** Extent of the colour mosaic (Curiosity location map configuration). */
 const COLOUR_AREA = L.latLngBounds([-4.87560429259321, 137.32672354505786], [-4.55506331169111, 137.4785574965306]);
 
+/**
+ * Asks the offline store (sw.js) for a NASA tile this device has already
+ * looked at, and for nothing else: the request never goes to the network.
+ */
+const SAVED_ONLY = '?saved=1';
+
 /** @type {Record<ConnectionMode, TileSets>} */
 export const TILE_SOURCES = {
   online: {
@@ -53,3 +59,13 @@ export const TILE_SOURCES = {
     colour: { url: `${LOCAL}/colour/{z}/{x}/{y}.jpg`, bounds: WALK_AREA, minZoom: 13, maxZoom: 15, isRemote: false },
   },
 };
+
+/**
+ * NASA's grayscale imagery as this device saved it while it had signal
+ * (sw.js keeps every Mars Trek tile the map shows). Offline it is drawn under
+ * the stored set, so places looked at before still show beyond the walk
+ * area. A tile that was never looked at stays empty.
+ * @type {TileSet[]}
+ */
+export const SAVED_NASA_TILES = [TILE_SOURCES.online.ctx, TILE_SOURCES.online.hirise]
+  .map((set) => ({ ...set, url: set.url + SAVED_ONLY }));
