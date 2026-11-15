@@ -83,8 +83,8 @@ A 30-second video cannot carry the evidence slide. **The slides are the safer ch
 | The storm sol was colder than 99% of sols at that season | Derived by the product from the same feed. Checked in the page on 14 Nov: sol 2100 gives Caution |
 | Sol 1815 gives Caution and sol 1947 gives No-go | Checked in the page on 14 Nov. Sol 1815 (13 Sep 2017): NASA's model forecast a solar storm grazing Mars. Sol 1947: a forecast direct hit. **These are NASA forecasts, not measurements at Mars.** Say "NASA forecast", never "Mars was hit" |
 | The path search uses 263 Curiosity drives | From the data notes: the drives that touch the boxwork area, joined into one network |
-| It works with no link to Earth | True of the stored copy: map, weather record and space weather record are bundled (first load about 1.2 MB). Say how old the stored copy is, as the page does |
-| 65 automated tests | Counted on `main`, 14 Nov. They test the logic, not the science |
+| It works with no link to Earth | True of the stored copy: map, weather record, space weather record and ground photos are bundled (first load about 1.2 MB). Since 15 Nov the device also saves the whole site (about 18 MB) after the first visit, so it reopens with no signal. Say how old the stored copy is, as the page does |
+| 91 automated tests | Counted on the branch in pull request 24, 15 Nov (65 on 14 Nov). Recount on `main` before the slide. They test the logic, not the science |
 | A signal takes about 3 to 22.4 minutes each way | NASA's Mars Relay Network page, found through a search summary. Open the page before using it |
 | Nine months and four drill holes | Derived from the waypoint file and the mission blog |
 | Surface radiation rose two to three times in the Sept 2017 solar storm | From search summaries of three papers. Not opened. Do not put a number on a slide until someone reads one of them |
@@ -105,6 +105,7 @@ A 30-second video cannot carry the evidence slide. **The slides are the safer ch
 | The logo or idea is "unique" | Not established |
 | "NASA is building a visor display" (citing TechPort 94571) | That project (Giner, Inc., 2018 to 2019, completed) made a curved visor that darkens itself. It shows no information. Say "a curved, self-darkening visor like the one NASA funded (TechPort 94571)", and call our visor view a simulation |
 | "It knows where the astronaut is" or "confirms their position" | The walk is simulated. On arrival the walker compares the ground with Curiosity's photos and confirms by hand. Say "the crew confirm it themselves against what the rover saw" |
+| "Works offline forever" or "saved permanently" | The browser decides whether to keep the saved copy, and can clear it. Say "saved on the device, so it opens with no signal" |
 | "Works in a helmet" | The visor view is a browser simulation on a tablet; no helmet or headset was tested |
 
 ## Required closing line

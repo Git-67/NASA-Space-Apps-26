@@ -56,7 +56,7 @@ export const TILE_SOURCES = {
     hirise: { url: `${LOCAL}/hirise/{z}/{y}/{x}.jpg`, bounds: WALK_AREA, minZoom: 12, maxZoom: 16, isRemote: false },
     ctx: { url: `${LOCAL}/ctx/{z}/{y}/{x}.jpg`, bounds: CRATER, minZoom: 8, maxZoom: 10, isRemote: false },
     dem: { url: `${LOCAL}/dem/{z}/{y}/{x}.png`, bounds: WALK_AREA, minZoom: 12, maxZoom: 14, isRemote: false },
-    colour: { url: `${LOCAL}/colour/{z}/{x}/{y}.jpg`, bounds: WALK_AREA, minZoom: 13, maxZoom: 15, isRemote: false },
+    colour: { url: `${LOCAL}/colour/{z}/{x}/{y}.jpg`, bounds: WALK_AREA, minZoom: 13, maxZoom: 17, isRemote: false },
   },
 };
 

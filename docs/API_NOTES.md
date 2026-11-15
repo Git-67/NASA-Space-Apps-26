@@ -13,7 +13,7 @@ How each data service is called, tested on 14 Nov 2026. For the developers. What
 | Curiosity waypoints and traverse | Yes, through scripts | Open | 0.6 s, 665 KB (waypoints) | No |
 | Curiosity daily weather (REMS) | Yes: through a script, and live in the Weather tab | Open | 0.6 s, 1.7 MB | No |
 | NASA DONKI space weather | Yes: through a script with a key, and live in the page with the shared key | Open | Three requests per visit | Yes |
-| Curiosity raw images | No. Needed for the photo comparison | Open, including the image files | 0.2 s per query | No |
+| Curiosity raw images | Yes, through a script: the ground photos (`scripts/prepare_ground_views.py`), stored with the site | Open, including the image files | 0.2 s per query | No |
 | Mars Trek layer search | No. Useful for finding layers | Closed | 0.3 s | No |
 | JPL Horizons | No. Could give the Earth to Mars signal delay | Closed | 0.3 s | Yes |
 | Perseverance weather, InSight weather | No | Open | Small | Mixed |
@@ -50,7 +50,7 @@ How each data service is called, tested on 14 Nov 2026. For the developers. What
   - The page itself uses NASA's shared `DEMO_KEY` to read the days after the stored record ends. A key in a web page is public, so a personal key must never go there.
 - **`DEMO_KEY` is the weak point.** NASA limits it per visitor address. From the build environment it was already exhausted on 14 Nov: the server answered 429 and reported a limit of 10 requests. From a browser on the same day the page did read live space weather. So it works, but not reliably, and many people on one network share one allowance. When it fails the page uses the stored record and says its date.
 
-## Curiosity raw images (for the photo comparison)
+## Curiosity raw images (the ground photos)
 
 `https://mars.nasa.gov/api/v1/raw_image_items/`
 
