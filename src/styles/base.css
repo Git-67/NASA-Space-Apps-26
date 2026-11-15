@@ -10,6 +10,7 @@
   --size-nav: var(--size-nav-row); /* Whole nav height; taller on narrow screens, where the tabs get their own row. */
   --size-page: 1280px;           /* Widest the dashboards grow (DESIGN.md, Grid and container). */
   --size-dashboard-column: 320px; /* Narrowest a dashboard column gets before the columns wrap. */
+  --size-ground-dialog: 720px;   /* Widest the ground view grows (DESIGN.md, ground-view). */
   --size-popup: 320px;           /* Width of the verdict pop-up on the map (DESIGN.md, map-popup width). */
   --size-panel: 400px;           /* Side panel beside the map on desktop. */
   --size-logo: 28px;             /* Logo height in the nav. */
@@ -122,7 +123,8 @@ a { color: var(--color-link); }
  */
 .view[hidden] { display: none; }
 .view-map { position: relative; }
-.map-area { position: relative; height: calc(100dvh - var(--size-nav)); }
+/* Clipped, because a turned map is a larger square centred on this box (map-rotation.js). */
+.map-area { position: relative; height: calc(100dvh - var(--size-nav)); overflow: hidden; }
 
 .dashboard {
   display: flex;

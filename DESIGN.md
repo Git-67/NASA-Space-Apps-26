@@ -985,6 +985,21 @@ The categorical palette was validated against `{colors.surface}`: all eight slot
 - Top-left panel. A checkbox or radio per layer with its name, and an optional opacity slider. Show at most one sequential layer at a time; two colour ramps on one map cannot be read.
 - **Defaults and memory:** the grayscale basemap is selected, and contour lines and the grid start switched on. Place names start off, because their labels cover the route's hazard callouts where the two sit close together. The visitor's choices are then remembered on their device and restored on the next visit or reload. An overlay whose data failed to load starts off and says why.
 
+**`map-photo-point`**: a camera badge beside a stop that has ground photos. Pressing it opens the `ground-view`.
+- A 24px circle in `{colors.map-ink}` with a camera icon in `{colors.route-casing}` and a 2px `{colors.route-casing}` ring: the stop badge's colours reversed, so the two are told apart by more than their icon. Hit target 44px.
+- It sits 20px right of and above the stop's own badge, and shows and hides with the stop. On hover or focus its ring turns `{colors.route}`.
+- Hidden during a journey, where taps on the map are off.
+
+**`ground-view`**: what Curiosity photographed from a stop, in a dialog up to 720px wide.
+- Background `{colors.surface-raised}`, border `1px solid {colors.hairline-strong}`, rounded `{rounded.lg}`, padding `{spacing.xl}`, the floating shadow, over the page dimmed with `{colors.void}`.
+- Top: the eyebrow "Ground view", the stop's name in `{typography.heading-3}`, and a 44px close button.
+- One photo at a time, at full width, with the direction it looks ("Looking about north-east (47°)") on a solid `{colors.surface-raised}` strip at its lower left. Never text straight on the photo.
+- Under it, "Turn left" and "Turn right" (`button-secondary`, `button-large`) with "3 of 8" between them in `{typography.telemetry}`. The left and right arrow keys do the same. Turning wraps round, so the viewer can keep going the same way.
+- Then the sol, local Mars time and Earth date in `{typography.telemetry}`; the camera, NASA's credit line for that image and a link to NASA's original in a `data-source-caption`; and a basis line saying the direction is approximate and worked out by us.
+- If a photo fails to load, the frame says so in words. Escape, the close button, or a press outside the dialog closes it.
+
+**Turning the map.** On a touch screen, twisting two fingers on the map turns it. A twist under 12° is ignored, so pinching to zoom does not turn it by accident. Once turned, a compass button (`map-control`) appears under the zoom buttons: its arrow points to north and "N" sits in its corner; pressing it puts north back at the top and the button goes away. Stop badges, camera badges and callouts stay upright. The zoom, layer and scale controls do not turn. During a journey the map turns itself to the walker's heading, and the two-finger turn is off. "Add a point on the map" puts north back first.
+
 **`map-marker`**: a point of interest, such as a science stop or a landing site.
 - 14px circle in `{colors.map-ink}` with a 2px `{colors.route-casing}` ring; hit target 44px. The selected marker grows to 18px with a `{colors.route}` ring.
 - **Markers are never orange or red.** Mars imagery is orange, tan and brown, so warm markers disappear on it.
@@ -1301,6 +1316,8 @@ The Weather view. It is built only from components already in this file; it adds
 - When place names are switched on, their labels can cover the route's hazard callouts where the two sit close together. Place names start off for that reason; the overlap itself is not solved.
 - The `map-layer-panel` is a single collapsible panel at every width, not the bottom sheet described under Collapsing strategy. There is no `map-legend`, `map-popup` or `map-timeline` yet.
 - The colour imagery option keeps the route, stops and contours (team decision, 14 Nov 2026).
+- The ground view shows black-and-white navigation camera frames one at a time. It is not a continuous panorama, and neighbouring frames are about 45° apart, so they do not join up.
+- Turning the map by two fingers was checked with simulated touches in a desktop browser, not on a real tablet.
 - The muted, dotted legs have no casing, so on bright dust they are fainter than DESIGN's casing rule intends. Accepted for now because they are deliberately secondary.
 - When two stops are closer than 30 m their map badges are nudged 14px apart so both stay visible; the stops' coordinates are unchanged.
 

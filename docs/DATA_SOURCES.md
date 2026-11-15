@@ -21,7 +21,14 @@ Three figures differ and each is correct for what it measures: the path from the
 | MRO CTX mosaic `curiosity_ctx_mosaic` | Not stored; tiles from NASA Mars Trek | None | None | Shown under HiRISE so the map zooms out to the whole crater (zoom 8). Published to zoom 10 and enlarged beyond it, always under the HiRISE layer |
 | NASA DONKI space weather | `data/raw/donki/` (not committed: about 440 files, 6.5 MB; the script fetches them again) | `scripts/prepare_space_weather.py` | `data/processed/space_weather.json` | See "Space weather" below |
 
-The product does not use the raw image service or any measured radiation data. How each service is called, and which ones a web page may call directly, is in `docs/API_NOTES.md`.
+**Ground photos (added 15 Nov 2026).** `scripts/prepare_ground_views.py` reads NASA's Curiosity raw image service and writes `data/processed/ground_views.json` plus 120 photos in `data/processed/ground/` (5.4 MB).
+- **Mission and instrument:** Mars Science Laboratory (Curiosity), left navigation camera (`NAV_LEFT_B`). Credit as the service gives it for each image: NASA/JPL-Caltech. Each photo in the page links to NASA's original.
+- **Which photos:** for each of the 15 stops (five curated, ten where the rover parked), images carrying the stop's own site and drive numbers, taken on the arrival sol or the two sols after; full-width frames looking within 20° of level; the frame nearest each of eight compass directions. Every stop has eight.
+- **Processing:** made smaller (640 pixels wide, JPEG quality 72, greyscale) so the site works offline without a large download. Nothing else is changed. They are raw images: unprocessed, uncalibrated, black and white.
+- **Direction (Derived, approximate):** compass bearing = the rover's heading (`yaw` in the waypoint file) + the camera's azimuth (`mast_az` in the image record). The azimuth is taken to be measured from the rover's own forward direction, because the same parked camera pose (azimuth 90.0°, elevation −28.7°) appears at stops where the rover faced different ways. **This reading has not been confirmed against NASA documentation**, and the sum ignores the rover's tilt (up to about 15° here), so a bearing can be several degrees out. The page says "about", and says the direction was worked out by us.
+- **Not the comparison in the plan.** The agreed "how sure" question was the orbital view beside the ground photo. What is built is the ground photos, opened from the map. They are not shown side by side with the orbital image.
+
+The product does not use any measured radiation data. How each service is called, and which ones a web page may call directly, is in `docs/API_NOTES.md`.
 
 **The Weather tab** (`src/pages/weather.js`) reads the same REMS feed and DONKI, live when online and from the stored files when offline. Its "usual / unusual" labels and its "dust watch" dates are **ours**: the dust watch is inferred from how narrow the daily temperature range was at each time of year across the Mars years in the feed. No dust measurement is used, because the feed's dust field is unusable.
 

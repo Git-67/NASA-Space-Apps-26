@@ -20,6 +20,8 @@ import { createRouteLayer } from './route-layer.js';
 import { TILE_SOURCES } from './tile-sources.js';
 import { createAstronautMarker } from './astronaut-marker.js';
 import { createMapRotation } from './map-rotation.js';
+import { createCompassControl } from './compass-control.js';
+import { icon } from '../../components/ui/icon.js';
 import { createMapPicker } from './map-picker.js';
 
 /** @typedef {import('../plan/plan-model.js').Route} Route */
@@ -45,6 +47,8 @@ const HIT_AREA_PX = 44;
 const CROWDED_STOPS_M = 30;
 /** How far each badge of a crowded pair is nudged sideways, in pixels, so both stay visible. */
 const CROWDED_NUDGE_PX = 14;
+/** How far a stop's camera badge sits right of and above the stop's own badge, in pixels. */
+const PHOTO_POINT_OFFSET_PX = 20;
 
 /**
  * Tell the visitor when the map is enlarged past the grayscale HiRISE mosaic's
@@ -93,7 +97,8 @@ const MARS_CRS = L.extend({}, L.CRS.EPSG4326, { R: MARS_RADIUS_M });
  * Draw the map.
  * @param {HTMLElement} container Element that will hold the map.
  * @param {Route} route The prepared route.
- * @param {{ places: Place[] | Error, calibration: DemCalibration | Error }} extras Data for the optional layers,
+ * @param {{ places: Place[] | Error, calibration: DemCalibration | Error, groundStopIds?: Set<string>, onGroundView?: (stopId: string) => void }} extras
+ *   `groundStopIds`: stops that have ground photos; `onGroundView`: called when one's camera badge is pressed. Also data for the optional layers,
  *   or why each could not be loaded; a missing one only disables its own layer.
  * @param {import('./tile-sources.js').ConnectionMode} mode Read tiles from NASA ('online') or from the site ('offline').
  * @param {(stopId: string) => void} onStopChosen Called when a visitor activates a stop marker.
@@ -128,6 +133,10 @@ export function createMapView(container, route, extras, mode, onStopChosen) {
   addOverZoomNotice(map);
 
   const rotation = createMapRotation(map, container);
+  // Turned by two fingers, the map shows a compass button that points north and turns it back.
+  const compass = createCompassControl(() => rotation.faceNorth());
+  compass.control.addTo(map);
+  rotation.onFreeTurn((angleDeg) => compass.show(angleDeg));
   /** When the layers were last told the followed view settled, from performance.now(). */
   let lastSettledAt = 0;
   const routeLayer = L.layerGroup().addTo(map);
@@ -137,7 +146,7 @@ export function createMapView(container, route, extras, mode, onStopChosen) {
   const path = route.points.map((point) => L.latLng(point.lat, point.lon));
 
   /** Badge and marker of each stop in the pool. Stops added later (custom points) get theirs then. */
-  /** @type {Map<string, { badge: HTMLElement, marker: L.Marker, stop: import('../plan/plan-model.js').Stop }>} */
+  /** @type {Map<string, { badge: HTMLElement, marker: L.Marker, stop: import('../plan/plan-model.js').Stop, photoPoint: L.Marker | null }>} */
   const markers = new Map();
   /**
    * Sideways nudge for a stop's badge. Two drill sites sit about 12 m apart, so their badges
@@ -153,6 +162,32 @@ export function createMapView(container, route, extras, mode, onStopChosen) {
     if (isNear(index + 1)) return -CROWDED_NUDGE_PX;
     if (isNear(index - 1)) return CROWDED_NUDGE_PX;
     return 0;
+  };
+  /**
+   * map-photo-point (DESIGN.md): a camera badge beside a stop that has ground photos. Pressing it
+   * opens them. It sits up and to the right of the stop's own badge, so neither covers the other.
+   * @param {import('../plan/plan-model.js').Stop} stop
+   * @param {number} nudgePx The stop badge's own sideways nudge, which the camera follows.
+   * @returns {L.Marker | null} Null when the stop has no ground photos.
+   */
+  const addPhotoPoint = (stop, nudgePx) => {
+    if (!extras.groundStopIds?.has(stop.id)) return null;
+    const badge = el('span', { className: 'map-photo-point' }, [icon('photo_camera')]);
+    const point = L.marker([stop.lat, stop.lon], {
+      icon: L.divIcon({
+        html: badge,
+        className: 'map-photo-hit',
+        iconSize: [HIT_AREA_PX, HIT_AREA_PX],
+        iconAnchor: [HIT_AREA_PX / 2 - nudgePx - PHOTO_POINT_OFFSET_PX, HIT_AREA_PX / 2 + PHOTO_POINT_OFFSET_PX],
+      }),
+      title: `Ground photos at ${stop.name}`,
+      alt: `Ground photos at ${stop.name}`,
+      keyboard: true,
+      // Above the stop badges, so the camera is never hidden behind one.
+      zIndexOffset: 500,
+    });
+    point.on('click keypress', () => extras.onGroundView?.(stop.id));
+    return point;
   };
   /** @param {import('../plan/plan-model.js').Stop} stop */
   const addMarker = (stop) => {
@@ -170,7 +205,7 @@ export function createMapView(container, route, extras, mode, onStopChosen) {
       keyboard: true,
     }).addTo(routeLayer);
     marker.on('click keypress', () => onStopChosen(stop.id));
-    markers.set(stop.id, { badge, marker, stop });
+    markers.set(stop.id, { badge, marker, stop, photoPoint: addPhotoPoint(stop, nudgeFor(index)) });
   };
   route.stops.forEach(addMarker);
   const picker = createMapPicker(map, route.network);
@@ -194,7 +229,7 @@ export function createMapView(container, route, extras, mode, onStopChosen) {
       planRoute.show(route, plan, activeStopId);
       rotation.straightenText();
       const visited = plan.stops.map((stop) => stop.id);
-      for (const [id, { badge, marker, stop }] of markers) {
+      for (const [id, { badge, marker, stop, photoPoint }] of markers) {
         const position = visited.indexOf(id);
         badge.classList.toggle('is-skipped', position < 0);
         badge.textContent = position < 0 ? '–' : String(position + 1);
@@ -202,12 +237,18 @@ export function createMapView(container, route, extras, mode, onStopChosen) {
         const isShown = stop.kind === 'curated' || position >= 0;
         if (isShown && !routeLayer.hasLayer(marker)) marker.addTo(routeLayer);
         if (!isShown && routeLayer.hasLayer(marker)) routeLayer.removeLayer(marker);
+        // A stop's camera badge shows and hides with the stop.
+        if (photoPoint && isShown !== routeLayer.hasLayer(photoPoint)) {
+          if (isShown) photoPoint.addTo(routeLayer); else routeLayer.removeLayer(photoPoint);
+        }
       }
     },
     addStop(stop) {
       if (!markers.has(stop.id)) addMarker(stop);
     },
     startPicking(onPick) {
+      // The instruction banner is drawn on the map's box, so the box must be upright to read it.
+      rotation.faceNorth();
       picker.start(onPick);
     },
     stopPicking() {
@@ -243,6 +284,8 @@ export function createMapView(container, route, extras, mode, onStopChosen) {
       }
     },
     setJourneyView(isOn) {
+      // Anything left open on the map (a leg's details) would sit over the walk.
+      if (isOn) map.closePopup();
       rotation.setEnabled(isOn);
     },
     setHeading(headingDeg) {

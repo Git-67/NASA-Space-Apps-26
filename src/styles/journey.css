@@ -18,17 +18,15 @@ body.is-journey .map-attribution { position: absolute; right: 0; bottom: 0; z-in
 body.is-journey .leaflet-control-container { display: none; }
 /* Taps on stops and legs are off while walking: fewer mis-taps, and the turned box would misplace them (map-rotation.js). */
 body.is-journey .map-waypoint-hit,
-body.is-journey .map-route-hit { pointer-events: none; }
-
-/* Heading-up map: a square as wide as the screen's diagonal, centred; map-rotation.js sets its size and turns it. */
-body.is-journey .map-container.is-turnable {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: var(--map-turned-side);
-  height: var(--map-turned-side);
-  translate: -50% -50%;
-}
+body.is-journey .map-photo-hit { pointer-events: none; }
+/*
+ * Leaflet's own rule for lines that can be pressed (.leaflet-pane > svg path.leaflet-interactive)
+ * is more specific than a plain class, so a leg's details still opened on a press or a hover
+ * during a walk. This selector outranks it.
+ */
+body.is-journey .leaflet-pane > svg path.map-route-hit { pointer-events: none; }
+/* The camera badges are for planning; while walking they would only be mis-tapped. */
+body.is-journey .map-photo-point { display: none; }
 
 .journey-hud { position: fixed; inset: 0; z-index: 1600; pointer-events: none; }
 .journey-hud[hidden] { display: none; }

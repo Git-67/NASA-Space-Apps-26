@@ -23,11 +23,13 @@ The site has three views, switched from the top bar:
 - The **safest path** between stops under **NASA's rules**: only ground Curiosity actually drove (263 rover drives joined into a network), never steeper than NASA's 20° suit limit, and the shortest within it, found with an A* search. Each sol brings a **daily mission** (our practice objectives, e.g. "Ridge versus hollow" or "Retrace Curiosity") that picks its stops from the five curated stops and ten places Curiosity parked; you can also **add your own points** by tapping the map, and they snap to Curiosity's tracks. The verdict also applies NASA's 8-hour and 2 km walk limits.
 - **Begin journey:** a full-screen, simulated walk of the plan, for a tablet. The top bar and the verdict pop-up close and the map zooms in close, keeps the walker centred and turns so the way they face is up (the device compass where there is one, else the direction of travel). Only the leg being walked is drawn solid. Live space weather sits top right, and "Simulate alert" plays a random practice alert, labelled as a drill. At each stop its tasks pop up once and are submitted with two presses; ending the walk takes three (the last a 2-second hold), so dust or a glove cannot end it by accident. It is labelled as a simulation: there is no real astronaut position. About 30 m before steep ground or a sandy hollow, a warning appears with the distance counting down. Quiet sound cues mark hazards, arrivals, submitted tasks, the end of the walk and space weather alerts; they are made in the browser (no sound files) and can be muted.
 - **Visor view:** during a journey, a small button on the right edge shows a curved helmet visor in plain white with a clear middle and the map as a small minimap on its left, showing only what matters: a compass tape with the next stop on it, the next stop's distance and time, the space weather level, and gauges for time out and distance from base against NASA's limits. It is a simulation of what a helmet display could show; no helmet or headset is involved.
+- **Ground photos:** a camera badge beside each stop opens what Curiosity's navigation camera saw from that spot, eight directions per stop, with "Turn left" and "Turn right". They are stored with the site, so they work offline, and each links to NASA's original. The direction shown is approximate and worked out by us.
+- **Turn the map:** on a tablet, twist two fingers to turn the map; a compass button shows north and puts it back.
 - Map options: contour lines from NASA's Gale elevation model, colour HiRISE imagery, names of places Curiosity explored, and a latitude/longitude grid. Contours and the grid start switched on, place names start off, and your choices are remembered on your device.
 - **Weather view:** conditions at a glance for the latest sol Curiosity reported (pressure, temperature, solar storms, particles, ultraviolet, daylight), charts of air temperature, ground temperature and pressure over the last 3 to 30 sols, and a "dust watch" of dates to keep an eye on. The dust watch is our own inference from how narrow the daily temperature range was at each time of year; it is not a NASA forecast.
 - Dark and light themes.
 
-Not built: the orbit and ground photo comparison at each stop (the "how sure" question), and a guided replay of the 2018 dust storm. Typing sol 2100 into the briefing does show that storm's effect on the verdict.
+Not built: the orbital view and the ground photo side by side (the "how sure" question; the ground photos exist, opened from the map), and a guided replay of the 2018 dust storm. Typing sol 2100 into the briefing does show that storm's effect on the verdict.
 
 | Journey | Visor view | A no-go sol |
 |---|---|---|
@@ -42,6 +44,7 @@ Not built: the orbit and ground photo comparison at each stop (the "how sure" qu
 | Elevation model | Mars Reconnaissance Orbiter, HiRISE Gale DEM, via NASA Mars Trek | Contour lines (one line per 18.6 m, see the data sources) |
 | Place names | Mars Science Laboratory (Curiosity) location map | Names of places the rover explored |
 | Rover waypoints | Mars Science Laboratory (Curiosity) | The route, stops, distances and climb |
+| Ground photos | Mars Science Laboratory (Curiosity), left navigation camera, raw images | What the ground looks like from each stop |
 | Daily weather | Curiosity REMS, provided by Centro de Astrobiología | Daylight and the seasonal comparison behind the verdict |
 | Space weather | NASA DONKI (CCMC): WSA-Enlil forecasts of solar storms at Mars, solar particle events, shocks | The solar storm check in the verdict |
 | Wider orbital imagery | Mars Reconnaissance Orbiter, CTX, via NASA Mars Trek | The map when zoomed out to the crater |
@@ -106,7 +109,11 @@ python3 scripts/prepare_safe_paths.py
 python3 scripts/prepare_rover_stops.py
 ```
 
-Run `prepare_route.py` first, then `prepare_safe_paths.py`, then `prepare_rover_stops.py`: each uses the one before.
+```bash
+python3 scripts/prepare_ground_views.py
+```
+
+Run `prepare_route.py` first, then `prepare_safe_paths.py`, then `prepare_rover_stops.py`, then `prepare_ground_views.py`: each uses the one before.
 
 Rebuild the offline imagery and fonts (needs the internet once, then never again):
 
@@ -149,6 +156,7 @@ python3 scripts/build_tokens.py
 | `src/features/map/` | The map, its layer panel, and the optional layers (colour imagery, contours, place names, grid) |
 | `src/features/plan/` | Stop search, daily missions, custom points, path search over rover tracks, sections, time, difficulty, hazards, packing list, elevation profile |
 | `src/features/conditions/` | The sol's conditions, NASA's walk limits, space weather, and the verdict |
+| `src/features/ground/` | The ground photo viewer |
 | `src/features/journey/` | Begin journey: the simulated walk, its pop-ups, and the visor view |
 | `src/features/connection/` | The online and offline switch |
 | `src/components/ui/` | Icons |

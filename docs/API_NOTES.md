@@ -101,7 +101,11 @@ Images whose `site` and `drive` match the stop, taken on the arrival sol or the 
 - The navigation cameras are black and white. The colour images are the mast camera ones.
 - The ten extra rover stops and custom points were not checked.
 
-**Recommendation if the comparison is built:** prepare it with a script, as the other data is. For each stop pick four to eight navigation camera frames spread by pointing direction, save their address, credit, direction and time to `data/processed/`, and copy the images into the offline bundle (about 280 KB each) so it works without a link.
+**Built on 15 Nov 2026** as `scripts/prepare_ground_views.py`, which also covers the ten rover stops (every one has a full sweep too). Two things learned while building it:
+- **`extended.mast_az` is measured from the rover, not from north.** The same parked pose (azimuth 90.0°, elevation −28.7°) turns up at stops where the rover faced different ways, and `camera_vector` gives the same azimuth, so both are in the rover's frame. A compass bearing is the waypoint's `yaw` plus `mast_az`. This is our reading; no NASA document was found that states it.
+- `subframe_rect` is "(x,y,width,height)". Frames narrower than 1024 are thumbnails or strips and are skipped.
+
+**The recommendation that was followed:** prepare it with a script, as the other data is. For each stop pick four to eight navigation camera frames spread by pointing direction, save their address, credit, direction and time to `data/processed/`, and copy the images into the offline bundle (about 280 KB each) so it works without a link.
 
 ## Other services tested
 

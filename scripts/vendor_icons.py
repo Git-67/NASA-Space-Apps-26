@@ -24,14 +24,15 @@ OUTPUT_FILE = REPO_ROOT / "src" / "components" / "ui" / "icon-paths.js"
 SVG_URL = "https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/{name}/default/24px.svg"
 # Every icon the page uses, the Weather tab's included.
 ICON_NAMES = [
-    "add_location", "air", "arrow_downward", "arrow_forward", "arrow_upward", "blur_on", "calendar_month",
-    "check_box_outline_blank", "check_circle", "checklist", "chevron_right", "close", "close_fullscreen",
-    "cloud", "compress", "cyclone", "dashboard", "directions_walk", "error", "event", "expand_less",
-    "fast_forward", "filter_b_and_w", "flag", "flare", "grain", "grid_on", "height", "help", "info", "label",
-    "landscape", "layers", "light_mode", "map", "my_location", "open_in_full", "palette", "partly_cloudy_day",
-    "pause", "play_arrow", "refresh", "scatter_plot", "schedule", "show_chart", "star", "storm", "table_chart",
-    "thermostat", "today", "trending_down", "trending_flat", "trending_up", "visibility", "volume_off",
-    "volume_up", "warning", "water_drop", "wb_twilight",
+    "add_location", "air", "arrow_back", "arrow_downward", "arrow_forward", "arrow_upward", "blur_on",
+    "calendar_month", "check_box_outline_blank", "check_circle", "checklist", "chevron_right", "close",
+    "close_fullscreen", "cloud", "compress", "cyclone", "dashboard", "directions_walk", "error", "event",
+    "expand_less", "fast_forward", "filter_b_and_w", "flag", "flare", "grain", "grid_on", "height", "help",
+    "info", "label", "landscape", "layers", "light_mode", "map", "my_location", "navigation", "open_in_full",
+    "open_in_new", "palette", "partly_cloudy_day", "pause", "photo_camera", "play_arrow", "refresh",
+    "scatter_plot", "schedule", "show_chart", "star", "storm", "table_chart", "thermostat", "today",
+    "trending_down", "trending_flat", "trending_up", "visibility", "volume_off", "volume_up", "warning",
+    "water_drop", "wb_twilight",
 ]
 VIEW_BOX = "0 -960 960 960"
 PATH = re.compile(r'<path d="([^"]+)"')

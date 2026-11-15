@@ -120,6 +120,7 @@ Also named by the mission, not yet placed on the map: Volcán Peña Blanca, Los 
 - [ ] Review the packing list and the task lists (`kitOurs`, `tasksOurs`) in `data/stops.json`. They are entirely ours.
 - [ ] Review the space weather rule (direct hit forecast at Mars is no-go; glancing hit, or particles near Earth, is caution). It is ours, and it now decides the verdict on about one sol in seven.
 - [ ] Review the five daily missions and the tasks at the ten extra rover stops. They are ours; nothing is known about those places beyond the sol and position NASA published.
+- [ ] Check the ground photos' directions. Open a stop's photos and compare one or two with the map: does "looking about south" show Mount Sharp rising? The method is in `docs/DATA_SOURCES.md` and is our own reading of the camera data.
 - [ ] Review the Weather tab's "dust watch" and its "usual / unusual" cut-offs. They are our inference, not NASA's.
 
 ## Sources

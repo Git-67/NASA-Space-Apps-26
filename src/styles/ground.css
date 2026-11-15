@@ -1,0 +1,51 @@
+/*
+ * ground-view (DESIGN.md): the dialog that shows what Curiosity photographed
+ * from a stop, one direction at a time. Only tokens are used.
+ */
+.ground-dialog {
+  width: min(var(--size-ground-dialog), calc(100vw - var(--space-xxl)));
+  max-height: calc(100dvh - var(--space-xxl));
+  padding: var(--space-xl);
+  background: var(--color-surface-raised);
+  color: var(--color-ink);
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-floating);
+  overflow-y: auto;
+}
+.ground-dialog[open] { display: flex; flex-direction: column; gap: var(--space-sm); }
+.ground-dialog::backdrop { background: var(--color-void); opacity: 0.7; }
+
+.ground-header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-md); }
+.ground-title { font: var(--type-heading-3); }
+
+/* The photo, with the direction it looks written over its lower edge on a solid strip. */
+.ground-frame {
+  position: relative;
+  background: var(--color-void);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.ground-photo { display: block; width: 100%; height: auto; }
+.ground-photo[hidden], .ground-failed[hidden] { display: none; }
+.ground-failed { padding: var(--space-xxl) var(--space-md); text-align: center; }
+.ground-direction {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  padding: var(--space-xxs) var(--space-sm);
+  background: var(--color-surface-raised);
+  color: var(--color-ink);
+  border-top-right-radius: var(--radius-md);
+  font: var(--type-body-sm-medium);
+}
+
+.ground-controls { display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm); }
+.ground-controls .button-secondary[hidden] { display: none; }
+.ground-position { font: var(--type-telemetry); color: var(--color-text-secondary); }
+
+@media (max-width: 479px) {
+  .ground-dialog { padding: var(--space-md); }
+  .ground-controls .button-large { padding: 0 var(--space-md); }
+}
