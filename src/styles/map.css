@@ -14,8 +14,14 @@
 }
 .leaflet-container { background: var(--color-void); font: var(--type-chart-label); }
 
-/* A turned map (heading-up in a journey, or turned by two fingers): a square as wide as the screen's diagonal, centred; map-rotation.js sets its size and turns it. */
-.map-container.is-turnable {
+/*
+ * A turned map (heading-up in a journey, or turned by two fingers): a square as wide as the
+ * screen's diagonal, centred, so no corner is left empty at any angle. map-rotation.js sets its
+ * size and turns it. The selector names the map's parent as well so that it outranks the journey's
+ * own "fill the screen" rule (body.is-journey .map-container), which would otherwise squash the
+ * square back to the screen's height and leave empty corners.
+ */
+.map-area .map-container.is-turnable {
   position: absolute;
   left: 50%;
   top: 50%;
