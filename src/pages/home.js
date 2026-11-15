@@ -19,13 +19,14 @@ import { refreshSpaceWeather } from '../features/conditions/space-weather-live.j
 import { drawDrill } from '../features/conditions/space-weather-drill.js';
 import { EVA_MAX_MINUTES, WALK_BACK_MAX_M } from '../features/conditions/nasa-limits.js';
 import { renderConnection } from '../features/connection/connection-view.js';
-import { canReachNasa, detectMode, setPrefersOffline } from '../lib/connection.js';
+import { detectMode, watchSignal } from '../lib/connection.js';
 import { loadBriefingData } from './load-briefing-data.js';
 import { createJourneyMode } from '../features/journey/journey-mode.js';
 import { missionForSol } from '../features/plan/daily-mission.js';
 import { addCustomPoint } from '../features/plan/custom-points.js';
 import { initViewTabs } from '../features/views/view-tabs.js';
 import { createGroundViewer } from '../features/ground/ground-view.js';
+import { createGroundPhotos } from '../features/ground/ground-photos.js';
 
 /** @typedef {import('./load-briefing-data.js').BriefingData} BriefingData */
 
@@ -71,7 +72,7 @@ function start({ route, records, places, calibration, spaceWeather: bundledSpace
   };
   const connection = {
     status: requireElement('connection-status'),
-    toggle: /** @type {HTMLButtonElement} */ (requireElement('connection-toggle')),
+    box: requireElement('connection-box'),
   };
 
   const solInput = /** @type {HTMLInputElement} */ (requireElement('sol-input'));
@@ -93,6 +94,8 @@ function start({ route, records, places, calibration, spaceWeather: bundledSpace
   // Ground photos: a camera badge beside each stop that has them opens the viewer. Without the
   // file the map simply has no camera badges; nothing else depends on it.
   const groundViewer = createGroundViewer();
+  /** The photo pane shown on arrival at a stop during a journey; one pane, refilled for each stop. */
+  const arrivalPhotos = createGroundPhotos({ isCompact: true });
   const viewsByStop = groundViews instanceof Error ? new Map() : groundViews;
   const mapView = createMapView(requireElement('map'), route, {
     places,
@@ -232,6 +235,13 @@ function start({ route, records, places, calibration, spaceWeather: bundledSpace
       drill: () => drawDrill(Math.random),
     },
     limits: { outMinutes: EVA_MAX_MINUTES, baseM: WALK_BACK_MAX_M },
+    // On arrival the walker compares the ground with Curiosity's photos from that stop, where there are any.
+    groundPhotosFor: (stop) => {
+      const view = viewsByStop.get(stop.id);
+      if (!view) return null;
+      arrivalPhotos.show(stop.name, view);
+      return arrivalPhotos.element;
+    },
     onEnd: () => redraw(),
   });
   const beginButton = /** @type {HTMLButtonElement} */ (requireElement('begin-journey'));
@@ -267,18 +277,10 @@ function start({ route, records, places, calibration, spaceWeather: bundledSpace
     else state.spaceWeather = bundledSpaceWeather;
     redraw();
   };
-  connection.toggle.addEventListener('click', async () => {
-    if (state.mode === 'online') {
-      setPrefersOffline(true);
-      state.connectionNote = 'You chose offline.';
-      setMode('offline');
-      return;
-    }
-    setPrefersOffline(false);
-    renderConnection(connection, { mode: 'checking', dataTo: null });
-    const isReachable = await canReachNasa();
-    state.connectionNote = isReachable ? undefined : 'NASA could not be reached. Showing the data stored with the site.';
-    setMode(isReachable ? 'online' : 'offline');
+  // Signal found or lost: the page switches by itself, both ways (src/lib/connection.js).
+  watchSignal(state.mode, (mode) => {
+    state.connectionNote = undefined;
+    setMode(mode);
   });
   if (state.mode === 'online') goLive();
 

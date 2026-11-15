@@ -104,6 +104,7 @@ A 30-second video cannot carry the evidence slide. **The slides are the safer ch
 | "NASA's packing list" | The packing list is ours |
 | The logo or idea is "unique" | Not established |
 | "NASA is building a visor display" (citing TechPort 94571) | That project (Giner, Inc., 2018 to 2019, completed) made a curved visor that darkens itself. It shows no information. Say "a curved, self-darkening visor like the one NASA funded (TechPort 94571)", and call our visor view a simulation |
+| "It knows where the astronaut is" or "confirms their position" | The walk is simulated. On arrival the walker compares the ground with Curiosity's photos and confirms by hand. Say "the crew confirm it themselves against what the rover saw" |
 | "Works in a helmet" | The visor view is a browser simulation on a tablet; no helmet or headset was tested |
 
 ## Required closing line

@@ -159,18 +159,66 @@ body.is-journey .map-photo-point { display: none; }
 .journey-choice > * { flex: 1 1 0; justify-content: center; }
 .journey-choice > :only-child { flex: 0 1 50%; margin-left: auto; }
 
-/* Hold to confirm: the button fills from left to right while held. */
-.journey-confirm.is-hold {
-  background-image: linear-gradient(var(--color-primary-pressed), var(--color-primary-pressed));
-  background-repeat: no-repeat;
-  background-size: 0% 100%;
-  transition: background-size var(--hold-ms) linear;
+/*
+ * slide-to-confirm: a handle held, then slid along its track. --slide-progress (0 to 1) is set
+ * by slide-to-confirm.js as the handle moves.
+ */
+.slide-track {
+  --slide-progress: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--size-touch-large);
+  background: var(--color-canvas);
+  border: 1px solid var(--color-border-control);
+  border-radius: var(--radius-full);
+  overflow: hidden;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
-  touch-action: none;
+  /* Not ready to be pressed for a moment after it appears (journey-confirm.js, ARM_MS). */
+  opacity: 0.6;
 }
-.journey-confirm.is-hold.is-holding { background-size: 100% 100%; }
+.slide-track.is-armed { opacity: 1; }
+/* The part of the track already crossed. */
+.slide-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--size-touch-large) + var(--slide-progress) * (100% - var(--size-touch-large)));
+  background: var(--color-tint-red);
+  border-radius: var(--radius-full);
+}
+.slide-label { position: relative; padding-left: var(--size-touch-large); font: var(--type-body-md-medium); color: var(--color-text-secondary); pointer-events: none; }
+.slide-handle {
+  position: absolute;
+  left: calc(var(--slide-progress) * (100% - var(--size-touch-large)));
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-touch-large);
+  height: 100%;
+  background: var(--color-surface-raised);
+  color: var(--color-ink);
+  border: 2px solid var(--color-border-control);
+  border-radius: var(--radius-full);
+  cursor: grab;
+  /* The page must not scroll or zoom under a finger that is holding the handle. */
+  touch-action: none;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+/* Held, not yet free to move: the ring fills in. Ready to slide: the handle turns solid. */
+.slide-track.is-holding .slide-handle { border-color: var(--color-semantic-error-text); }
+.slide-track.is-ready .slide-handle { background: var(--color-semantic-error); color: var(--color-on-primary); border-color: var(--color-semantic-error); cursor: grabbing; }
+/* The "confirm" tone: a check, not something that cannot be undone. */
+.slide-track.is-confirm .slide-fill { background: var(--color-tint-blue); }
+.slide-track.is-confirm.is-holding .slide-handle { border-color: var(--color-link); }
+.slide-track.is-confirm.is-ready .slide-handle,
+.slide-track.is-confirm.is-done .slide-handle { background: var(--color-primary); color: var(--color-on-primary); border-color: var(--color-primary); }
+.slide-track.is-done .slide-handle { background: var(--color-semantic-error); color: var(--color-on-primary); border-color: var(--color-semantic-error); }
+/* Let go early and the handle goes back; while it is being dragged it follows the finger exactly. */
+.slide-track:not(.is-ready) .slide-handle, .slide-track:not(.is-ready) .slide-fill { transition: left var(--transition-fast), width var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast); }
 
 .journey-dialog-level { display: flex; align-items: center; gap: var(--space-xs); font: var(--type-heading-4); }
 .journey-dialog-level.is-no-go { color: var(--color-semantic-error-text); }

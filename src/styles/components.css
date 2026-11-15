@@ -457,24 +457,10 @@
 }
 :root[data-connection="offline"] .badge-live { background: var(--color-surface-raised); color: var(--color-text-secondary); }
 
-/* The connection button: the badge plus the action, one 44px control. */
-.connection-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs);
-  min-height: var(--size-touch);
-  padding: 0 var(--space-xs);
-  background: transparent;
-  color: var(--color-text-secondary);
-  border: 0;
-  border-radius: var(--radius-sm);
-  font: var(--type-button-md);
-  cursor: pointer;
-}
-.connection-toggle:hover { background: var(--color-surface-raised); color: var(--color-ink); }
-.connection-toggle:disabled { cursor: default; }
+/* connection-status: the signal badge in the top bar. It reports; it is not a control. */
+.connection-status { display: inline-flex; align-items: center; min-height: var(--size-touch); margin: 0; }
 @media (max-width: 767px) {
-  .connection-detail, .connection-action { display: none; }
+  .connection-detail { display: none; }
 }
 
 /* button-primary */

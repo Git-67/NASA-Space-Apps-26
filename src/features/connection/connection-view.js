@@ -1,7 +1,8 @@
 // @ts-check
 /**
- * The connection status in the top bar: whether the page is reading live NASA
- * data or the copy stored with the site, and a button to switch.
+ * The signal status in the top bar: whether the page is reading live NASA
+ * data or the copy stored with the site. It only reports; the page switches
+ * by itself (src/lib/connection.js).
  * The badge never says LIVE unless the data really is live (DESIGN.md, badge-live).
  */
 import { el } from '../../lib/dom.js';
@@ -21,28 +22,25 @@ export function badgeDate(date) {
 }
 
 /**
- * Show the current mode on the connection button.
- * @param {{ status: HTMLElement, toggle: HTMLButtonElement }} elements The badge, and the button holding it.
+ * Show the current signal.
+ * @param {{ status: HTMLElement, box: HTMLElement }} elements The badge, and the element holding it.
  * @param {{ mode: ConnectionMode | 'checking', dataTo: string | null, note?: string }} state
- *   `dataTo`: the newest date the page's data reaches. `note` explains a forced offline mode.
+ *   `dataTo`: the newest date the page's data reaches. `note` explains a problem with the live data.
  */
-export function renderConnection({ status, toggle }, { mode, dataTo, note }) {
+export function renderConnection({ status, box }, { mode, dataTo, note }) {
   document.documentElement.dataset.connection = mode;
-  toggle.disabled = mode === 'checking';
-  const action = /** @type {HTMLElement} */ (toggle.querySelector('.connection-action'));
   if (mode === 'checking') {
-    status.textContent = 'CHECKING LINK…';
-    action.textContent = '';
-    toggle.setAttribute('aria-label', 'Checking the link to NASA');
+    status.textContent = 'CHECKING SIGNAL…';
+    box.title = 'Checking the link to NASA.';
     return;
   }
   const isOnline = mode === 'online';
   const detail = isOnline ? ' · NASA' : ` · DATA TO ${dataTo ? badgeDate(dataTo) : '?'}`;
-  // The detail and the action text drop out on narrow screens (CSS); the label and title keep the whole story.
-  status.replaceChildren(isOnline ? 'LIVE' : 'OFFLINE', el('span', { className: 'connection-detail', text: detail }));
-  action.textContent = isOnline ? 'Go offline' : 'Go online';
-  const explanation = note ?? (isOnline ? 'Reading live data from NASA.' : 'Showing the data stored with the site.');
-  toggle.setAttribute('aria-label', `${isOnline ? 'Live' : 'Offline'}${detail}. ${explanation} ${action.textContent}.`);
-  toggle.title = explanation;
-  toggle.setAttribute('aria-pressed', String(!isOnline));
+  // The detail drops out on narrow screens (CSS); the spoken label and the title keep the whole story.
+  status.replaceChildren(isOnline ? 'LIVE' : 'NO SIGNAL', el('span', { className: 'connection-detail', text: detail }));
+  const explanation = note ?? (isOnline
+    ? 'Signal found. Reading live data from NASA.'
+    : 'No signal. Showing the data stored with the site. It will go live by itself when the signal returns.');
+  box.setAttribute('aria-label', `${isOnline ? 'Live' : 'No signal'}${detail}. ${explanation}`);
+  box.title = explanation;
 }
