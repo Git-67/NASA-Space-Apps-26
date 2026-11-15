@@ -139,15 +139,14 @@
 .verdict[data-level="caution"] .verdict-symbol, [data-level="caution"] > .reason-symbol { background: var(--color-tint-amber); color: var(--color-semantic-warning); }
 .verdict[data-level="no-go"] .verdict-symbol, [data-level="no-go"] > .reason-symbol { background: var(--color-tint-red); color: var(--color-semantic-error-text); }
 .verdict[data-level="unknown"] .verdict-symbol, [data-level="unknown"] > .reason-symbol { background: var(--color-surface-raised); color: var(--color-text-secondary); }
+/* Under the verdict: what passed, or what needs care. */
+.verdict-summary { font: var(--type-body-sm); color: var(--color-text-secondary); margin-top: var(--space-xs); }
 /*
- * Under the verdict: what passed, or what needs care. It always takes three lines of room and
- * never more, so the verdict card keeps one height whatever it says. Longer text is cut with an
- * ellipsis here and shown in full in the "Why" card below.
+ * In the pop-up the summary always takes three lines of room and never more, so the pop-up keeps
+ * one height whatever it says and never grows over the map. Longer text is cut with an ellipsis
+ * there and shown in full in the briefing.
  */
-.verdict-summary {
-  font: var(--type-body-sm);
-  color: var(--color-text-secondary);
-  margin-top: var(--space-xs);
+.verdict-popup .verdict-summary {
   height: 3lh;
   overflow: hidden;
   display: -webkit-box;
@@ -157,29 +156,47 @@
 }
 
 /*
- * verdict (DESIGN.md): beside the map, the verdict card stays at the top of the panel while the
- * rest of the briefing scrolls under it. The strip above it hides the cards passing behind the gap.
+ * verdict-popup (DESIGN.md): the verdict floating over the right of the map, with "Begin journey".
+ * It folds down to its headline so it can be moved out of the way of the map.
  */
-@media (min-width: 1024px) {
-  .verdict-card {
-    position: sticky;
-    top: calc(var(--size-nav) + var(--space-md));
-    z-index: 5;
-    /* Tighter than other cards: it is always on screen, so it should take as little of it as it can. */
-    padding: var(--space-md);
-    box-shadow: var(--shadow-floating);
-  }
-  .verdict-card .verdict-action { padding-top: var(--space-xs); }
-  .verdict-card::before {
-    content: "";
-    position: absolute;
-    left: calc(-1 * var(--space-xs));
-    right: calc(-1 * var(--space-xs));
-    bottom: 100%;
-    height: calc(var(--space-md) + 1px);
-    background: var(--color-canvas);
-  }
+.verdict-popup {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: min(var(--size-popup), calc(100% - 2 * var(--space-md)));
+  padding: var(--space-md);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-floating);
 }
+.verdict-popup-body { display: flex; flex-direction: column; align-items: stretch; gap: var(--space-xs); }
+.verdict-popup-body .basis { text-align: center; }
+.verdict-popup-body .source-link { justify-content: center; }
+.verdict-popup-toggle { position: absolute; top: var(--space-xs); right: var(--space-xs); }
+.verdict-popup-toggle .icon { transition: rotate var(--transition-fast); }
+/* Folded: the level only. */
+.verdict-popup.is-collapsed .verdict-popup-body,
+.verdict-popup.is-collapsed .verdict-summary { display: none; }
+.verdict-popup.is-collapsed .verdict-popup-toggle .icon { rotate: 180deg; }
+/* Folded, it is only as wide as its headline, and leaves room for its own toggle. */
+.verdict-popup.is-collapsed { width: auto; padding-right: calc(var(--size-touch) + var(--space-md)); }
+/*
+ * Narrow screens: it stays top right, beside the column of map controls on the left, and starts
+ * folded (home.js) so it does not cover the Layers button or the route until asked.
+ */
+@media (max-width: 767px) {
+  .verdict-popup:not(.is-collapsed) { left: calc(var(--size-touch) + 2 * var(--space-md)); width: auto; }
+}
+/* While a point is being added, the map's own instruction takes the pop-up's place. */
+.view-map:has(.map-container.is-picking) .verdict-popup { display: none; }
+
+/* The checks behind the verdict, listed in full in the briefing. */
+.reasons-title { font: var(--type-body-sm-medium); color: var(--color-text-secondary); margin-top: var(--space-xs); }
 .reason-list { display: flex; flex-direction: column; gap: var(--space-sm); margin-top: var(--space-xs); }
 .reason-list li { display: flex; gap: var(--space-sm); font: var(--type-body-sm); }
 

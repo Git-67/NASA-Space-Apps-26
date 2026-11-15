@@ -7,12 +7,10 @@
 /* map-container */
 .map-container {
   width: 100%;
-  height: 60vh;
+  /* Fills the map view, which is the screen below the nav (base.css). */
+  height: 100%;
   min-height: var(--map-min-height);
   background: var(--color-void);
-}
-@media (min-width: 1024px) {
-  .map-container { height: 100%; }
 }
 .leaflet-container { background: var(--color-void); font: var(--type-chart-label); }
 
@@ -69,13 +67,16 @@
 
 /* map-attribution */
 .map-attribution {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 500;
+  max-width: 70%;
   padding: var(--space-xxs) var(--space-md);
   background: var(--color-void);
   color: var(--color-text-muted);
   font: var(--type-chart-label);
-}
-@media (min-width: 1024px) {
-  .map-attribution { position: absolute; right: 0; bottom: 0; z-index: 500; max-width: 70%; opacity: 0.9; }
+  opacity: 0.9;
 }
 
 /* map-layer-panel: closed, it is a 44px "Layers" button; open, a raised panel. */

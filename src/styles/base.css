@@ -6,7 +6,11 @@
 :root {
   --size-touch: 44px;            /* Minimum touch target (DESIGN.md, Touch targets). */
   --size-touch-large: 56px;      /* Height of button-large (DESIGN.md, button-large). */
-  --size-nav: 64px;              /* Top nav height. */
+  --size-nav-row: 64px;          /* Height of the top nav's main row (DESIGN.md, top-nav). */
+  --size-nav: var(--size-nav-row); /* Whole nav height; taller on narrow screens, where the tabs get their own row. */
+  --size-page: 1280px;           /* Widest the dashboards grow (DESIGN.md, Grid and container). */
+  --size-dashboard-column: 320px; /* Narrowest a dashboard column gets before the columns wrap. */
+  --size-popup: 320px;           /* Width of the verdict pop-up on the map (DESIGN.md, map-popup width). */
   --size-panel: 400px;           /* Side panel beside the map on desktop. */
   --size-logo: 28px;             /* Logo height in the nav. */
   --size-focus: 2px;             /* Focus outline width and offset. */
@@ -108,55 +112,64 @@ a { color: var(--color-link); }
 .logo-on-light { display: none; }
 :root[data-theme="light"] .logo-on-dark { display: none; }
 :root[data-theme="light"] .logo-on-light { display: block; }
-.tagline { font: var(--type-body-sm); color: var(--color-text-secondary); margin-right: auto; }
+/* The view tabs sit in the nav, pushed to the middle by the space either side of them. */
+.nav-tabs { margin: 0 auto; align-self: stretch; }
 
-/* Page layout: map above the briefing on small screens, side by side on desktop. */
-.briefing { display: grid; grid-template-columns: minmax(0, 1fr); }
-.map-area { position: relative; }
-.panel {
+/*
+ * Page layout (DESIGN.md, "Views"): three views switched from the top nav.
+ * The map view is the map alone, filling the screen below the nav. The briefing
+ * and weather views are dashboards that scroll with the page.
+ */
+.view[hidden] { display: none; }
+.view-map { position: relative; }
+.map-area { position: relative; height: calc(100dvh - var(--size-nav)); }
+
+.dashboard {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
-  padding: var(--space-md);
+  gap: var(--space-xl);
+  width: 100%;
+  max-width: var(--size-page);
+  margin: 0 auto;
+  padding: var(--space-xl) var(--space-md);
   min-width: 0;
 }
-.panel-intro { display: flex; flex-direction: column; gap: var(--space-xs); }
-.panel-footer {
+.dashboard-intro { display: flex; flex-direction: column; gap: var(--space-xs); }
+/* Columns of cards. Each column stacks its own cards, so a tall card never leaves a hole beside it. */
+.dashboard-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--size-dashboard-column)), 1fr));
+  gap: var(--space-xl);
+  align-items: start;
+}
+.dashboard-column { display: flex; flex-direction: column; gap: var(--space-xl); min-width: 0; }
+
+.page-footer {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
+  width: 100%;
+  max-width: var(--size-page);
+  margin: 0 auto;
+  padding: var(--space-md);
+  border-top: 1px solid var(--color-hairline);
   font: var(--type-caption);
   color: var(--color-text-muted);
-  padding: var(--space-md) 0;
-  border-top: 1px solid var(--color-hairline);
 }
+/* The map view is one screen with nothing below it. */
+body[data-view="map"] .page-footer { display: none; }
 
-/*
- * Desktop: the page itself scrolls, not a fixed-height panel. The map column is
- * sticky, so it keeps filling the viewport below the nav (DESIGN.md, Map page),
- * and its scale bar and controls stay in view while the briefing scrolls past.
- */
 @media (min-width: 1024px) {
   .top-nav { padding: 0 var(--space-xxl); }
-  .briefing {
-    grid-template-columns: minmax(0, 1fr) var(--size-panel);
-    align-items: start;
-  }
-  .map-area {
-    position: sticky;
-    top: var(--size-nav);
-    height: calc(100vh - var(--size-nav));
-  }
-  .panel {
-    min-height: calc(100vh - var(--size-nav));
-    padding: var(--space-xl);
-    border-left: 1px solid var(--color-hairline);
-  }
+  .dashboard, .page-footer { padding-left: var(--space-xxl); padding-right: var(--space-xxl); }
 }
 
-@media (max-width: 479px) {
-  .tagline { display: none; }
-  .top-nav { justify-content: space-between; }
+/* Narrow screens: the tabs take a row of their own under the logo, so each stays a full touch target. */
+@media (max-width: 767px) {
+  :root { --size-nav: calc(var(--size-nav-row) + var(--size-touch)); }
+  .top-nav { flex-wrap: wrap; align-content: center; row-gap: 0; }
+  .nav-tabs { order: 3; flex: 1 0 100%; margin: 0; }
+  .nav-tabs .tab { flex: 1; justify-content: center; }
 }
 
 @media (prefers-reduced-motion: reduce) {

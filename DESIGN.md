@@ -861,7 +861,7 @@ All buttons have a minimum touch height of 44px.
 
 **`pill-tab`** and **`pill-tab-active`**: top-level switching (for example between datasets). Inactive: text `{colors.text-secondary}`, border `{colors.hairline-strong}`. Active: background `{colors.ink}`, text `{colors.void}`.
 
-**`segmented-tab`** and **`segmented-tab-active`**: underline tabs inside a section. Inactive: text `{colors.text-muted}` in `{typography.body-sm-medium}`. Active: text `{colors.ink}` with a 2px `{colors.accent}` underline. At least 44px tall. The panel's Briefing and Weather tabs use these.
+**`segmented-tab`** and **`segmented-tab-active`**: underline tabs inside a section. Inactive: text `{colors.text-muted}` in `{typography.body-sm-medium}`. Active: text `{colors.ink}` with a 2px `{colors.accent}` underline. At least 44px tall, with an icon before the label. The Map, Briefing and Weather tabs in the top nav use these.
 
 ### Badges
 
@@ -973,7 +973,7 @@ The categorical palette was validated against `{colors.surface}`: all eight slot
 - **Basemap**: Mars imagery or shaded relief; see **Mars map rules** below. The area outside the imagery is `{colors.void}` in both themes.
 
 **`map-control`**: zoom in, zoom out, reset view, locate.
-- 44px square buttons, background `{colors.surface-raised}`, border `1px solid {colors.hairline-strong}`, rounded `{rounded.md}`, icon in `{colors.ink}`. Stacked in the top-right with `{spacing.xs}` between them. Each has an accessible name.
+- 44px square buttons, background `{colors.surface-raised}`, border `1px solid {colors.hairline-strong}`, rounded `{rounded.md}`, icon in `{colors.ink}`. Stacked in the top-left, above the layer panel, with `{spacing.xs}` between them. Each has an accessible name.
 
 **`map-legend`**: required whenever colour or size encodes a value.
 - Bottom-left panel. Background `{colors.surface-raised}`, padding `{spacing.sm}`.
@@ -1021,7 +1021,7 @@ The categorical palette was validated against `{colors.surface}`: all eight slot
 **`map-arrow`**: a 20px `{colors.route-casing}` disc with a `{colors.map-ink}` arrow, halfway along each shown leg, pointing the way it is walked. Decorative for assistive technology: the stop list gives the order in words.
 
 **`journey-hud`**: "Begin journey" mode, a full-screen simulated walk of the plan, for a tablet held in gloved hands.
-- The top nav, the side panel, the map's own controls (zoom, scale, layers, over-zoom notice) are hidden: fewer things to press by mistake, and more map to see through a dusty visor. Pinch and scroll still zoom, about the centre. Taps on stops and legs are off while walking.
+- The top nav, the verdict pop-up, the map's own controls (zoom, scale, layers, over-zoom notice) are hidden: fewer things to press by mistake, and more map to see through a dusty visor. Pinch and scroll still zoom, about the centre. Taps on stops and legs are off while walking.
 - Controls are `button-secondary` (End, Walk / Pause, speed, Simulate alert, Re-centre) and `button-primary` for confirming, all in the `button-large` size, on `{colors.surface-raised}` panels. The bottom panel grows to 720px.
 - **Starting it:** "Begin journey" is the page's `button-primary`, directly under the verdict, at its natural width, with a one-line "simulated" note.
 - **Zoom:** 17, one step past the HiRISE imagery's own resolution; the facing line says "imagery enlarged 2×" in place of the hidden `map-notice`.
@@ -1136,13 +1136,20 @@ Added with the first build of the briefing page. They are compositions of existi
 **`verdict`**: the page's main message: Go, Caution, No-go or No verdict.
 - The level is set in `{typography.stat-value}` beside a round symbol (a tick, an exclamation mark, a cross or a question mark). The symbol uses the matching badge colours: `badge-success` for go, `badge-warning` for caution, `badge-error` for no-go, and `{colors.surface-raised}` with `{colors.text-secondary}` for no verdict.
 - Read at a glance: the level, then a summary in `{typography.body-sm}` and `{colors.text-secondary}`: "All 5 checks pass." or the sentences of the checks that do not. Then "Begin journey" (`button-primary`, `button-large`, full width) and "Simulated walk of your plan."
-- **One height, always.** The summary takes exactly three lines of room: shorter text leaves the rest empty, and longer text is cut with an ellipsis. So the card is the same height whatever the verdict says, and nothing below it jumps when the sol changes. The full sentences are always in the "Why" card.
-- **It stays in view.** Beside the map (1024px and wider), the verdict card sticks to the top of the panel, `{spacing.md}` below the top nav, while the rest of the briefing scrolls under it. It uses `{spacing.md}` padding there instead of a card's usual `{spacing.xl}`, and the floating shadow, because it sits above other cards. Below 1024px, where the panel is under the map, it scrolls with the page.
-- The reasons sit in their own card directly below, in a `disclosure`, "Why (5 checks)": each with its own symbol, a sentence in `{typography.body-sm}`, and its basis in `{typography.body-sm}` and `{colors.text-muted}`. They are outside the verdict card so that opening them cannot change its height. The verdict card's "Verdict" heading is for screen readers only.
+- **In the pop-up, one height always.** There the summary takes exactly three lines of room: shorter text leaves the rest empty, and longer text is cut with an ellipsis. So the pop-up never grows over the map, whatever the verdict says. In the briefing the summary is shown in full.
+- **It is shown in two places:** in the `verdict-popup` on the map, and at the top of the briefing dashboard. Both always show the same verdict.
+- The reasons are listed in full in the briefing's Verdict card, under "Why: 5 checks": each with its own symbol, a sentence in `{typography.body-sm}`, and its basis in `{typography.body-sm}` and `{colors.text-muted}`. The pop-up links to them ("Why, and the full briefing").
 - The level is always given in words and by symbol, never by colour alone. The region is announced to screen readers when it changes.
 - The overall level is the worst of its reasons.
 
-**Card spacing in the panel:** every card in a tab is `{spacing.xl}` (24px) from the next, as the Whitespace rule requires.
+**`verdict-popup`**: the verdict floating over the map, on the right.
+- Top right of the map, `{spacing.md}` from its edges, 320px wide. Background `{colors.surface-raised}`, border `1px solid {colors.hairline-strong}`, rounded `{rounded.lg}`, padding `{spacing.md}`, the floating shadow.
+- Holds the `verdict` headline, "Begin journey" (`button-primary`, `button-large`, full width), the line "Simulated walk of your plan.", and a `button-link` to the briefing.
+- **It folds.** A 44px icon button in its corner folds it down to the level alone ("Go"), so it can be moved off the map. The button's accessible name says which way it goes. On screens narrower than 768px it starts folded, because open it would cover the map's controls and much of the route.
+- It is hidden while a point is being added to the map, and during a journey.
+- The map's zoom buttons sit top left, above the layer panel, so the right side is free for the pop-up.
+
+**Card spacing:** every card in a dashboard is `{spacing.xl}` (24px) from the next, as the Whitespace rule requires.
 
 **`sol-slider`**: a range input for choosing a sol, always paired with a labelled number input showing the same value, and a "Today" button (`button-secondary`) beside the number.
 - A 32px round thumb in `{colors.accent}` with a 2px `{colors.void}` ring on an 8px `{colors.hairline-strong}` track, 44px tall hit area: big enough for a glove.
@@ -1175,15 +1182,19 @@ Added with the first build of the briefing page. They are compositions of existi
 
 **Basis lines**: any derived or assumed number is followed by a line starting "Basis:" or "Our own", in `{typography.body-sm}` and `{colors.text-muted}` (14px: the smallest supporting text on a tablet held at arm's length).
 
-**Briefing order (tablet):** the panel answers "can we go?" first and keeps everything else a tap away. Title (no lede), tabs, then the verdict card with "Begin journey" on the first screen; When (Today, sol, slider, daylight and air temperature, space weather, one sources line; more readings and data gaps fold away); Where (stops, three totals in one row: time, round trip, climb; the height profile; legs table and safety rules fold away); Tasks (one row per stop); Dangers; What to pack (folded).
+**Views.** The page has three views, switched by `segmented-tab`s in the top nav. One shows at a time, and the address records which (`#map`, `#briefing`, `#weather`), so a reload or a shared link opens the same one.
+- **Map** (the first view): the map alone, filling the screen below the nav, with the `verdict-popup` on its right. Nothing else: no side panel, no footer, no scrolling.
+- **Briefing**: a dashboard. Up to 1280px wide, in columns at least 320px wide that wrap as the screen narrows (three on a desktop, two on a tablet, one on a phone). Each column stacks its own cards, so a tall card leaves no hole beside it. Column one: Verdict (headline, every check, "See it on the map"), then When. Column two: Where. Column three: Tasks, Dangers, What to pack.
+- **Weather**: a dashboard. From 1024px, two equal columns: "At a glance" and "Dust watch" stacked on the left, the chart on the right. Below that, one column.
+- "Add a point on the map" is in the briefing; pressing it opens the Map view, where the tap happens.
 
 ### Weather tab
 
-The panel's second tab. It is built only from components already in this file; it adds no colours, type sizes or radii of its own. Styles are in `src/styles/tabs.css`.
+The Weather view. It is built only from components already in this file; it adds no colours, type sizes or radii of its own. Styles are in `src/styles/tabs.css`.
 
 | Part of the tab | Component used |
 |---|---|
-| Briefing / Weather switch | `segmented-tab` |
+| Map / Briefing / Weather switch | `segmented-tab`, in the top nav |
 | Each block ("At a glance", "Weather at Gale Crater", "Dust watch") | `card-base`, with an icon before the title |
 | Headline ("Check before you go") | `weather-banner`, below |
 | Rows of readings | `reading-list`, with an icon before the label and a badge after the value |
@@ -1212,10 +1223,10 @@ The panel's second tab. It is built only from components already in this file; i
 ### Navigation
 
 **`top-nav`**: sticky bar, height 64px, background `{colors.canvas}`, bottom border `1px solid {colors.hairline}`.
-- Left: the logo (`logo-on-dark.svg` or `logo-on-light.svg` by theme), 28px tall, linking to the home page. Centre or right: page links in `{typography.body-sm-medium}` and `{colors.text-secondary}`; the current page is `{colors.ink}` with a 2px `{colors.accent}` underline. Far right: `theme-toggle`, then one `button-primary`.
+- Left: the logo (`logo-on-dark.svg` or `logo-on-light.svg` by theme), 28px tall, linking to the home page. Centre: the three view tabs (`segmented-tab`), whose underline sits on the nav's bottom border. Right: the online and offline switch, then `theme-toggle`.
 
 **`theme-toggle`**: a 44px icon button (sun or moon) that switches theme. It has an accessible name that states the action ("Switch to light theme"), and the choice persists.
-- Collapses to a menu button below 1024px.
+- There is no menu button: with three tabs, everything stays visible. Below 768px the tabs move to a second row.
 
 **`faq-accordion-item`**: a question in `{typography.heading-4}` with a chevron, bottom border `1px solid {colors.hairline}`.
 
@@ -1269,7 +1280,7 @@ The panel's second tab. It is built only from components already in this file; i
 - **Top nav**: collapses to a menu button below 1024px.
 - **Hero**: `hero-data-card` moves below the text and buttons; `telemetry-strip` wraps to a two-by-two grid; orbital arcs are simplified or hidden below 480px.
 - **Charts**: full width. Reduce axis tick count rather than shrinking text. Legends wrap above the plot. Direct labels are dropped before the legend is.
-- **Map page**: on desktop the map fills the viewport height below the nav with the briefing in a side panel 400px wide; below 1024px the briefing sits below the map and the page scrolls.
+- **Views**: the Map view fills the screen below the nav at every width. The dashboards go from three columns to two to one as the screen narrows. Below 768px the view tabs take a row of their own under the logo, each a third of the width, and the nav is 108px tall.
 - **Maps**: full width. `map-layer-panel` and `map-legend` collapse into toggle buttons that open a bottom sheet. `map-timeline` stays docked at the bottom.
 - **Tables**: scroll horizontally inside their own container with the first column pinned. The page itself never scrolls sideways.
 - **Card grids**: 3-up desktop, 2-up tablet, 1-up mobile.

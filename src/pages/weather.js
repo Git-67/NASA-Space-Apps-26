@@ -772,36 +772,11 @@ async function load(panel) {
   }
 }
 
-function wireArrows(btns, select) {
-  btns.forEach((b, i) =>
-    b.addEventListener("keydown", (e) => {
-      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
-      e.preventDefault();
-      const next = btns[(i + (e.key === "ArrowRight" ? 1 : -1) + btns.length) % btns.length];
-      next.focus();
-      select(next);
-    })
-  );
-}
-
-function initTabs() {
-  const tabs = [...document.querySelectorAll('.tabs [role="tab"]')];
-  if (!tabs.length) return;
-  let weatherLoaded = false;
-  const select = (tab) => {
-    for (const t of tabs) {
-      const on = t === tab;
-      t.setAttribute("aria-selected", String(on));
-      t.tabIndex = on ? 0 : -1;
-      document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
-    }
-    if (tab.id === "tab-btn-weather" && !weatherLoaded) {
-      weatherLoaded = true;
-      load(document.getElementById("tab-weather"));
-    }
-  };
-  tabs.forEach((t) => t.addEventListener("click", () => select(t)));
-  wireArrows(tabs, select);
-}
-
-initTabs();
+// The page's views are switched in src/features/views/view-tabs.js, which announces each one.
+// The weather is loaded the first time its view is shown, not at page load.
+let weatherLoaded = false;
+document.addEventListener("sol-stroll:view", (e) => {
+  if (e.detail !== "weather" || weatherLoaded) return;
+  weatherLoaded = true;
+  load(document.getElementById("tab-weather"));
+});

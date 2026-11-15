@@ -4,7 +4,14 @@
 
 Mars maps show where to walk. Sol Stroll tells a crew whether to go. It follows NASA's Curiosity rover through the boxwork region of Mount Sharp, in Gale Crater, and answers three questions about that one walk: why go, where, and when. Two more were planned and are not built: how sure (the orbital view beside the rover's ground photo) and a guided "what if" replay.
 
-![The briefing page: map of the route with the verdict panel](docs/screenshots/briefing-dark.png)
+![The Map view: the route on orbital imagery, with the verdict pop-up on the right](docs/screenshots/map-dark.png)
+
+The site has three views, switched from the top bar:
+
+| Map | Briefing | Weather |
+|---|---|---|
+| The map alone, with the verdict as a pop-up and "Begin journey" | A dashboard: the verdict and every check behind it, when, where, tasks, dangers, what to pack | A dashboard: conditions at a glance, charts, dust watch |
+| ![Map view](docs/screenshots/map-light.png) | ![Briefing dashboard](docs/screenshots/briefing-dashboard.png) | ![Weather dashboard](docs/screenshots/weather-dashboard.png) |
 
 ## What works today
 
@@ -14,10 +21,10 @@ Mars maps show where to walk. Sol Stroll tells a crew whether to go. It follows 
 - A task list for each stop with why it matters, hazards on the route, and a packing list.
 - **Live, with an offline mode:** online it reads live NASA data; with no link (as on Mars), or at the press of a button, it uses the copy stored with the site and says how recent it is (first load about 1.2 MB).
 - The **safest path** between stops under **NASA's rules**: only ground Curiosity actually drove (263 rover drives joined into a network), never steeper than NASA's 20° suit limit, and the shortest within it, found with an A* search. Each sol brings a **daily mission** (our practice objectives, e.g. "Ridge versus hollow" or "Retrace Curiosity") that picks its stops from the five curated stops and ten places Curiosity parked; you can also **add your own points** by tapping the map, and they snap to Curiosity's tracks. The verdict also applies NASA's 8-hour and 2 km walk limits.
-- **Begin journey:** a full-screen, simulated walk of the plan, for a tablet. The top bar and side panel close and the map zooms in close, keeps the walker centred and turns so the way they face is up (the device compass where there is one, else the direction of travel). Only the leg being walked is drawn solid. Live space weather sits top right, and "Simulate alert" plays a random practice alert, labelled as a drill. At each stop its tasks pop up once and are submitted with two presses; ending the walk takes three (the last a 2-second hold), so dust or a glove cannot end it by accident. It is labelled as a simulation: there is no real astronaut position. About 30 m before steep ground or a sandy hollow, a warning appears with the distance counting down. Quiet sound cues mark hazards, arrivals, submitted tasks, the end of the walk and space weather alerts; they are made in the browser (no sound files) and can be muted.
+- **Begin journey:** a full-screen, simulated walk of the plan, for a tablet. The top bar and the verdict pop-up close and the map zooms in close, keeps the walker centred and turns so the way they face is up (the device compass where there is one, else the direction of travel). Only the leg being walked is drawn solid. Live space weather sits top right, and "Simulate alert" plays a random practice alert, labelled as a drill. At each stop its tasks pop up once and are submitted with two presses; ending the walk takes three (the last a 2-second hold), so dust or a glove cannot end it by accident. It is labelled as a simulation: there is no real astronaut position. About 30 m before steep ground or a sandy hollow, a warning appears with the distance counting down. Quiet sound cues mark hazards, arrivals, submitted tasks, the end of the walk and space weather alerts; they are made in the browser (no sound files) and can be muted.
 - **Visor view:** during a journey, a small button on the right edge shows a curved helmet visor in plain white with a clear middle and the map as a small minimap on its left, showing only what matters: a compass tape with the next stop on it, the next stop's distance and time, the space weather level, and gauges for time out and distance from base against NASA's limits. It is a simulation of what a helmet display could show; no helmet or headset is involved.
 - Map options: contour lines from NASA's Gale elevation model, colour HiRISE imagery, names of places Curiosity explored, and a latitude/longitude grid. Contours and the grid start switched on, place names start off, and your choices are remembered on your device.
-- **Weather tab:** conditions at a glance for the latest sol Curiosity reported (pressure, temperature, solar storms, particles, ultraviolet, daylight), charts of air temperature, ground temperature and pressure over the last 3 to 30 sols, and a "dust watch" of dates to keep an eye on. The dust watch is our own inference from how narrow the daily temperature range was at each time of year; it is not a NASA forecast.
+- **Weather view:** conditions at a glance for the latest sol Curiosity reported (pressure, temperature, solar storms, particles, ultraviolet, daylight), charts of air temperature, ground temperature and pressure over the last 3 to 30 sols, and a "dust watch" of dates to keep an eye on. The dust watch is our own inference from how narrow the daily temperature range was at each time of year; it is not a NASA forecast.
 - Dark and light themes.
 
 Not built: the orbit and ground photo comparison at each stop (the "how sure" question), and a guided replay of the 2018 dust storm. Typing sol 2100 into the briefing does show that storm's effect on the verdict.
@@ -135,9 +142,10 @@ python3 scripts/build_tokens.py
 
 | Path | What it holds |
 |---|---|
-| `index.html` | The one page, with two tabs: Briefing and Weather |
+| `index.html` | The one page, with three views: Map, Briefing and Weather |
 | `src/pages/home.js`, `load-briefing-data.js` | Load the data, hold the page state, ask the features to redraw |
-| `src/pages/weather.js` | The Weather tab |
+| `src/pages/weather.js` | The Weather view |
+| `src/features/views/` | Switching between the three views from the top bar |
 | `src/features/map/` | The map, its layer panel, and the optional layers (colour imagery, contours, place names, grid) |
 | `src/features/plan/` | Stop search, daily missions, custom points, path search over rover tracks, sections, time, difficulty, hazards, packing list, elevation profile |
 | `src/features/conditions/` | The sol's conditions, NASA's walk limits, space weather, and the verdict |

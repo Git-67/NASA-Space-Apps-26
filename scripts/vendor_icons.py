@@ -25,12 +25,13 @@ SVG_URL = "https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutli
 # Every icon the page uses, the Weather tab's included.
 ICON_NAMES = [
     "add_location", "air", "arrow_downward", "arrow_forward", "arrow_upward", "blur_on", "calendar_month",
-    "check_box_outline_blank", "check_circle", "chevron_right", "close", "close_fullscreen", "cloud", "compress",
-    "cyclone", "dashboard", "directions_walk", "error", "event", "fast_forward", "filter_b_and_w", "flag",
-    "flare", "grain", "grid_on", "height", "help", "info", "label", "landscape", "layers", "light_mode", "my_location",
-    "open_in_full", "palette", "partly_cloudy_day", "pause", "play_arrow", "refresh", "scatter_plot", "schedule",
-    "show_chart", "star", "storm", "table_chart", "thermostat", "today", "trending_down", "trending_flat",
-    "trending_up", "visibility", "volume_off", "volume_up", "warning", "water_drop", "wb_twilight",
+    "check_box_outline_blank", "check_circle", "checklist", "chevron_right", "close", "close_fullscreen",
+    "cloud", "compress", "cyclone", "dashboard", "directions_walk", "error", "event", "expand_less",
+    "fast_forward", "filter_b_and_w", "flag", "flare", "grain", "grid_on", "height", "help", "info", "label",
+    "landscape", "layers", "light_mode", "map", "my_location", "open_in_full", "palette", "partly_cloudy_day",
+    "pause", "play_arrow", "refresh", "scatter_plot", "schedule", "show_chart", "star", "storm", "table_chart",
+    "thermostat", "today", "trending_down", "trending_flat", "trending_up", "visibility", "volume_off",
+    "volume_up", "warning", "water_drop", "wb_twilight",
 ]
 VIEW_BOX = "0 -960 960 960"
 PATH = re.compile(r'<path d="([^"]+)"')

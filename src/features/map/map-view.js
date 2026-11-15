@@ -121,7 +121,8 @@ export function createMapView(container, route, extras, mode, onStopChosen) {
   };
   showBasemaps(TILE_SOURCES[mode]);
 
-  L.control.zoom({ position: 'topright', zoomInTitle: 'Zoom in', zoomOutTitle: 'Zoom out' }).addTo(map);
+  // Top left, above the layer panel: the right side of the map belongs to the verdict pop-up.
+  L.control.zoom({ position: 'topleft', zoomInTitle: 'Zoom in', zoomOutTitle: 'Zoom out' }).addTo(map);
   // Metric only: SI units throughout (DESIGN.md, Mars conventions).
   L.control.scale({ position: 'bottomleft', imperial: false }).addTo(map);
   addOverZoomNotice(map);
