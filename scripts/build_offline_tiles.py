@@ -8,7 +8,7 @@ hirise     Mars Trek `curiosity_hirise_mosaic` (MRO HiRISE)     WALK_AREA   12-1
 ctx        Mars Trek `curiosity_ctx_mosaic` (MRO CTX)           CRATER      8-10    grey JPEG
 dem        Mars Trek `Gale_DEM_SMG_1m` (MRO HiRISE elevation)   WALK_AREA   12-14   PNG, unchanged
 colour     Curiosity map `MSL_Gale_HiRISE-LRGB_78quads` (HiRISE colour, Web Mercator, TMS rows)
-                                                                WALK_AREA   14-16   colour JPEG
+                                                                WALK_AREA   14-18   colour JPEG
 
 Only the imagery is re-encoded (JPEG, quality JPEG_QUALITY), which changes no
 position and no data value. Elevation tiles stay PNG because their grey levels
@@ -18,7 +18,7 @@ Grids: Trek tiles use a plain latitude/longitude grid, 180 / 2**z degrees per
 tile, rows from 90° N, stored as {z}/{row}/{col}. Colour tiles keep their own
 Web Mercator grid, stored as {z}/{col}/{tms_row} as on the source server.
 
-Output: data/processed/tiles/<layer>/... (about 6 MB in all).
+Output: data/processed/tiles/<layer>/... (about 12 MB in all).
 Needs Pillow (requirements.txt).
 
 Run:  python3 scripts/build_offline_tiles.py [--refresh]
@@ -41,7 +41,8 @@ TILE_DIR = PROCESSED_DIR / "tiles"
 WALK_AREA = (-4.815, 137.373, -4.794, 137.390)
 # The whole of Gale Crater, as covered by the CTX mosaic.
 CRATER = (-7.2137273, 136.2768326, -3.5804738, 139.3864225)
-JPEG_QUALITY = 70
+# 85, not lower: at 70 the HiRISE detail the walker zooms in to was visibly smeared offline.
+JPEG_QUALITY = 85
 TREK = "https://trek.nasa.gov/tiles/Mars/EQ/{layer}/1.0.0/default/default028mm/{z}/{row}/{col}.png"
 COLOUR = "https://mars.nasa.gov/mmgis-maps/MSL/Layers/MSL_Gale_HiRISE-LRGB_78quads/{z}/{col}/{row}.png"
 _USER_AGENT = "Mozilla/5.0 (compatible; data-preparation-script)"
@@ -52,7 +53,9 @@ LAYERS = [
     ("ctx", "curiosity_ctx_mosaic", CRATER, range(8, 11), False),
     ("dem", "Gale_DEM_SMG_1m", WALK_AREA, range(12, 15), True),
 ]
-COLOUR_ZOOMS = range(14, 17)
+# Down to the source's own finest level (Mercator 18, map zoom 17), as online. Stopping at 16
+# left offline colour 4x coarser than online, which showed as a blurry map when zoomed in.
+COLOUR_ZOOMS = range(14, 19)
 
 
 def trek_tiles(area: tuple[float, float, float, float], z: int) -> list[tuple[int, int]]:

@@ -31,7 +31,7 @@ The team widened the scope during the day. `CLAUDE.md` section 1 records each ch
 | Signal detector (15 Nov) | The manual online and offline button is gone. The page checks its link to NASA and switches by itself |
 | Three views (15 Nov) | Tabs in the top nav: Map (the map alone, verdict as a pop-up), Briefing and Weather (dashboards). The address keeps the view: `#map`, `#briefing`, `#weather` |
 | Offline mode | Everything works from a copy stored with the site |
-| Saved on the device (15 Nov, branch `claude/offline-store`, not yet merged) | A service worker (`sw.js`) saves the whole site (about 11 MB) on the device after the first visit, keeps NASA map tiles the device has looked at, and the latest space weather it read. The site then reopens with no signal. Checked in a headless browser only, not on a tablet. Run `python3 scripts/build_offline_manifest.py` before each release |
+| Saved on the device (15 Nov, branch `claude/offline-store`, not yet merged) | A service worker (`sw.js`) saves the whole site (about 18 MB) on the device after the first visit, keeps NASA map tiles the device has looked at, and the latest space weather it read. The site then reopens with no signal. Checked in a headless browser only, not on a tablet. Run `python3 scripts/build_offline_manifest.py` before each release |
 | Map layers | Contours, colour imagery, place names, a grid |
 
 ## Not built
