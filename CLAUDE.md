@@ -59,7 +59,7 @@ Chosen for a team that knows Python, HTML, CSS and basic JavaScript, and for fre
 - **Types:** plain JavaScript with JSDoc types and `// @ts-check` at the top of each file. This replaces TypeScript, which would need a build step.
 - **Map:** Leaflet 1.9.4, the official minified build, vendored in `public/vendor/leaflet/` and loaded as a classic script (`src/lib/leaflet.js` hands it to the modules). **Charts:** hand-drawn inline SVG so far; add a charting library only if a chart needs more than that.
 - **Data preparation:** Python scripts in `scripts/` turn raw NASA data into small JSON, GeoJSON or image files in `data/processed/`. The browser never parses raw mission files.
-- **Online with an offline mode (decided 14 Nov 2026; automatic since 15 Nov):** the page detects signal by itself and switches both ways; nobody chooses (`src/lib/connection.js`). Online, the page reads live NASA data (map tiles, DONKI space weather, the REMS feed). When NASA cannot be reached it uses the copy stored with the site (tiles, fonts, icons, all data) and says how recent that copy is. The offline copy must always be complete: refresh it with the scripts in `scripts/` before each release. Keep the first load under about 1.5 MB, and do heavy computation in the scripts, not the browser, because computers on Mars will be modest.
+- **Online with an offline mode (decided 14 Nov 2026; automatic since 15 Nov):** the page detects signal by itself and switches both ways; nobody chooses (`src/lib/connection.js`). Online, the page reads live NASA data (map tiles, DONKI space weather, the REMS feed). When NASA cannot be reached it uses the copy stored with the site (tiles, fonts, icons, all data) and says how recent that copy is. Since 15 Nov the device also keeps what it has fetched (`sw.js`, `src/lib/offline-store.js`): the whole site is saved in the background after the first visit, NASA map tiles it has looked at are kept and shown again offline, and the latest space weather it read is kept with its date. NASA's live data services are never answered from the store, so stored data is never shown as live. The offline copy must always be complete: refresh it with the scripts in `scripts/` before each release. Keep the first load under about 1.5 MB, and do heavy computation in the scripts, not the browser, because computers on Mars will be modest.
 - **Safety rules are NASA's (decided 14 Nov 2026):** use NASA's published figures (EVA-EXP-0042, NASA-STD-3001) wherever one exists, cite it, and say "lunar" when it is a lunar figure. Our own numbers are allowed only where NASA has none, and are labelled "ours" in the page.
 - **Hosting:** GitHub Pages, served from `main`, for judges. The same folder runs from a local server with no internet. The repository must be public for Pages on a free plan.
 
@@ -70,6 +70,7 @@ Chosen for a team that knows Python, HTML, CSS and basic JavaScript, and for fre
 | Python dependencies | `pip install -r requirements.txt` (pinned versions) |
 | Test | `node --test tests/*.test.js` |
 | Test the path search | `python3 -m unittest discover scripts` (A* in `scripts/safe_paths.py`) |
+| Rebuild the offline file list | `python3 scripts/build_offline_manifest.py` after adding, removing or changing any file under `src/`, `public/` or `data/processed/`, and before each release. It writes `offline-manifest.json`, which `sw.js` uses to save the whole site on the device |
 | Rebuild style tokens | `python3 scripts/build_tokens.py` after any change to `DESIGN.md`. Never edit `src/styles/tokens.css` by hand |
 | Lint, format, type check | _Not set up. There is no automated check that `// @ts-check` passes_ |
 
@@ -80,6 +81,8 @@ All paths in the site are relative, because Pages serves the project from a sub-
 Organise by feature, not by file type. The layout as it stands:
 
 ```
+sw.js                  The offline store (service worker). At the root so that it covers the whole site.
+offline-manifest.json  Every file a device saves for offline use. Built by scripts/build_offline_manifest.py.
 index.html             The one page (Map, Briefing and Weather views), at the root as GitHub Pages expects.
 scripts/               Python data preparation, one script per dataset, plus shared modules and their tests.
 src/

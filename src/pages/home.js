@@ -16,10 +16,12 @@ import { compareWithSeason, decideVerdict } from '../features/conditions/conditi
 import { renderConditions, renderSpaceWeather, renderVerdictHeadline, renderVerdictReasons } from '../features/conditions/conditions-view.js';
 import { assessSpaceWeather } from '../features/conditions/space-weather-model.js';
 import { refreshSpaceWeather } from '../features/conditions/space-weather-live.js';
+import { loadSavedSpaceWeather, newerSpaceWeather, saveSpaceWeather } from '../features/conditions/space-weather-store.js';
 import { drawDrill } from '../features/conditions/space-weather-drill.js';
 import { EVA_MAX_MINUTES, WALK_BACK_MAX_M } from '../features/conditions/nasa-limits.js';
 import { renderConnection } from '../features/connection/connection-view.js';
 import { detectMode, watchSignal } from '../lib/connection.js';
+import { describeOfflineStatus, startOfflineStore } from '../lib/offline-store.js';
 import { loadBriefingData } from './load-briefing-data.js';
 import { createJourneyMode } from '../features/journey/journey-mode.js';
 import { missionForSol } from '../features/plan/daily-mission.js';
@@ -43,6 +45,8 @@ const DEFAULT_SOL = 4711;
  */
 function start({ route, records, places, calibration, spaceWeather: bundledSpaceWeather, groundViews }, startMode) {
   const recordBySol = new Map(records.map((record) => [record.sol, record]));
+  // With no signal: the newest space weather this device has, published with the site or saved from NASA.
+  let storedSpaceWeather = newerSpaceWeather(bundledSpaceWeather, loadSavedSpaceWeather());
   const firstSol = records[0].sol;
   const reference = records[records.length - 1];
   const today = new Date();
@@ -66,7 +70,7 @@ function start({ route, records, places, calibration, spaceWeather: bundledSpace
     sol: DEFAULT_SOL,
     mode: startMode,
     /** Space weather in use: the bundled record, extended to today when online. */
-    spaceWeather: bundledSpaceWeather,
+    spaceWeather: storedSpaceWeather,
     /** Why the page is offline when it was not the visitor's choice, if so. */
     connectionNote: /** @type {string | undefined} */ (undefined),
   };
@@ -209,7 +213,12 @@ function start({ route, records, places, calibration, spaceWeather: bundledSpace
   const goLive = () => {
     if (bundledSpaceWeather instanceof Error || state.mode !== 'online') return Promise.resolve();
     return refreshSpaceWeather(bundledSpaceWeather, new Date())
-      .then((fresh) => { if (state.mode === 'online') { state.spaceWeather = fresh; liveReadAt = new Date(); } })
+      .then((fresh) => {
+        // Kept on the device, so the next walk with no signal judges from this, not the older published record.
+        saveSpaceWeather(fresh);
+        storedSpaceWeather = newerSpaceWeather(storedSpaceWeather, fresh);
+        if (state.mode === 'online') { state.spaceWeather = fresh; liveReadAt = new Date(); }
+      })
       .catch((error) => { state.connectionNote = `Live space weather failed: ${error instanceof Error ? error.message : error}`; })
       .finally(redraw);
   };
@@ -274,7 +283,7 @@ function start({ route, records, places, calibration, spaceWeather: bundledSpace
     state.mode = mode;
     mapView.setMode(mode);
     if (mode === 'online') goLive();
-    else state.spaceWeather = bundledSpaceWeather;
+    else state.spaceWeather = storedSpaceWeather;
     redraw();
   };
   // Signal found or lost: the page switches by itself, both ways (src/lib/connection.js).
@@ -313,6 +322,9 @@ function start({ route, records, places, calibration, spaceWeather: bundledSpace
 async function main() {
   drawPageIcons(document);
   initThemeToggle(requireElement('theme-toggle'));
+  // Save the site on the device in the background; the page does not wait for it.
+  const offlineStatus = requireElement('offline-status');
+  startOfflineStore((status) => { offlineStatus.textContent = describeOfflineStatus(status); });
   const status = requireElement('load-status');
   try {
     // Check the link to NASA while the stored data loads; neither waits for the other.
